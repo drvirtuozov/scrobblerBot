@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/drvirtuozov/scrobblerBot/issues"
   },
-  "homepage": "https://github.com/drvirtuozov/scrobblerBot#readme"
+  "homepage": "https://github.com/drvirtuozov/scrobblerBot#readme",
+  "dependencies": {
+    "axios": "^0.15.3",
+    "mongoose": "^4.7.6"
+  }
 }

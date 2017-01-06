@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose';
 
 
 const userSchema = mongoose.Schema({
@@ -31,6 +31,6 @@ const userSchema = mongoose.Schema({
     album: String
   },
   discogsResults: Array
-}, {collection: "scrobbler-users"});
+}, {collection: 'scrobbler-users'});
 
-module.exports = mongoose.model("User", userSchema);
+export default mongoose.model('User', userSchema);
