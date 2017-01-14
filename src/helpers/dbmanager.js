@@ -6,9 +6,21 @@ import Track from '../models/track';
 User.Album = User.hasOne(Album);
 Album.Tracks = Album.hasMany(Track);
 
-export async function createUser(query) {
-  let data = await User.create(query);
-  console.log(data);
+export async function findOrCreateUser(query) {
+  let [ Instance, created ] = await User.findOrCreate(query);
+  return { user: Instance.dataValues, created };
+}
+
+export async function findUserById(id) {
+  let Instance = await User.findById(id);
+  return Instance.dataValues;
+}
+
+export async function findUserByIdAndUpdate(id, updates) {
+  let Instance = await User.findById(id),
+   UpdatedInstance = await Instance.update(updates);
+
+  return UpdatedInstance.dataValues;
 }
 
 export function sync() {
