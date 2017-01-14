@@ -1,8 +1,9 @@
 import axios from 'axios';
-import User from '../models/user';
 import bot from '../bot';
 import config from '../config';
 import { error } from './utils';
+import { findUserById } from './dbmanager';
+import { Extra } from 'telegraf';
 
 export function alert(message) {
   User.find({})
@@ -25,8 +26,8 @@ export function help(ctx) {
 }
 
 export async function whoami(ctx) {
-  let user = await User.findById(ctx.from.id);
-  ctx.reply(`You are logged in as <a href="http://www.last.fm/user/${user.account}">${user.account}</a>.`);
+  let user = await findUserById(ctx.from.id);
+  ctx.reply(`You are logged in as <a href="http://www.last.fm/user/${user.account}">${user.account}</a>.`, Extra.HTML().webPreview(false));
 }
 
 export function nextAlbum(query, which) {

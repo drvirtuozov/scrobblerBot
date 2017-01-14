@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import bot from '../bot';
-import User from '../models/user';
 import songs from '../songs';
 
 
@@ -13,12 +12,6 @@ export function cancelQuery(query) {
   .then(() => {
     bot.setUserMilestone('source', query.from.id);
   });
-}
-
-export async function isUserAuthorized(id) {
-  let user = await User.findById(id);
-  user = user || {};
-  return user.key ? true : false;
 }
 
 export function sendToAdmin(text) {

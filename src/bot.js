@@ -1,5 +1,5 @@
 import Bot from 'telegraf';
-import { isUserAuthorized, sendToAdmin } from './helpers/utils';
+import { sendToAdmin } from './helpers/utils';
 import { whoami, help } from './helpers/actions';
 // import { scrobble, scrobbleSong } from './helpers/scrobble';
 import config from './config';
@@ -15,7 +15,7 @@ const flow = new TelegrafFlow();
 
 const bot = new Bot(config.token);
 
-import { sync, findOrCreateUser } from './helpers/dbmanager';
+import { sync, findOrCreateUser, isUserAuthorized } from './helpers/dbmanager';
 
 flow.command('sync', ctx => {
   sync();
@@ -34,32 +34,7 @@ flow.command('start', async ctx => {
 })
 
 
-/*bot.on('/start', (message, next) => {
-  User.findById(message.from.id)
-    .then(user => {
-      if (!user) {
-        return User.create({
-          _id: message.from.id,
-          username: message.from.username
-        })
-        .then(() => {
-          return message.echo(`Hello, ${message.from.first_name}!\n\nThis bot provides you ability to scrobble songs, albums or song lists in text mode. To take advantage of these opportunities you have to grant access to your Last.fm account...`);
-        })
-        .then(() => {
-          return auth(message);
-        })
-        .then(() => {
-          sendToAdmin(`We've got a new user! @${message.from.username}`);
-        });
-      } else {
-        next();
-      }
-    })
-    .catch(err => {
-      error(message, err);
-    });
-});
-
+/*
 bot.on('text', message => {
   isUserAuthorized(message.from.id, yes => {
     yes ? scrobbleSong(message) : auth(message);

@@ -23,6 +23,12 @@ export async function findUserByIdAndUpdate(id, updates) {
   return UpdatedInstance.dataValues;
 }
 
+export async function isUserAuthorized(id) {
+  let user = await findUserById(id);
+  user = user || {};
+  return user.key ? true : false;
+}
+
 export function sync() {
   return db.sync({ force: true })
     .then(() => {
