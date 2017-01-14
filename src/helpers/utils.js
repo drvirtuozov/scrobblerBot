@@ -1,10 +1,8 @@
 import crypto from 'crypto';
 import bot from '../bot';
 import User from '../models/user';
-import { auth } from './actions';
+import songs from '../songs';
 
-
-const songs = require('../songs.json');
 
 export function cancelQuery(query) {
   bot.editMessageText({
@@ -17,23 +15,18 @@ export function cancelQuery(query) {
   });
 }
 
-export function isUserAuthorized(id, callback) {
-  User.findById(id)
-    .then(user => {
-      user = user || {};
-      callback(user.key ? true : false);
-    });
+export async function isUserAuthorized(id) {
+  let user = await User.findById(id);
+  user = user || {};
+  return user.key ? true : false;
 }
 
 export function sendToAdmin(text) {
-  return bot.sendMessage({
-    chat_id: 1501719,
-    text
-  });
+  return bot.telegram.sendMessage(1501719, text);
 }
 
-export function md5(string: string): string {
-  return crypto.createHash('md5').update(string, 'utf8').digest('hex');
+export function md5(text) {
+  return crypto.createHash('md5').update(text, 'utf8').digest('hex');
 }
 
 export function getRandomFavSong() {
@@ -53,7 +46,7 @@ export function error(event, err) {
             text: 'Access has not been granted.'
           })
           .then(() => {
-            auth(event);
+            //auth(event);
           });
           
           return;
@@ -68,6 +61,10 @@ export function error(event, err) {
   }
 }
 
-export function utf8(text: string): string {
+/*export function utf8(text: string): string {
   return unescape(decodeURIComponent(text));
+}*/
+
+export function utf8(text) {
+  return decodeURI(decodeURIComponent(text));
 }

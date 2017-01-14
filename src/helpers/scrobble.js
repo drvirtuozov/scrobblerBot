@@ -2,7 +2,6 @@ import axios from 'axios';
 import User from '../models/user';
 import bot from '../bot';
 import { getRandomFavSong, md5, utf8 } from './utils';
-import { auth } from './actions';
 import config from '../config';
 
 
@@ -153,7 +152,7 @@ export function unsuccessfulScrobble(event, err) {
     err.data = err.data || {};
   
     if (err.data.error === 9) {
-      auth(event);
+      //auth(event);
     } else {
       bot.sendMessage({
         chat_id: event.from.id,

@@ -17,61 +17,16 @@ export function alert(message) {
     });
 }
 
-export function auth(message) {
-  return axios(`${config.lastfm.url}auth.gettoken&api_key=${config.lastfm.key}&format=json`)
-    .then(res => {
-      let token = res.data.token;
-    
-      bot.sendMessage({
-        text: 'Please click the link below to grant access to your Last.fm account and then click OK button.',
-        chat_id: message.from.id,
-        disable_web_page_preview: true,
-        reply_markup: {
-          inline_keyboard: [[
-            {text: 'Grant access...', url: `http://www.last.fm/api/auth?api_key=${config.lastfm.key}&token=${token}`}, 
-            {text: 'OK', callback_data: 'ACCESS_GRANTED'}
-          ]]
-        }
-      });
-      
-      return User.findByIdAndUpdate(message.from.id, { token });
-    })
-    .catch(err => {
-      return error(message, err);
-    });
-}
-
-export function wish(message) {
-  message.echo('Ok, I\'m listening... /cancel')
-    .then(() => {
-      bot.setUserMilestone('wish', message.from.id);
-    });
-}
-
-export function report(message) {
-  message.echo('Ok, I\'m listening. Tell me about a bug... /cancel')
-    .then(() => {
-      bot.setUserMilestone('report', message.from.id);
-    });
-}
-
-export function help(message) {
-  message.echo(`To scrobble a single song just type its info in this format:\n\n
+export function help(ctx) {
+  ctx.reply(`To scrobble a single song just type its info in this format:\n\n
     Artist\nSong Name\nAlbum Title\n\nIf you want to find a song or scrobble either a song list or 
     an album use our guide via /scrobble command.\n\nGrant access or change account - /auth.\n\n
     If you have any ideas or improvements for the bot please tell us about them via /wish command.`);
 }
 
-export function whoami(message) {
-  User.findById(message.from.id)
-    .then(user => {
-      bot.sendMessage({
-        text: `You are logged in as <a href="http://www.last.fm/user/${user.account}">${user.account}</a>.`, 
-        chat_id: message.from.id,
-        parse_mode: 'HTML',
-        disable_web_page_preview: true
-      });
-    });
+export async function whoami(ctx) {
+  let user = await User.findById(ctx.from.id);
+  ctx.reply(`You are logged in as <a href="http://www.last.fm/user/${user.account}">${user.account}</a>.`);
 }
 
 export function nextAlbum(query, which) {
