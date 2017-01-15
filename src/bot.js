@@ -1,7 +1,7 @@
 import Bot from 'telegraf';
 import { sendToAdmin } from './helpers/utils';
 import { whoami, help } from './helpers/actions';
-// import { scrobble, scrobbleSong } from './helpers/scrobble';
+import { scrobbleSong } from './helpers/scrobble';
 import config from './config';
 
 import reportScene from './scenes/report';
@@ -74,6 +74,11 @@ bot.milestones.on('/scrobble', message => {
 bot.milestones.on('command', message => {
   message.echo('If you are confused type /help.');
 });*/
+
+bot.on('text', async ctx => {
+  let yes = await isUserAuthorized(ctx.from.id);
+  yes ? scrobbleSong(ctx) : ctx.flow.enter('auth');
+});
 
 flow.command('auth', ctx => {
   ctx.flow.enter('auth');

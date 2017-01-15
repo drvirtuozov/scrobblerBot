@@ -1,8 +1,8 @@
 import axios from 'axios';
-import User from '../models/user';
 import bot from '../bot';
 import { getRandomFavSong, md5, utf8 } from './utils';
 import config from '../config';
+import { findUserById, findUserByIdAndIncrement } from './dbmanager';
 
 
 export function scrobble(message) {
@@ -25,59 +25,51 @@ export function scrobble(message) {
   });
 }
 
-export function scrobbleSong(event, isAlbum?) {
-  if (event.text) {
-    let track = event.text.split('\n'),
-      song = getRandomFavSong();
-    
-    if (track.length < 2 || track.length > 3) {
-      event.echo(`Please, send me valid data separated by new lines. Example:\n\n
-        ${song.artist}\n${song.name}\n${song.album}\n\nAlbum title is an optional parameter. 
-        Type /help for more info.`);
-    } else {
-      User.findById(event.from.id)
-        .then(user => {
-          if (Date.now() - user.lastScrobble <= 30000) {
-            event.echo(`You can\'t scrobble songs more than once in 30 seconds. 
-              If you need to scrobble a list of songs you can do that via /scrobble command.`);
-            throw undefined;
-          }
-          
-          return scrobbleSongs([{ artist: track[0], name: track[1], album: track[2] || '', duration: 0 }], user.key);
-        })
-        .then(res => {
+export async function scrobbleSong(ctx, isAlbum) {
+  try {
+    if (ctx.message.text) {
+      let track = ctx.message.text.split('\n'),
+        song = getRandomFavSong();
+      
+      if (track.length < 2 || track.length > 3) {
+        ctx.reply(`Please, send me valid data separated by new lines. Example:\n\n
+          ${song.artist}\n${song.name}\n${song.album}\n\nAlbum title is an optional parameter. 
+          Type /help for more info.`);
+      } else {
+        let user = await findUserById(ctx.from.id);
+
+        if (Date.now() - user.last_scrobble <= 30000) {
+          ctx.reply(`You can\'t scrobble songs more than once in 30 seconds. 
+            If you need to scrobble a list of songs you can do that via /scrobble command.`);
+        } else {
+          let res = await scrobbleSongs([{ artist: track[0], name: track[1], album: track[2] || '', duration: 0 }], user.key);
+
           if (res.data.scrobbles['@attr'].ingored) 
-            return successfulScrobble(event, 'Error. Track has been ignored.');
-          
-          return successfulScrobble(event);
-        })
-        .catch(err => {
-          return unsuccessfulScrobble(event, err);
-        });
-    }
-  } else {
-    isAlbum = typeof isAlbum === 'undefined' ? true : isAlbum;
-    
-    User.findById(event.from.id)
-      .then(user => {
-        if (Date.now() - user.lastScrobble <= 30000) {
-          event.echo('You can\'t scrobble songs more than once in 30 seconds. If you need to scrobble a list of songs you can do that via /scrobble command.');
-          throw undefined;
+            return successfulScrobble(ctx, 'Error. Track has been ignored.');
+            
+          successfulScrobble(ctx);
         }
-        
+      }
+    } else {
+      isAlbum = typeof isAlbum === 'undefined' ? true : isAlbum;
+      
+      let user = await findUserById(ctx.from.id)
+
+      if (Date.now() - user.last_scrobble <= 30000) {
+        ctx.reply('You can\'t scrobble songs more than once in 30 seconds. If you need to scrobble a list of songs you can do that via /scrobble command.');
+      } else {
         let track = user.track;
-        
-        return scrobbleSongs([{ artist: track.artist, name: track.name, album: track.album, duration: 0 }], user.key);
-      })
-      .then(res => {
+      
+        let res = await scrobbleSongs([{ artist: track.artist, name: track.name, album: track.album, duration: 0 }], user.key);
+
         if (res.data.scrobbles['@attr'].ingored) 
-          return successfulScrobble(event, 'Error. Track has been ignored.');
+          return successfulScrobble(ctx, 'Error. Track has been ignored.');
         
-        return successfulScrobble(event);
-      })
-      .catch(err => {
-        return unsuccessfulScrobble(event, err);
-      });
+        successfulScrobble(ctx);
+      }
+    }
+  } catch (e) {
+    unsuccessfulScrobble(ctx, e);
   }
 }
 
@@ -117,8 +109,35 @@ export function scrobbleAlbum(event) {
     });
 }
 
-export function successfulScrobble(event, text?) {
-  User.findByIdAndUpdate(event.from.id, {
+export async function successfulScrobble(ctx, text) {
+  let user = await findUserByIdAndIncrement(ctx.from.id, { scrobbles: 1 });
+
+  if (ctx.callbackQuery) {
+    ctx.editMessageText(text ? text : 'Success!');
+  } else {
+    ctx.reply(text ? text : 'Success!');
+  }
+  
+  ctx.flow.leave();
+}
+
+export function unsuccessfulScrobble(ctx, err) {
+  if (err) {
+    console.log(err.data || err);
+    err.data = err.data || {};
+  
+    if (err.data.error === 9) {
+      ctx.flow.enter('auth');
+    } else {
+      ctx.reply('Oops, something went wrong. Please try again later. If it goes on constantly please let us know via /report command.');
+      ctx.flow.leave();
+    }
+  }
+}
+
+/*
+export function successfulScrobble(ctx, text) {
+  User.findByIdAndUpdate(ctx.from.id, {
     $inc: { scrobbles: 1 }, 
     username: event.from.username, 
     lastScrobble: Date.now(),
@@ -126,41 +145,5 @@ export function successfulScrobble(event, text?) {
     track: {}, 
     discogsResults: []
   })
-    .then(() => {
-      if (event.data) {
-        event.echo('Scrobbled.');
-        return bot.editMessageText({
-          chat_id: event.from.id,
-          message_id: event.message.message_id,
-          text: text ? text : 'Success!'
-        });
-      }
-      
-      return bot.sendMessage({
-        chat_id: event.from.id,
-        text: text ? text : 'Success!'
-      });
-    })
-    .then(() => {
-      bot.setUserMilestone('source', event.from.id);
-    });
 }
-
-export function unsuccessfulScrobble(event, err) {
-  if (err) {
-    console.log(err.data || err);
-    err.data = err.data || {};
-  
-    if (err.data.error === 9) {
-      //auth(event);
-    } else {
-      bot.sendMessage({
-        chat_id: event.from.id,
-        text: 'Oops, something went wrong. Please try again later. If it goes on constantly please let us know via /report command.'
-      })
-      .then(() => {
-        bot.setUserMilestone('source', event.from.id);
-      });
-    }
-  }
-}
+*/

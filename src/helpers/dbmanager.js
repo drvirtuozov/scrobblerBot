@@ -23,6 +23,13 @@ export async function findUserByIdAndUpdate(id, updates) {
   return UpdatedInstance.dataValues;
 }
 
+export async function findUserByIdAndIncrement(id, query) {
+  let Instance = await User.findById(id),
+   UpdatedInstance = await Instance.increment(query);
+
+  return UpdatedInstance.dataValues;
+}
+
 export async function isUserAuthorized(id) {
   let user = await findUserById(id);
   user = user || {};
