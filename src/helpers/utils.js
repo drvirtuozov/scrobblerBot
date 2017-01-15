@@ -3,17 +3,6 @@ import bot from '../bot';
 import songs from '../songs';
 
 
-export function cancelQuery(query) {
-  bot.editMessageText({
-    chat_id: query.from.id,
-    message_id: query.message.message_id,
-    text: 'Canceled.'
-  })
-  .then(() => {
-    bot.setUserMilestone('source', query.from.id);
-  });
-}
-
 export function sendToAdmin(text) {
   return bot.telegram.sendMessage(1501719, text);
 }

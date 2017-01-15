@@ -7,6 +7,7 @@ import config from './config';
 import reportScene from './scenes/report';
 import wishScene from './scenes/wish';
 import authScene from './scenes/auth';
+import scrobbleScene from './scenes/scrobble';
 
 import TelegrafFlow from 'telegraf-flow';
 
@@ -35,12 +36,6 @@ flow.command('start', async ctx => {
 
 
 /*
-bot.on('text', message => {
-  isUserAuthorized(message.from.id, yes => {
-    yes ? scrobbleSong(message) : auth(message);
-  });
-});
-
 bot.on('/alert', (message, next) => {
   if (message.from.id === 1501719) {
     message.echo('Type an alert... /cancel')
@@ -63,21 +58,14 @@ bot.milestone('search_song', searchSongMilestone);
 bot.milestone('set_tracks', setTracksMilestone);
 bot.milestone('song_list', songListMilestone);
 
-bot.milestones.on('/scrobble', message => {
-  isUserAuthorized(message.from.id, yes => {
-    yes ? scrobble(message) : auth(message);
-  });
-});
-
-
 
 bot.milestones.on('command', message => {
   message.echo('If you are confused type /help.');
 });*/
 
-bot.on('text', async ctx => {
+flow.command('scrobble', async ctx => {
   let yes = await isUserAuthorized(ctx.from.id);
-  yes ? scrobbleSong(ctx) : ctx.flow.enter('auth');
+  yes ? ctx.flow.enter('scrobble') : ctx.flow.enter('auth');
 });
 
 flow.command('auth', ctx => {
@@ -99,9 +87,15 @@ flow.command('whoami', async ctx => {
 
 flow.command('help', help);
 
+/*bot.on('text', async ctx => {
+  let yes = await isUserAuthorized(ctx.from.id);
+  yes ? scrobbleSong(ctx) : ctx.flow.enter('auth');
+});*/
+
 flow.register(reportScene);
 flow.register(wishScene);
 flow.register(authScene);
+flow.register(scrobbleScene);
 
 bot.use(Bot.memorySession());
 bot.use(flow.middleware());

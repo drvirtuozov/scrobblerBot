@@ -5,26 +5,6 @@ import config from '../config';
 import { findUserById, findUserByIdAndIncrement } from './dbmanager';
 
 
-export function scrobble(message) {
-  bot.sendMessage({
-    text: 'What do you want to scrobble?',
-    chat_id: message.from.id,
-    reply_markup: {
-      inline_keyboard: [[
-        { text: 'Song', callback_data: 'SONG' },
-        { text: 'List of Songs', callback_data: 'LIST' },
-        { text: 'Album', callback_data: 'ALBUM' }
-      ],
-      [
-        { text: 'Cancel', callback_data: 'CANCEL' }
-      ]]
-    }
-  })
-  .then(() => {
-    bot.setUserMilestone('scrobble', message.from.id);
-  });
-}
-
 export async function scrobbleSong(ctx, isAlbum) {
   try {
     if (ctx.message.text) {
@@ -93,20 +73,18 @@ export function scrobbleSongs(tracks, key) {
     );
 }
 
-export function scrobbleAlbum(event) {
-  return User.findById(event.from.id)
-    .then(user => {
-      let tracks = user.album.tracks.map(track => {
-        return {
-          name: track.name,
-          artist: user.album.artist,
-          album: user.album.title,
-          duration: track.duration
-        };
-      });
-      
-      return scrobbleSongs(tracks, user.key);
+export async function scrobbleAlbum(ctx) {
+  let user = await findUserById(ctx.from.id),
+    tracks = user.album.tracks.map(track => {
+      return {
+        name: track.name,
+        artist: user.album.artist,
+        album: user.album.title,
+        duration: track.duration
+      };
     });
+  
+  return scrobbleSongs(tracks, user.key);
 }
 
 export async function successfulScrobble(ctx, text) {
@@ -118,7 +96,7 @@ export async function successfulScrobble(ctx, text) {
     ctx.reply(text ? text : 'Success!');
   }
   
-  ctx.flow.leave();
+  ctx.flow.leave(); // strange behavior
 }
 
 export function unsuccessfulScrobble(ctx, err) {
