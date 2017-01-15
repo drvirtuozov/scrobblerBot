@@ -1,9 +1,9 @@
 import db from '../db';
 
-const Track = db.import('track', (db, DataTypes) => {
+const AlbumTrack = db.import('album_track', (db, DataTypes) => {
   const { STRING, INTEGER } = DataTypes;
 
-  return db.define('track', {
+  return db.define('album_track', {
     name: STRING,
     duration: {
       type: INTEGER,
@@ -19,4 +19,4 @@ const Track = db.import('track', (db, DataTypes) => {
   });
 });
 
-export default Track;
+export default AlbumTrack;

@@ -1,10 +1,13 @@
 import db from '../db';
 import User from '../models/user';
-import Album from '../models/album';
-import Track from '../models/track';
+import UserTrack from '../models/user_track';
+import UserAlbum from '../models/user_album';
+import AlbumTrack from '../models/album_track';
 
-User.Album = User.hasOne(Album);
-Album.Tracks = Album.hasMany(Track);
+
+User.Album = User.hasOne(UserAlbum, { as: 'album' });
+User.Track = User.hasOne(UserTrack, { as: 'track' });
+UserAlbum.Tracks = UserAlbum.hasMany(AlbumTrack, { as: 'tracks' });
 
 export async function findOrCreateUser(query) {
   let [ Instance, created ] = await User.findOrCreate(query);
@@ -13,6 +16,21 @@ export async function findOrCreateUser(query) {
 
 export async function findUserById(id) {
   let Instance = await User.findById(id);
+  return Instance.dataValues;
+}
+
+export async function findUserByIdAndSetTrack(id, track) {
+  let Instance = await User.findById(id, { include: [{ model: UserTrack, as: 'track' }] }),
+    TrackInstance = await Instance.track.updateAttributes(track),
+    user = Instance.dataValues;
+  
+  user.track = TrackInstance.dataValues;
+  return user;
+}
+
+export async function findUserByIdWithTrack(id) {
+  let Instance = await User.findById(id, { include: [{ model: UserTrack, as: 'track' }] });
+
   return Instance.dataValues;
 }
 
@@ -55,12 +73,22 @@ export function sync() {
               duration: 13
             }
           ]
+        },
+        track: {
+          name: 'Dancing with Myself',
+          artist: 'Billy Idol',
+          album: 'Billy Idol'
         }
       }, {
-        include: {
-          association: User.Album,
-          include: [ Album.Tracks ]
-        }
+        include: [
+          {
+            association: User.Album,
+            include: [ UserAlbum.Tracks ]
+          },
+          {
+            association: User.Track
+          }
+        ]
       });
     });
 }

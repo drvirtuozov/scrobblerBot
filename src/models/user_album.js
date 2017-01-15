@@ -1,9 +1,10 @@
 import db from '../db';
 
-const Album = db.import('album', (db, DataTypes) => {
+
+const UserAlbum = db.import('user_album', (db, DataTypes) => {
   const { STRING } = DataTypes;
 
-  return db.define('album', {
+  return db.define('user_album', {
     title: STRING,
     artist: STRING
   }, { 
@@ -12,4 +13,4 @@ const Album = db.import('album', (db, DataTypes) => {
   });
 });
 
-export default Album;
+export default UserAlbum;

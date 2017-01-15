@@ -8,6 +8,7 @@ import reportScene from './scenes/report';
 import wishScene from './scenes/wish';
 import authScene from './scenes/auth';
 import scrobbleScene from './scenes/scrobble';
+import searchSongScene from './scenes/search_song';
 
 import TelegrafFlow from 'telegraf-flow';
 
@@ -52,7 +53,6 @@ bot.milestone('alert', alertMilestone);
 bot.milestone('edit_album', editAlbumMilestone);
 bot.milestone('edit_track_album', editTrackAlbumMilestone);
 bot.milestone('no_info', noInfoMilestone);
-bot.milestone('scrobble', scrobbleMilestone)
 bot.milestone('search_album', searchAlbumMilestone);
 bot.milestone('search_song', searchSongMilestone);
 bot.milestone('set_tracks', setTracksMilestone);
@@ -96,6 +96,7 @@ flow.register(reportScene);
 flow.register(wishScene);
 flow.register(authScene);
 flow.register(scrobbleScene);
+flow.register(searchSongScene);
 
 bot.use(Bot.memorySession());
 bot.use(flow.middleware());

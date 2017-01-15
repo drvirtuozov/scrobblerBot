@@ -16,10 +16,10 @@ scrobbleScene.on('callback_query', async ctx => {
   switch (ctx.callbackQuery.data) {
     case 'SONG': 
       await ctx.editMessageText('Ok. In order to start searching a song click the button below. Or you can type song info in this format manually:\n\nArtist\nSong Name\nAlbum Title',
-        Markup.inlineKeyboard([
-          Markup.switchToCurrentChatButton('Search...'),
-          Markup.callbackButton('Cancel', 'CANCEL')
-      ]).extra());
+          Markup.inlineKeyboard([
+            Markup.switchToCurrentChatButton('Search...', ''),
+            Markup.callbackButton('Cancel', 'CANCEL')
+        ]).extra());
       ctx.flow.enter('search_song');
       break;
 
@@ -34,7 +34,7 @@ scrobbleScene.on('callback_query', async ctx => {
     case 'ALBUM': 
       await ctx.editMessageText('Ok. In order to start searching an album click the button below. Or you can type album info in this format manually:\n\nArtist\nAlbum Title',
         Markup.inlineKeyboard([
-          Markup.switchToCurrentChatButton('Search...'),
+          Markup.switchToCurrentChatButton('Search...', ''),
           Markup.callbackButton('Cancel', 'CANCEL')
       ]).extra());
       ctx.flow.enter('search_album');

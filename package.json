@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "babel-node index.js",
+    "start": "babel-node server.js",
     "build": "nodemon --watch src --exec babel-node -- server.js"
   },
   "repository": {

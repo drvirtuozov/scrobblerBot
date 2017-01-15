@@ -17,29 +17,21 @@ export function getRandomFavSong() {
   return songs[index];
 }
 
-export function error(event, err) {
+export async function error(ctx, err) {
   if (err) {
-    if (event.data) {
+    if (ctx.callbackQuery) {
       if (err.data) {
         if (err.data.error === 14 || err.data.error === 4) {
-          bot.editMessageText({
-            chat_id: event.from.id,
-            message_id: event.message.message_id,
-            text: 'Access has not been granted.'
-          })
-          .then(() => {
-            //auth(event);
-          });
-          
-          return;
+          await ctx.editMessageText('Access has not been granted.')
+          return ctx.flow.enter('auth');
         }
       }
       
-      return event.echo('Oops, something went wrong. Please try again later.');  
+      return ctx.reply('Oops, something went wrong. Please try again later.');  
     }
     
     console.log(err.data || err);
-    event.echo('Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command.');
+    ctx.reply('Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command.');
   }
 }
 

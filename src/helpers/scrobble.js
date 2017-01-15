@@ -2,12 +2,12 @@ import axios from 'axios';
 import bot from '../bot';
 import { getRandomFavSong, md5, utf8 } from './utils';
 import config from '../config';
-import { findUserById, findUserByIdAndIncrement } from './dbmanager';
+import { findUserById, findUserByIdAndIncrement, findUserByIdWithTrack } from './dbmanager';
 
 
 export async function scrobbleSong(ctx, isAlbum) {
   try {
-    if (ctx.message.text) {
+    if (ctx.message) {
       let track = ctx.message.text.split('\n'),
         song = getRandomFavSong();
       
@@ -33,7 +33,7 @@ export async function scrobbleSong(ctx, isAlbum) {
     } else {
       isAlbum = typeof isAlbum === 'undefined' ? true : isAlbum;
       
-      let user = await findUserById(ctx.from.id)
+      let user = await findUserByIdWithTrack(ctx.from.id)
 
       if (Date.now() - user.last_scrobble <= 30000) {
         ctx.reply('You can\'t scrobble songs more than once in 30 seconds. If you need to scrobble a list of songs you can do that via /scrobble command.');
