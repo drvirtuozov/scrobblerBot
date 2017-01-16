@@ -9,6 +9,14 @@ import { findUserByIdAndUpdate, findUserByIdAndSetTrack } from '../helpers/dbman
 
 const searchSongScene = new Scene('search_song');
 
+searchSongScene.enter(async ctx => {
+  await ctx.editMessageText('Ok. In order to start searching a song click the button below. Or you can type song info in this format manually:\n\nArtist\nSong Name\nAlbum Title',
+    Markup.inlineKeyboard([
+      Markup.switchToCurrentChatButton('Search...', ''),
+      Markup.callbackButton('Cancel', 'CANCEL')
+  ]).extra());
+});
+
 searchSongScene.on('inline_query', async ctx => {
   console.log('INLINE QUEEEERY', ctx.inlineQuery)
   if (!ctx.inlineQuery.query) return ctx.reply('Type your query below...');

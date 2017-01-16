@@ -9,6 +9,7 @@ import wishScene from './scenes/wish';
 import authScene from './scenes/auth';
 import scrobbleScene from './scenes/scrobble';
 import searchSongScene from './scenes/search_song';
+import songListScene from './scenes/song_list';
 
 import TelegrafFlow from 'telegraf-flow';
 
@@ -97,6 +98,7 @@ flow.register(wishScene);
 flow.register(authScene);
 flow.register(scrobbleScene);
 flow.register(searchSongScene);
+flow.register(songListScene);
 
 bot.use(Bot.memorySession());
 bot.use(flow.middleware());
