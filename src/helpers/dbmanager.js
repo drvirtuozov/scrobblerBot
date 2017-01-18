@@ -28,15 +28,50 @@ export async function findUserByIdAndSetTrack(id, track) {
   return user;
 }
 
+export async function findUserByIdAndSetAlbum(id, album) {
+  let Instance = await User.findById(id, { include: [{ model: UserAlbum, as: 'album' }] }),
+    AlbumInstance = await Instance.album.updateAttributes(album),
+    user = Instance.dataValues;
+  
+  user.album = AlbumInstance.dataValues;
+  return user;
+}
+
+export async function findUserByIdAndSetAlbumTracks(id, tracks) {
+  let Instance = await User.findById(id, { 
+      include: [{ 
+        model: UserAlbum, as: 'album',
+        include: [{ model: AlbumTrack, as: 'tracks'}] 
+      }] 
+    }),
+    createdTracks = await AlbumTrack.bulkCreate(tracks, { returning: true });
+  
+  await Instance.album.setTracks(createdTracks);
+  let user = await Instance.reload();
+
+  return user.toJSON();
+}
+
 export async function findUserByIdWithTrack(id) {
   let Instance = await User.findById(id, { include: [{ model: UserTrack, as: 'track' }] });
 
   return Instance.dataValues;
 }
 
+export async function findUserByIdWithAlbum(id) {
+  let Instance = await User.findById(id, { 
+    include: [{ 
+      model: UserAlbum, as: 'album' ,
+      include: [{ model: AlbumTrack, as: 'tracks'}]
+    }] 
+  });
+
+  return Instance.toJSON();
+}
+
 export async function findUserByIdAndUpdate(id, updates) {
   let Instance = await User.findById(id),
-   UpdatedInstance = await Instance.update(updates);
+    UpdatedInstance = await Instance.update(updates);
 
   return UpdatedInstance.dataValues;
 }
@@ -52,6 +87,11 @@ export async function isUserAuthorized(id) {
   let user = await findUserById(id);
   user = user || {};
   return user.key ? true : false;
+}
+
+export async function test() {
+  let user = await User.update({ 'discogs_results': [{ title: 'epta_blya'}]}, { where: { id: 1501719 }});
+  console.log(user);
 }
 
 export function sync() {
@@ -78,7 +118,8 @@ export function sync() {
           name: 'Dancing with Myself',
           artist: 'Billy Idol',
           album: 'Billy Idol'
-        }
+        },
+        discogs_results: [{ title: 'test json object 1'}, { title: 'object 2'}]
       }, {
         include: [
           {

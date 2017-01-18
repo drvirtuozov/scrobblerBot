@@ -27,6 +27,7 @@ export async function error(ctx, err) {
         }
       }
       
+      console.log(err.data || err);
       return ctx.reply('Oops, something went wrong. Please try again later.');  
     }
     

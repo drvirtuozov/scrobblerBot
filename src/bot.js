@@ -2,6 +2,7 @@ import Bot from 'telegraf';
 import { sendToAdmin } from './helpers/utils';
 import { whoami, help } from './helpers/actions';
 import { scrobbleSong } from './helpers/scrobble';
+import { test } from './helpers/dbmanager';
 import config from './config';
 
 import reportScene from './scenes/report';
@@ -10,6 +11,11 @@ import authScene from './scenes/auth';
 import scrobbleScene from './scenes/scrobble';
 import searchSongScene from './scenes/search_song';
 import songListScene from './scenes/song_list';
+
+import searchAlbumScene from './scenes/search_album';
+import noAlbumInfoScene from './scenes/no_album_info';
+import editAlbumScene from './scenes/edit_album';
+import setTracksScene from './scenes/set_tracks';
 
 import TelegrafFlow from 'telegraf-flow';
 
@@ -86,6 +92,8 @@ flow.command('whoami', async ctx => {
   yes ? whoami(ctx) : ctx.flow.enter('auth');
 });
 
+flow.command('test', test);
+
 flow.command('help', help);
 
 /*bot.on('text', async ctx => {
@@ -99,6 +107,10 @@ flow.register(authScene);
 flow.register(scrobbleScene);
 flow.register(searchSongScene);
 flow.register(songListScene);
+flow.register(searchAlbumScene);
+flow.register(noAlbumInfoScene);
+flow.register(editAlbumScene);
+flow.register(setTracksScene);
 
 bot.use(Bot.memorySession());
 bot.use(flow.middleware());

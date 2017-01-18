@@ -1,30 +1,38 @@
-import bot from '../bot';
+import { Markup } from 'telegraf';
+import { Scene } from 'telegraf-flow';
 import { 
   scrobbleAlbum, successfulScrobble, unsuccessfulScrobble
 } from '../helpers/scrobble';
-import User from '../models/user';
-import { cancelQuery } from '../helpers/utils';
+import { findUserByIdWithAlbum, findUserByIdAndSetAlbumTracks } from '../helpers/dbmanager';
 
 
-export default function (milestone) {
-  milestone.on('text', message => {
+const editAlbumScene = new Scene('edit_album');
+
+editAlbumScene.enter(async ctx => {
+  let user = await findUserByIdWithAlbum(ctx.from.id);
+  ctx.editMessageText(`Edit the tracklist and send it back to me:\n\n${user.album.tracks.map(track => track.name).join('\n')}`,
+    Markup.inlineKeyboard([ Markup.callbackButton('Cancel', 'CANCEL') ]).extra()
+  );
+});
+
+editAlbumScene.on('text', async ctx => {
+  try {
     let tracks = message.text.split('\n').map(name => ({ name }));
     
-    User.findByIdAndUpdate(message.from.id, { 'album.tracks': tracks })
-      .then(() => {
-        return scrobbleAlbum(message);
-      })
-      .then(() => {
-        return successfulScrobble(message);
-      })
-      .catch(err => {
-        return unsuccessfulScrobble(message, err);
-      });
-  });
-  
-  milestone.on('callback_query', query => {
-    if (query.data === 'CANCEL') {
-      cancelQuery(query);
-    }
-  });
-}
+    await findUserByIdAndSetAlbumTracks(ctx.from.id, tracks);
+    await scrobbleAlbum(message);
+    successfulScrobble(message);
+  } catch (e) {
+    unsuccessfulScrobble(ctx, e);
+  }
+});
+
+editAlbumScene.on('callback_query', async ctx => {
+  switch (ctx.callbackQuery.data) {
+    case 'CANCEL': 
+      await ctx.editMessageText('Canceled.');
+      ctx.flow.leave();
+  }
+});
+
+export default editAlbumScene;

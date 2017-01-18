@@ -2,7 +2,10 @@ import axios from 'axios';
 import bot from '../bot';
 import { getRandomFavSong, md5, utf8 } from './utils';
 import config from '../config';
-import { findUserById, findUserByIdAndIncrement, findUserByIdWithTrack } from './dbmanager';
+import { 
+  findUserById, findUserByIdAndIncrement, 
+  findUserByIdWithTrack, findUserByIdWithAlbum 
+} from './dbmanager';
 
 
 export async function scrobbleSong(ctx, isAlbum) {
@@ -74,7 +77,7 @@ export function scrobbleSongs(tracks, key) {
 }
 
 export async function scrobbleAlbum(ctx) {
-  let user = await findUserById(ctx.from.id),
+  let user = await findUserByIdWithAlbum(ctx.from.id),
     tracks = user.album.tracks.map(track => {
       return {
         name: track.name,
