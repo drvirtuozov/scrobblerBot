@@ -1,5 +1,4 @@
 import axios from 'axios';
-import config from '../config';
 import { error } from './utils';
 import { findUserById, findUserByIdAndSetAlbumTracks, findUserByIdWithAlbum } from './dbmanager';
 import { Extra, Markup } from 'telegraf';

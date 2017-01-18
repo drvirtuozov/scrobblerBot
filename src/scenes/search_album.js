@@ -75,7 +75,7 @@ searchAlbumScene.on('text', async ctx => {
       discogsResults = results[0].data.results;
       discogsResults.unshift({});
 
-      await findUserByIdAndUpdate(ctx.from.id, { discogs_results: discogsResults }); // implement this function in future
+      await findUserByIdAndUpdate(ctx.from.id, { discogs_results: discogsResults.map(result => ({ id: result.id })) });
 
       let res = await axios(`https://api.discogs.com/releases/${id}`);
       
@@ -98,7 +98,7 @@ searchAlbumScene.on('text', async ctx => {
       ctx.flow.enter('no_info');
     }
 
-    let user = await findUserByIdAndSetAlbumTracks(ctx.from.id, tracks), // implement this function in future
+    let user = await findUserByIdAndSetAlbumTracks(ctx.from.id, tracks),
       album = user.album,
       name = album.title,
       artist = album.artist,
