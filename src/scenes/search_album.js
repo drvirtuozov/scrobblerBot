@@ -1,4 +1,4 @@
-import { Markup, Extra } from 'telegraf';
+import Bot, { Markup, Extra } from 'telegraf';
 import { Scene } from 'telegraf-flow';
 import axios from 'axios';
 import config from '../config';
@@ -7,7 +7,9 @@ import { nextAlbum } from '../helpers/actions';
 import { 
   scrobbleAlbum, successfulScrobble, unsuccessfulScrobble
 } from '../helpers/scrobble';
-import { findUserByIdAndSetAlbum, findUserByIdAndSetAlbumTracks, findUserByIdAndUpdate } from '../helpers/dbmanager'; 
+import { findUserByIdAndUpdate } from '../helpers/dbmanager'; 
+import toTitleCase from 'to-title-case';
+
 
 const searchAlbumScene = new Scene('search_album');
 
@@ -54,15 +56,15 @@ searchAlbumScene.on('inline_query', async ctx => {
 searchAlbumScene.on('text', async ctx => {
   try {
     let parsedAlbum = ctx.message.text.split('\n'),
-      parsedTitle = parsedAlbum[1],
-      parsedArtist = parsedAlbum[0],
+      parsedTitle = toTitleCase(parsedAlbum[1]),
+      parsedArtist = toTitleCase(parsedAlbum[0]),
       foundOn = '',
       discogsResults = [],
       tracks = [];
       
     if (parsedAlbum.length < 2) return ctx.reply('Format:\n\nArtist\nAlbum Title');
     
-    await findUserByIdAndSetAlbum(ctx.from.id, { title: parsedTitle, artist: parsedArtist });
+    await findUserByIdAndUpdate(ctx.from.id, { $set: { album: { title: parsedTitle, artist: parsedArtist }}});
 
     let results = await Promise.all([
       axios(encodeURI(`https://api.discogs.com/database/search?artist=${parsedArtist}&release_title=${parsedTitle}&type=release&key=${config.discogs.key}&secret=${config.discogs.secret}`)),
@@ -98,7 +100,7 @@ searchAlbumScene.on('text', async ctx => {
       ctx.flow.enter('no_info');
     }
 
-    let user = await findUserByIdAndSetAlbumTracks(ctx.from.id, tracks),
+    let user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true }),
       album = user.album,
       name = album.title,
       artist = album.artist,

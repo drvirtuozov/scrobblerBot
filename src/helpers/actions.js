@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { error } from './utils';
-import { findUserById, findUserByIdAndSetAlbumTracks, findUserByIdWithAlbum } from './dbmanager';
+import { findUserById, findUserByIdAndUpdate } from './dbmanager';
 import { Extra, Markup } from 'telegraf';
 
 export function alert(message) {
@@ -39,6 +39,7 @@ export async function nextAlbum(ctx, which) {
       id = user.discogs_results[i].id;
         
     let res = await axios(`https://api.discogs.com/releases/${id}`);
+
     if (res.data.tracklist.length) {
       let tracks = res.data.tracklist
         .map(track => { 
@@ -46,12 +47,12 @@ export async function nextAlbum(ctx, which) {
           return { name: track.title, duration: dur[0] * 60 + +dur[1] };
         });
 
-      await findUserByIdAndSetAlbumTracks(ctx.from.id, tracks);
+      user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true });
     } else {
-      await findUserByIdAndSetAlbumTracks(ctx.from.id, []);
+      user = await findUserByIdAndUpdate(ctx.from.id, { 
+        'album.tracks': [ 'There are no any tracks in this result.' ] 
+      }, { new: true });
     }
-
-    user = await findUserByIdWithAlbum(ctx.from.id);
 
     let title = user.album.title,
       artist = user.album.artist;

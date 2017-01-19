@@ -1,25 +1,36 @@
-import db from '../db';
+import mongoose from 'mongoose';
 
-const User = db.import('user', (db, DataTypes) => {
-  const { INTEGER, STRING, DATE, JSONB } = DataTypes;
 
-  return db.define('user', {
-    id: {
-      type: INTEGER,
-      allowNull: false,
-      primaryKey: true
-    },
-    username: STRING,
-    key: STRING,
-    account: STRING,
-    token: STRING,
-    scrobbles: {
-      type: INTEGER,
-      defaultValue: 0
-    },
-    last_scrobble: DATE,
-    discogs_results: JSONB
-  }, { underscored: true });
-});
+const userSchema = mongoose.Schema({
+  _id: { type: Number, required: true },
+  username: String,
+  key: String,
+  account: String,
+  token: String,
+  scrobbles: { type: Number, default: 0 },
+  timestamp: { type: Number, default: Date.now },
+  last_scrobble: Number,
+  album: {
+    title: String,
+    artist: String,
+    tracks: [{
+      name: String,
+      duration: { 
+        type: Number, 
+        default: 300, 
+        set: function (duration) { 
+          duration = duration || 300;
+          return duration < 30 ? 30 : duration; 
+        }
+      }
+    }]
+  },
+  track: {
+    name: String,
+    artist: String,
+    album: String
+  },
+  discogs_results: Array
+}, { collection: 'scrobbler-users' });
 
-export default User;
+export default mongoose.model('User', userSchema);

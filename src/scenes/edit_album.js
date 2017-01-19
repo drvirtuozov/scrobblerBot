@@ -3,13 +3,13 @@ import { Scene } from 'telegraf-flow';
 import { 
   scrobbleAlbum, successfulScrobble, unsuccessfulScrobble
 } from '../helpers/scrobble';
-import { findUserByIdWithAlbum, findUserByIdAndSetAlbumTracks } from '../helpers/dbmanager';
+import { findUserById, findUserByIdAndUpdate } from '../helpers/dbmanager';
 
 
 const editAlbumScene = new Scene('edit_album');
 
 editAlbumScene.enter(async ctx => {
-  let user = await findUserByIdWithAlbum(ctx.from.id);
+  let user = await findUserById(ctx.from.id, 'album');
   ctx.editMessageText(`Edit the tracklist and send it back to me:\n\n${user.album.tracks.map(track => track.name).join('\n')}`,
     Markup.inlineKeyboard([ Markup.callbackButton('Cancel', 'CANCEL') ]).extra()
   );
@@ -19,7 +19,7 @@ editAlbumScene.on('text', async ctx => {
   try {
     let tracks = message.text.split('\n').map(name => ({ name }));
     
-    await findUserByIdAndSetAlbumTracks(ctx.from.id, tracks);
+    await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks });
     await scrobbleAlbum(message);
     successfulScrobble(message);
   } catch (e) {

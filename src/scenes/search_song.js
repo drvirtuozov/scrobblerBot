@@ -4,7 +4,7 @@ import { Scene } from 'telegraf-flow';
 import config from '../config';
 import { scrobbleSong } from '../helpers/scrobble';
 import { error } from '../helpers/utils';
-import { findUserByIdAndUpdate, findUserByIdAndSetTrack } from '../helpers/dbmanager';
+import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 
 
 const searchSongScene = new Scene('search_song');
@@ -18,7 +18,6 @@ searchSongScene.enter(async ctx => {
 });
 
 searchSongScene.on('inline_query', async ctx => {
-  console.log('INLINE QUEEEERY', ctx.inlineQuery)
   if (!ctx.inlineQuery.query) return ctx.reply('Type your query below...');
   
   try {
@@ -66,7 +65,7 @@ searchSongScene.on('text', async ctx => {
         name = track.name || '',
         album = track.album.title || '';
       
-      let user = await findUserByIdAndSetTrack(ctx.from.id, { name, artist, album });
+      let user = await findUserByIdAndUpdate(ctx.from.id, { track: { name, artist, album }});
       track = user.track;
           
       if (track.album) {

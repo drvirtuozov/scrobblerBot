@@ -1,6 +1,19 @@
-import Sequelize from 'sequelize';
+import mongoose from 'mongoose';
+import Promise from 'bluebird';
+import config from './config';
 
 
-const db = new Sequelize('postgres://rvuzfjit:SFyVOqvQA7ih4ey00VhPpsuVuVAo0G7G@horton.elephantsql.com:5432/rvuzfjit');
+const db = mongoose.connection;
 
-export default db;
+mongoose.Promise = Promise;
+mongoose.connect(config.MONGODB);
+
+db.on('error', err => {
+  console.log('Failed to connect to database server:', err);
+});
+
+db.once('open', () => {
+  console.log('Connection to database established!');
+});
+
+module.exports = db;

@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "babel-node server.js",
+    "start": "babel-node --ignore '/node_modules/(?!telegraf)' server.js",
     "build": "nodemon --watch src --exec babel-node -- server.js"
   },
   "repository": {
@@ -20,16 +20,17 @@
   "homepage": "https://github.com/drvirtuozov/scrobblerBot#readme",
   "dependencies": {
     "axios": "^0.15.3",
+    "bluebird": "^3.4.7",
     "express": "^4.14.0",
-    "pg": "^6.1.2",
-    "pg-hstore": "^2.3.2",
-    "sequelize": "^3.29.0",
+    "mongoose": "^4.7.7",
     "telegraf": "^3.6.4",
     "telegraf-flow": "^8.1.1",
     "to-title-case": "^1.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
+    "babel-plugin-transform-regenerator": "6.16.1",
+    "babel-plugin-transform-runtime": "^6.15.0",
     "babel-preset-es2015": "^6.18.0",
     "babel-preset-es2017": "^6.16.0",
     "nodemon": "^1.11.0"

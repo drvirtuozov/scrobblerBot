@@ -3,7 +3,7 @@ import { Scene } from 'telegraf-flow';
 import { 
   scrobbleAlbum, successfulScrobble, unsuccessfulScrobble
 } from '../helpers/scrobble';
-import { findUserByIdAndSetAlbumTracks } from '../helpers/dbmanager';
+import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 
 
 const setTracksScene = new Scene('set_tracks');
@@ -21,7 +21,7 @@ setTracksScene.on('text', async ctx => {
     if (tracks.length <= 1) 
       return ctx.reply('Send me song names separated by new lines.');
     
-    await findUserByIdAndSetAlbumTracks(ctx.from.id, tracks);
+    await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks });
     await scrobbleAlbum(ctx);
     await successfulScrobble(message);
   } catch (e) {

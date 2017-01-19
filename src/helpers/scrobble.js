@@ -2,10 +2,7 @@ import axios from 'axios';
 import bot from '../bot';
 import { getRandomFavSong, md5, utf8 } from './utils';
 import config from '../config';
-import { 
-  findUserById, findUserByIdAndIncrement, 
-  findUserByIdWithTrack, findUserByIdWithAlbum 
-} from './dbmanager';
+import { findUserById, findUserByIdAndUpdate } from './dbmanager';
 
 
 export async function scrobbleSong(ctx, isAlbum) {
@@ -36,7 +33,7 @@ export async function scrobbleSong(ctx, isAlbum) {
     } else {
       isAlbum = typeof isAlbum === 'undefined' ? true : isAlbum;
       
-      let user = await findUserByIdWithTrack(ctx.from.id)
+      let user = await findUserById(ctx.from.id, 'track')
 
       if (Date.now() - user.last_scrobble <= 30000) {
         ctx.reply('You can\'t scrobble songs more than once in 30 seconds. If you need to scrobble a list of songs you can do that via /scrobble command.');
@@ -77,7 +74,7 @@ export function scrobbleSongs(tracks, key) {
 }
 
 export async function scrobbleAlbum(ctx) {
-  let user = await findUserByIdWithAlbum(ctx.from.id),
+  let user = await findUserById(ctx.from.id),
     tracks = user.album.tracks.map(track => {
       return {
         name: track.name,
@@ -91,12 +88,19 @@ export async function scrobbleAlbum(ctx) {
 }
 
 export async function successfulScrobble(ctx, text) {
-  let user = await findUserByIdAndIncrement(ctx.from.id, { scrobbles: 1 });
+  let user = await findUserByIdAndUpdate(ctx.from.id, {
+    $inc: { scrobbles: 1 }, 
+    username: ctx.from.username, 
+    last_scrobble: Date.now(),
+    album: {}, 
+    track: {}, 
+    discogs_results: []
+  });
 
   if (ctx.callbackQuery) {
-    ctx.editMessageText(text ? text : 'Success!');
+    await ctx.editMessageText(text ? text : 'Success!');
   } else {
-    ctx.reply(text ? text : 'Success!');
+    await ctx.reply(text ? text : 'Success!');
   }
   
   ctx.flow.leave(); // strange behavior
@@ -115,16 +119,3 @@ export function unsuccessfulScrobble(ctx, err) {
     }
   }
 }
-
-/*
-export function successfulScrobble(ctx, text) {
-  User.findByIdAndUpdate(ctx.from.id, {
-    $inc: { scrobbles: 1 }, 
-    username: event.from.username, 
-    lastScrobble: Date.now(),
-    album: {}, 
-    track: {}, 
-    discogsResults: []
-  })
-}
-*/

@@ -1,46 +1,37 @@
 import Bot from 'telegraf';
+import TelegrafFlow from 'telegraf-flow';
 import { sendToAdmin } from './helpers/utils';
 import { whoami, help } from './helpers/actions';
 import { scrobbleSong } from './helpers/scrobble';
 import { test } from './helpers/dbmanager';
 import config from './config';
-
 import reportScene from './scenes/report';
 import wishScene from './scenes/wish';
 import authScene from './scenes/auth';
 import scrobbleScene from './scenes/scrobble';
 import searchSongScene from './scenes/search_song';
 import songListScene from './scenes/song_list';
-
 import searchAlbumScene from './scenes/search_album';
 import noAlbumInfoScene from './scenes/no_album_info';
 import editAlbumScene from './scenes/edit_album';
 import setTracksScene from './scenes/set_tracks';
+import { findOrCreateUserById, isUserAuthorized } from './helpers/dbmanager';
 
-import TelegrafFlow from 'telegraf-flow';
 
 const flow = new TelegrafFlow();
-
-
 const bot = new Bot(config.token);
 
-import { sync, findOrCreateUser, isUserAuthorized } from './helpers/dbmanager';
-
-flow.command('sync', ctx => {
-  sync();
-});
-
 flow.command('start', async ctx => {
-  let data = await findOrCreateUser({ where: { id: ctx.from.id }});
+  let user = await findOrCreateUserById(ctx.from.id);
   
-  if (data.created) {
+  if (user.created) {
     await ctx.reply(`Hello, ${ctx.from.first_name}!\n\nThis bot provides you ability to scrobble songs, albums or song lists in text mode. To take advantage of these opportunities you have to grant access to your Last.fm account...`);
     ctx.flow.enter('auth');
     await sendToAdmin(`We've got a new user! @${ctx.from.username}`);
   } else {
     ctx.reply('user already exists');
   }
-})
+});
 
 
 /*
@@ -54,17 +45,6 @@ bot.on('/alert', (message, next) => {
     next();
   }
 });
-
-bot.milestone('album_chosen', albumChosenMilestone);
-bot.milestone('alert', alertMilestone);
-bot.milestone('edit_album', editAlbumMilestone);
-bot.milestone('edit_track_album', editTrackAlbumMilestone);
-bot.milestone('no_info', noInfoMilestone);
-bot.milestone('search_album', searchAlbumMilestone);
-bot.milestone('search_song', searchSongMilestone);
-bot.milestone('set_tracks', setTracksMilestone);
-bot.milestone('song_list', songListMilestone);
-
 
 bot.milestones.on('command', message => {
   message.echo('If you are confused type /help.');
