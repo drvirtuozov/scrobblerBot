@@ -12,15 +12,12 @@ export async function scrobbleSong(ctx, isAlbum) {
         song = getRandomFavSong();
       
       if (track.length < 2 || track.length > 3) {
-        ctx.reply(`Please, send me valid data separated by new lines. Example:\n\n
-          ${song.artist}\n${song.name}\n${song.album}\n\nAlbum title is an optional parameter. 
-          Type /help for more info.`);
+        ctx.reply(`Please, send me valid data separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nAlbum title is an optional parameter. Type /help for more info.`);
       } else {
         let user = await findUserById(ctx.from.id);
 
         if (Date.now() - user.last_scrobble <= 30000) {
-          ctx.reply(`You can\'t scrobble songs more than once in 30 seconds. 
-            If you need to scrobble a list of songs you can do that via /scrobble command.`);
+          ctx.reply(`You can\'t scrobble songs more than once in 30 seconds. If you need to scrobble a list of songs you can do that via /scrobble command.`);
         } else {
           let res = await scrobbleSongs([{ artist: track[0], name: track[1], album: track[2] || '', duration: 0 }], user.key);
 

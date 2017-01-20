@@ -1,4 +1,4 @@
-import Bot, { Markup, Extra } from 'telegraf';
+import { Markup, Extra } from 'telegraf';
 import { Scene } from 'telegraf-flow';
 import axios from 'axios';
 import config from '../config';

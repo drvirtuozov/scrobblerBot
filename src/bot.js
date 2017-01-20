@@ -17,6 +17,7 @@ import searchAlbumScene from './scenes/search_album';
 import noAlbumInfoScene from './scenes/no_album_info';
 import editAlbumScene from './scenes/edit_album';
 import setTracksScene from './scenes/set_tracks';
+import editTrackAlbumScene from './scenes/edit_track_album';
 import { findOrCreateUserById, isUserAuthorized } from './helpers/dbmanager';
 
 
@@ -36,23 +37,6 @@ flow.command('start', async ctx => {
     ctx.reply('user already exists');
   }
 });
-
-
-/*
-bot.on('/alert', (message, next) => {
-  if (message.from.id === 1501719) {
-    message.echo('Type an alert... /cancel')
-    .then(() => {
-      bot.setUserMilestone('alert', message.from.id);
-    });
-  } else {
-    next();
-  }
-});
-
-bot.milestones.on('command', message => {
-  message.echo('If you are confused type /help.');
-});*/
 
 flow.command('scrobble', async ctx => {
   let yes = await isUserAuthorized(ctx.from.id);
@@ -95,6 +79,7 @@ flow.register(searchAlbumScene);
 flow.register(noAlbumInfoScene);
 flow.register(editAlbumScene);
 flow.register(setTracksScene);
+flow.register(editTrackAlbumScene);
 
 bot.use(Bot.memorySession());
 bot.use(flow.middleware());

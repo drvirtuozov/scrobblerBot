@@ -4,18 +4,6 @@ import { findUserById, findUserByIdAndUpdate } from './dbmanager';
 import { Extra, Markup } from 'telegraf';
 import config from '../config';
 
-export function alert(message) {
-  User.find({})
-    .then(users => {
-      return bot.alert({
-        chat_ids: users.map(user => user.id),
-        text: message.text
-      });
-    })
-    .then(res => {
-      message.echo(res.description);
-    });
-}
 
 export function help(ctx) {
   ctx.reply(`To scrobble a single song just type its info in this format:\n\n

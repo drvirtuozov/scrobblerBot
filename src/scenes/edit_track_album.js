@@ -1,22 +1,25 @@
-import bot from '../bot';
-import { 
-  scrobbleSong
-} from '../helpers/scrobble';
-import User from '../models/user';
+import { Scene } from 'telegraf-flow';
+import { scrobbleSong } from '../helpers/scrobble';
 import { error } from '../helpers/utils';
+import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 
 
-export default function (milestone) {
-  milestone.on('text', message => {
-    let album = message.text;
-    
-    User.findByIdAndUpdate(message.from.id, { 'track.album': album })
-      .then(() => {
-        message.text = '';
-        scrobbleSong(message);
-      })
-      .catch(err => {
-        error(message, err);
-      });
-  });
-}
+const editTrackAlbumScene = new Scene('edit_track_album');
+
+editTrackAlbumScene.enter(ctx => {
+  ctx.reply('Send me album title please.');
+});
+
+editTrackAlbumScene.on('text', async ctx => {
+  try {
+    let album = ctx.message.text,
+    user = await findUserByIdAndUpdate(ctx.from.id, { 'track.album': album });
+
+    delete ctx.message;
+    scrobbleSong(ctx);  
+  } catch (e) {
+    error(ctx, e);
+  }
+});
+
+export default editTrackAlbumScene;

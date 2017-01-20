@@ -66,12 +66,9 @@ searchSongScene.on('text', async ctx => {
 searchSongScene.on('callback_query', async ctx => {
   switch (ctx.callbackQuery.data) {
     case 'SCR': scrobbleSong(ctx); break;
-    case 'LEAVE': scrobbleSong(query, false); break;
-    case 'YES': 
-      await ctx.reply('Send me album title please.');
-      ctx.flow.enter('edit_track_album');
-      break;
-    case 'NO': scrobbleSong(query, false); break;
+    case 'LEAVE': scrobbleSong(ctx, false); break;
+    case 'YES': ctx.flow.enter('edit_track_album'); break;
+    case 'NO': scrobbleSong(ctx, false); break;
     case 'CANCEL':
       ctx.editMessageText('Canceled.');
       ctx.flow.leave();
