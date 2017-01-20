@@ -85,9 +85,10 @@ searchAlbumScene.on('text', async ctx => {
           Markup.callbackButton('Cancel', 'CANCEL')
         ]);
     
-    ctx.reply(`You are about to scrobble [${name}](${encodeURI(`http://www.last.fm/music/${artist}/${name}`)}) by [${artist}](${encodeURI(`http://www.last.fm/music/${artist}`)}). The following tracks have been found on ${foundOn} and will be scrobbled:\n\n${album.tracks.map(track => track.name).join('\n')}${foundOn === 'Discogs.com' ? 
-      `\n\nResults: 1 of ${discogsResults.length - 1}` : ''}`, 
-      Extra.markdown().webPreview(false).markup(inlineKeyboard)
+    ctx.reply(`You are about to scrobble <a href="${encodeURI(`http://www.last.fm/music/${artist}/${name}`)}">${name}</a> by <a href="${encodeURI(`http://www.last.fm/music/${artist}`)}">${artist}</a>. The following tracks have been found on ${foundOn} and will be scrobbled:\n\n${album.tracks
+      .map(track => track.name).join('\n')}${foundOn === 'Discogs.com' ? 
+        `\n\nResults: 1 of ${discogsResults.length - 1}` : ''}`, 
+      Extra.HTML().webPreview(false).markup(inlineKeyboard)
     );
   } catch (e) {
     error(ctx, e);
