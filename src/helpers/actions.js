@@ -114,3 +114,28 @@ export async function searchFromLastfmAndAnswerInlineQuery(ctx) {
 
   ctx.answerInlineQuery(inlineResults);
 }
+
+export async function recentTracks(ctx) {
+  let user = await findUserById(ctx.from.id),
+    res = await axios(`${config.lastfm.url}user.getrecenttracks&user=${user.account}&limit=15&api_key=${config.lastfm.key}&format=json`),
+    tracks = res.data.recenttracks.track
+      .filter(track => {
+        if (track['@attr']) {
+          return !track['@attr'].nowplaying;
+        } else {
+          return true;
+        }
+      })
+      .map(track => {
+        return {
+          artist: track.artist['#text'],
+          name: track.name,
+          album: track.album['#text'],
+          url: track.url
+        }
+      });
+
+  ctx.reply(`Here are the very last 15 scrobbled tracks from your account:\n\n${(tracks.map(track => `<a href="${encodeURI(`http://www.last.fm/music/${track.artist}`)}">${track.artist}</a> — <a href="${track.url}">${track.name}</a>`)
+    .join('\n'))}`,
+    Extra.HTML().webPreview(false));
+} 

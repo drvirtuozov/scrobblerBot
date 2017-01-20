@@ -3,7 +3,7 @@ import TelegrafFlow from 'telegraf-flow';
 import Promise from 'bluebird';
 import axios from 'axios';
 import { sendToAdmin } from './helpers/utils';
-import { whoami, help, searchFromLastfmAndAnswerInlineQuery } from './helpers/actions';
+import { whoami, help, searchFromLastfmAndAnswerInlineQuery, recentTracks } from './helpers/actions';
 import { scrobbleSong } from './helpers/scrobble';
 import { test } from './helpers/dbmanager';
 import config from './config';
@@ -77,8 +77,8 @@ flow.command('whoami', async ctx => {
 });
 
 flow.command('test', test);
-
 flow.command('help', help);
+flow.command('recent', recentTracks);
 
 /*bot.on('text', async ctx => {
   let yes = await isUserAuthorized(ctx.from.id);
