@@ -21,38 +21,6 @@ searchAlbumScene.enter(async ctx => {
   ]).extra());
 });
 
-searchAlbumScene.on('inline_query', async ctx => {
-  try {
-    if (!ctx.inlineQuery.query) return ctx.reply('Type your query below...');
-    
-    let res = await axios(encodeURI(`${config.lastfm.url}album.search&album=${query.query}&api_key=${config.lastfm.key}&format=json`)),
-      albums = res.data.results.albummatches.album;
-        
-    let results = albums
-      .filter(album => album.name !== '(null)')
-      .map((album, i) => {
-        let photo_url = album.image[2]['#text'] || 'http://img2-ak.lst.fm/i/u/174s/c6f59c1e5e7240a4c0d427abd71f3dbb.png';
-        
-        return {
-          type: 'article',
-          id: String(i),
-          thumb_url: photo_url,
-          photo_width: 174,
-          photo_height: 174,
-          title: album.name,
-          description: album.artist,
-          input_message_content: {
-            message_text: `${album.artist}\n${album.name}`
-          }
-        };
-    });
-
-    ctx.answerInlineQuery(results);
-  } catch (e) {
-    error(ctx, e);
-  }
-});
-
 searchAlbumScene.on('text', async ctx => {
   try {
     let parsedAlbum = ctx.message.text.split('\n'),

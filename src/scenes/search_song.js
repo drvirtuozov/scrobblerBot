@@ -17,36 +17,6 @@ searchSongScene.enter(async ctx => {
   ]).extra());
 });
 
-searchSongScene.on('inline_query', async ctx => {
-  if (!ctx.inlineQuery.query) return ctx.reply('Type your query below...');
-  
-  try {
-    let res = await axios(`${config.lastfm.url}track.search&track=${encodeURI(ctx.inlineQuery.query)}&api_key=${config.lastfm.key}&format=json`),
-      tracks = res.data.results.trackmatches.track;
-
-    let results = tracks  
-      .map((track, i) => {
-        let photo_url = track.image[2]['#text'] || 'http://img2-ak.lst.fm/i/u/174s/c6f59c1e5e7240a4c0d427abd71f3dbb.png';
-        
-        return {
-          type: 'article',
-          id: String(i),
-          thumb_url: photo_url,
-          photo_width: 174,
-          photo_height: 174,
-          title: track.name,
-          description: `${track.artist}`,
-          input_message_content: {
-            message_text: `${track.artist}\n${track.name}`
-          }
-        };
-      });
-  } catch (e) {
-    console.log('SEARCH SONG EEERRROR', e);
-    //error(ctx, e);
-  }
-});
-
 searchSongScene.on('text', async ctx => {
   try {
     let parsedTrack = ctx.message.text.split('\n');

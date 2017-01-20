@@ -1,7 +1,9 @@
 import Bot from 'telegraf';
 import TelegrafFlow from 'telegraf-flow';
+import Promise from 'bluebird';
+import axios from 'axios';
 import { sendToAdmin } from './helpers/utils';
-import { whoami, help } from './helpers/actions';
+import { whoami, help, searchFromLastfmAndAnswerInlineQuery } from './helpers/actions';
 import { scrobbleSong } from './helpers/scrobble';
 import { test } from './helpers/dbmanager';
 import config from './config';
@@ -20,6 +22,8 @@ import { findOrCreateUserById, isUserAuthorized } from './helpers/dbmanager';
 
 const flow = new TelegrafFlow();
 const bot = new Bot(config.token);
+
+bot.on('inline_query', searchFromLastfmAndAnswerInlineQuery);
 
 flow.command('start', async ctx => {
   let user = await findOrCreateUserById(ctx.from.id);
