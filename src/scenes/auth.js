@@ -3,7 +3,7 @@ import { Markup, Extra } from 'telegraf';
 import config from '../config';
 import axios from 'axios';
 import { findUserById, findUserByIdAndUpdate } from '../helpers/dbmanager';
-import { md5, getRandomFavSong } from '../helpers/utils';
+import { md5, getRandomFavSong, error } from '../helpers/utils';
 
 
 const authScene = new Scene('auth');
@@ -19,8 +19,7 @@ authScene.enter(async ctx => {
       ]).extra());
     await findUserByIdAndUpdate(ctx.from.id, { token });
   } catch (e) {
-    console.log('AUTH ERROR!!!', e)
-    //error(message, err);
+    error(ctx, e);
   }
 });
 
@@ -47,8 +46,7 @@ authScene.on('callback_query', async ctx => {
       ctx.flow.leave();
     }
   } catch (e) {
-    console.log('AUTH ERROR!!!', e)
-    //return error(query, err);
+    error(ctx, e);
   }
 });
 

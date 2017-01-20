@@ -1,8 +1,6 @@
 import { Markup } from 'telegraf';
 import { Scene } from 'telegraf-flow';
-import { 
-  scrobbleAlbum, successfulScrobble, unsuccessfulScrobble
-} from '../helpers/scrobble';
+import { scrobbleAlbum, successfulScrobble } from '../helpers/scrobble';
 import { findUserById, findUserByIdAndUpdate } from '../helpers/dbmanager';
 
 
@@ -17,13 +15,13 @@ editAlbumScene.enter(async ctx => {
 
 editAlbumScene.on('text', async ctx => {
   try {
-    let tracks = message.text.split('\n').map(name => ({ name }));
+    let tracks = ctx.message.text.split('\n').map(name => ({ name }));
     
     await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks });
-    await scrobbleAlbum(message);
-    successfulScrobble(message);
+    await scrobbleAlbum(ctx);
+    successfulScrobble(ctx);
   } catch (e) {
-    unsuccessfulScrobble(ctx, e);
+    error(ctx, e);
   }
 });
 

@@ -1,8 +1,6 @@
 import { Markup } from 'telegraf';
 import { Scene } from 'telegraf-flow';
-import { 
-  scrobbleAlbum, successfulScrobble, unsuccessfulScrobble
-} from '../helpers/scrobble';
+import { scrobbleAlbum, successfulScrobble } from '../helpers/scrobble';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 
 
@@ -23,9 +21,9 @@ setTracksScene.on('text', async ctx => {
     
     await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks });
     await scrobbleAlbum(ctx);
-    await successfulScrobble(message);
+    successfulScrobble(ctx);
   } catch (e) {
-    unsuccessfulScrobble(ctx, e);
+    error(ctx, e);
   }
 });
 

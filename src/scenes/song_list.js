@@ -1,8 +1,6 @@
 import { Markup } from 'telegraf';
 import { Scene } from 'telegraf-flow';
-import { 
-  scrobbleSongs, successfulScrobble, unsuccessfulScrobble
-} from '../helpers/scrobble';
+import { scrobbleSongs, successfulScrobble } from '../helpers/scrobble';
 import { findUserById } from '../helpers/dbmanager';
 
 
@@ -54,7 +52,7 @@ songListScene.on('text', async ctx => {
     
     successfulScrobble(ctx);
   } catch (e) {
-    unsuccessfulScrobble(ctx, e);
+    error(ctx, e);
   }
 });
 

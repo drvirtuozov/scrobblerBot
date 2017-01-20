@@ -4,9 +4,7 @@ import axios from 'axios';
 import config from '../config';
 import { error } from '../helpers/utils';
 import { nextAlbum } from '../helpers/actions';
-import { 
-  scrobbleAlbum, successfulScrobble, unsuccessfulScrobble
-} from '../helpers/scrobble';
+import { scrobbleAlbum, successfulScrobble } from '../helpers/scrobble';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager'; 
 import toTitleCase from 'to-title-case';
 
@@ -102,7 +100,7 @@ searchAlbumScene.on('callback_query', async ctx => {
         await scrobbleAlbum(ctx);
         successfulScrobble(ctx);
       } catch (e) {
-        unsuccessfulScrobble(ctx, e);
+        error(ctx, e);
       }
 
       break;

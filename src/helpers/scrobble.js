@@ -1,13 +1,13 @@
 import axios from 'axios';
 import bot from '../bot';
-import { getRandomFavSong, md5, utf8 } from './utils';
+import { getRandomFavSong, md5, utf8, error } from './utils';
 import config from '../config';
 import { findUserById, findUserByIdAndUpdate } from './dbmanager';
 
 
 export async function scrobbleSong(ctx, isAlbum) {
   try {
-    if (ctx.message) {
+    if (ctx.message.text) {
       let track = ctx.message.text.split('\n'),
         song = getRandomFavSong();
       
@@ -30,7 +30,7 @@ export async function scrobbleSong(ctx, isAlbum) {
     } else {
       isAlbum = typeof isAlbum === 'undefined' ? true : isAlbum;
       
-      let user = await findUserById(ctx.from.id, 'track')
+      let user = await findUserById(ctx.from.id);
 
       if (Date.now() - user.last_scrobble <= 30000) {
         ctx.reply('You can\'t scrobble songs more than once in 30 seconds. If you need to scrobble a list of songs you can do that via /scrobble command.');
@@ -46,7 +46,7 @@ export async function scrobbleSong(ctx, isAlbum) {
       }
     }
   } catch (e) {
-    unsuccessfulScrobble(ctx, e);
+    error(ctx, e);
   }
 }
 
@@ -101,18 +101,4 @@ export async function successfulScrobble(ctx, text) {
   }
   
   ctx.flow.leave(); // strange behavior
-}
-
-export function unsuccessfulScrobble(ctx, err) {
-  if (err) {
-    console.log(err.data || err);
-    err.data = err.data || {};
-  
-    if (err.data.error === 9) {
-      ctx.flow.enter('auth');
-    } else {
-      ctx.reply('Oops, something went wrong. Please try again later. If it goes on constantly please let us know via /report command.');
-      ctx.flow.leave();
-    }
-  }
 }

@@ -13,9 +13,9 @@ editTrackAlbumScene.enter(ctx => {
 editTrackAlbumScene.on('text', async ctx => {
   try {
     let album = ctx.message.text,
-    user = await findUserByIdAndUpdate(ctx.from.id, { 'track.album': album });
+      user = await findUserByIdAndUpdate(ctx.from.id, { 'track.album': album });
 
-    delete ctx.message;
+    delete ctx.update.message.text;
     scrobbleSong(ctx);  
   } catch (e) {
     error(ctx, e);

@@ -17,28 +17,21 @@ export function getRandomFavSong() {
   return songs[index];
 }
 
-export async function error(ctx, err) {
-  if (err) {
-    if (ctx.callbackQuery) {
-      if (err.data) {
-        if (err.data.error === 14 || err.data.error === 4) {
-          await ctx.editMessageText('Access has not been granted.')
-          return ctx.flow.enter('auth');
-        }
-      }
-      
-      console.log(err.data || err);
-      return ctx.reply('Oops, something went wrong. Please try again later.');  
-    }
-    
-    console.log(err.data || err);
-    ctx.reply('Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command.');
-  }
-}
+export async function error(ctx, e) {
+  console.log('ERROR!!!', e);
 
-/*export function utf8(text: string): string {
-  return unescape(decodeURIComponent(text));
-}*/
+  if (e.response && e.response.data) {
+    let error = e.response.data.error;
+
+    if (error === 14 || error === 4 || error === 9) {
+      await ctx.editMessageText('Access has not been granted. Please re-authenticate.')
+      return ctx.flow.enter('auth');
+    }
+  }
+  
+  await ctx.reply('Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command.');
+  ctx.flow.leave();
+}
 
 export function utf8(text) {
   return decodeURI(decodeURIComponent(text));
