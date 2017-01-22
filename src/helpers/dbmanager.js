@@ -20,8 +20,8 @@ export function findUserByIdAndUpdate(id, updates, opts) {
   return User.findByIdAndUpdate(id, updates, opts);
 }
 
-export async function isUserAuthorized(id) {
-  let user = await User.findById(id);
+export async function isUserAuthorized(ctx) {
+  let user = await User.findById(ctx.from.id);
   user = user || {};
   return user.key ? true : false;
 }

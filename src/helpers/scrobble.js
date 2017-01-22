@@ -1,5 +1,4 @@
 import axios from 'axios';
-import bot from '../bot';
 import { getRandomFavSong, md5, utf8, error } from './utils';
 import config from '../config';
 import { findUserById, findUserByIdAndUpdate } from './dbmanager';
@@ -19,7 +18,12 @@ export async function scrobbleSong(ctx, isAlbum) {
         if (Date.now() - user.last_scrobble <= 30000) {
           ctx.reply(`You can\'t scrobble songs more than once in 30 seconds. If you need to scrobble a list of songs you can do that via /scrobble command.`);
         } else {
-          let res = await scrobbleSongs([{ artist: track[0], name: track[1], album: track[2] || '', duration: 0 }], user.key);
+          let res = await scrobbleSongs([{ 
+            artist: track[0], 
+            name: track[1], 
+            album: track[2] || '', 
+            duration: 0 
+          }], ctx.message.date, user.key);
 
           if (res.data.scrobbles['@attr'].ingored) 
             return successfulScrobble(ctx, 'Error. Track has been ignored.');
@@ -27,7 +31,7 @@ export async function scrobbleSong(ctx, isAlbum) {
           successfulScrobble(ctx);
         }
       }
-    } else {
+    } else if (ctx.callbackQuery) {
       isAlbum = typeof isAlbum === 'undefined' ? true : isAlbum;
       
       let user = await findUserById(ctx.from.id);
@@ -37,7 +41,12 @@ export async function scrobbleSong(ctx, isAlbum) {
       } else {
         let track = user.track;
       
-        let res = await scrobbleSongs([{ artist: track.artist, name: track.name, album: track.album, duration: 0 }], user.key);
+        let res = await scrobbleSongs([{ 
+          artist: track.artist, 
+          name: track.name, 
+          album: track.album, 
+          duration: 0 
+        }], ctx.callbackQuery.date, user.key);
 
         if (res.data.scrobbles['@attr'].ingored) 
           return successfulScrobble(ctx, 'Error. Track has been ignored.');
@@ -50,8 +59,8 @@ export async function scrobbleSong(ctx, isAlbum) {
   }
 }
 
-export function scrobbleSongs(tracks, key) {
-  let startTimestamp = Math.floor(Date.now() / 1000) - tracks
+export function scrobbleSongs(tracks, timestamp, key) {
+  let startTimestamp = (timestamp || Math.floor(Date.now() / 1000)) - tracks
       .map(track => track.duration)
       .reduce((prev, next) => prev + next),
     names = tracks.map(track => track.name),
@@ -100,5 +109,5 @@ export async function successfulScrobble(ctx, text) {
     await ctx.reply(text ? text : 'Success!');
   }
   
-  ctx.flow.leave(); // strange behavior
+  if (ctx.flow) ctx.flow.leave();
 }
