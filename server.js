@@ -21,11 +21,6 @@ if (config.NODE_ENV === 'production') {
       passphrase: 'test'
     };
 
-  app.post(`/${config.token}`, (req, res, next) => {
-    console.log('request');
-    next();
-  });
-
   https.createServer(sslOptions, app)
     .listen(config.PORT, () => {
       console.log(`Server listening at ${config.IP}:${config.PORT}`);
