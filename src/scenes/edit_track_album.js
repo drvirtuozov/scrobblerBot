@@ -1,5 +1,5 @@
 import { Scene } from 'telegraf-flow';
-import { scrobbleSong } from '../helpers/scrobble';
+import { scrobbleTrack } from '../helpers/scrobbler';
 import { error } from '../helpers/utils';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 
@@ -16,7 +16,7 @@ editTrackAlbumScene.on('text', async ctx => {
       user = await findUserByIdAndUpdate(ctx.from.id, { 'track.album': album });
 
     delete ctx.update.message.text;
-    scrobbleSong(ctx);  
+    scrobbleTrack(ctx);  
   } catch (e) {
     error(ctx, e);
   }

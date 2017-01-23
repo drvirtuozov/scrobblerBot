@@ -3,8 +3,8 @@ import { Scene } from 'telegraf-flow';
 import axios from 'axios';
 import config from '../config';
 import { error } from '../helpers/utils';
-import { nextAlbum } from '../helpers/actions';
-import { scrobbleAlbum, successfulScrobble } from '../helpers/scrobble';
+import { nextAlbum, searchFromLastfmAndAnswerInlineQuery } from '../helpers/actions';
+import { scrobbleAlbum, successfulScrobble } from '../helpers/scrobbler';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager'; 
 import toTitleCase from 'to-title-case';
 
@@ -17,6 +17,10 @@ searchAlbumScene.enter(async ctx => {
       Markup.switchToCurrentChatButton('Search...', ''),
       Markup.callbackButton('Cancel', 'CANCEL')
   ]).extra());
+});
+
+searchAlbumScene.on('inline_query', ctx => {
+  searchFromLastfmAndAnswerInlineQuery(ctx, 'album');
 });
 
 searchAlbumScene.on('text', async ctx => {
@@ -63,7 +67,7 @@ searchAlbumScene.on('text', async ctx => {
         
       foundOn = 'Last.fm';
     } else {
-      ctx.flow.enter('no_info');
+      return ctx.flow.enter('no_album_info');
     }
 
     let user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true }),
@@ -95,16 +99,7 @@ searchAlbumScene.on('text', async ctx => {
 
 searchAlbumScene.on('callback_query', async ctx => {
   switch (ctx.callbackQuery.data) {
-    case 'OK': 
-      try {
-        await scrobbleAlbum(ctx);
-        successfulScrobble(ctx);
-      } catch (e) {
-        error(ctx, e);
-      }
-
-      break;
-
+    case 'OK': scrobbleAlbum(ctx); break;
     case 'EDIT': ctx.flow.enter('edit_album'); break;
     case 'PREV': nextAlbum(ctx, 'PREV'); break;
     case 'NEXT': nextAlbum(ctx, 'NEXT'); break;

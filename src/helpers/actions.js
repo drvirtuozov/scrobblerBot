@@ -70,46 +70,46 @@ export async function nextAlbum(ctx, which) {
   }
 }
 
-export async function searchFromLastfmAndAnswerInlineQuery(ctx) {
-  if (!ctx.inlineQuery.query) 
-    return ctx.answerInlineQuery([{
-      type: 'article',
-      title: 'Type your query below...',
-      id: ctx.inlineQuery.id,
-      input_message_content: {
-        message_text: 'Type your query below...'
-      }
-    }]);
-
-  let query = ctx.inlineQuery.query,
-    results = await Promise.all([
-      axios(`${config.lastfm.url}track.search&track=${encodeURI(query)}&api_key=${config.lastfm.key}&format=json`),
-      axios(encodeURI(`${config.lastfm.url}album.search&album=${query}&api_key=${config.lastfm.key}&format=json`))
-    ]),
-    sum = results[0].data.results.trackmatches.track.slice(0, 5);
-  
-  results[1].data.results.albummatches.album.slice(0, 15).forEach(el => sum.push(el))
-
-  let inlineResults = sum
-    .filter(item => item.name !== '(null)')  
-    .map((item, i) => {
-      let photo_url = item.image[2]['#text'] || 'http://img2-ak.lst.fm/i/u/174s/c6f59c1e5e7240a4c0d427abd71f3dbb.png';
-      
-      return {
+export async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
+  try {
+    if (!ctx.inlineQuery.query) 
+      return ctx.answerInlineQuery([{
         type: 'article',
-        id: String(i),
-        thumb_url: photo_url,
-        photo_width: 174,
-        photo_height: 174,
-        title: item.name,
-        description: `${item.artist}`,
+        title: 'Type your query below...',
+        id: ctx.inlineQuery.id,
         input_message_content: {
-          message_text: `${item.artist}\n${item.name}`
+          message_text: 'Type your query below...'
         }
-      };
-    });
+      }]);
 
-  ctx.answerInlineQuery(inlineResults);
+    let query = ctx.inlineQuery.query,
+      res = await axios(encodeURI(
+        `${config.lastfm.url}${type}.search&${type}=${query}&api_key=${config.lastfm.key}&format=json`
+      )),
+      results = res.data.results[`${type}matches`][`${type}`],
+      inlineResults = results
+        .filter(item => item.name !== '(null)')  
+        .map((item, i) => {
+          let photo_url = item.image[2]['#text'] || 'http://img2-ak.lst.fm/i/u/174s/c6f59c1e5e7240a4c0d427abd71f3dbb.png';
+          
+          return {
+            type: 'article',
+            id: String(i),
+            thumb_url: photo_url,
+            photo_width: 174,
+            photo_height: 174,
+            title: item.name,
+            description: `${item.artist}`,
+            input_message_content: {
+              message_text: `${item.artist}\n${item.name}`
+            }
+          };
+        });
+
+    ctx.answerInlineQuery(inlineResults);
+  } catch (e) {
+    error(ctx, e);
+  }
 }
 
 export async function recentTracks(ctx) {

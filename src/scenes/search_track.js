@@ -2,32 +2,37 @@ import axios from 'axios';
 import { Extra, Markup } from 'telegraf';
 import { Scene } from 'telegraf-flow';
 import config from '../config';
-import { scrobbleSong } from '../helpers/scrobble';
+import { scrobbleTrack } from '../helpers/scrobbler';
 import { error } from '../helpers/utils';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
+import { searchFromLastfmAndAnswerInlineQuery } from '../helpers/actions';
 
 
-const searchSongScene = new Scene('search_song');
+const searchTrackScene = new Scene('search_track');
 
-searchSongScene.enter(async ctx => {
-  await ctx.editMessageText('Ok. In order to start searching a song click the button below. Or you can type song info in this format manually:\n\nArtist\nSong Name\nAlbum Title',
+searchTrackScene.enter(async ctx => {
+  await ctx.editMessageText('Ok. In order to start searching a track click the button below. Or you can type song info in this format manually:\n\nArtist\nTrack Name\nAlbum Title',
     Markup.inlineKeyboard([
       Markup.switchToCurrentChatButton('Search...', ''),
       Markup.callbackButton('Cancel', 'CANCEL')
   ]).extra());
 });
 
-searchSongScene.on('text', async ctx => {
+searchTrackScene.on('inline_query', ctx => {
+  searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
+});
+
+searchTrackScene.on('text', async ctx => {
   try {
     let parsedTrack = ctx.message.text.split('\n');
     
     if (parsedTrack.length > 2) {
-      scrobbleSong(ctx);
+      scrobbleTrack(ctx);
     } else if (parsedTrack.length === 2) {
       let res = await axios(encodeURI(`${config.lastfm.url}track.getInfo&api_key=${config.lastfm.key}&artist=${parsedTrack[0]}&track=${parsedTrack[1]}&format=json`));
       
       if (res.data.error) 
-        return scrobbleSong(message);
+        return scrobbleTrack(message);
       
       let track = res.data.track || {};
         track.album = track.album || {};
@@ -36,10 +41,9 @@ searchSongScene.on('text', async ctx => {
         album = track.album.title || '';
       
       let user = await findUserByIdAndUpdate(ctx.from.id, { track: { name, artist, album }});
-      track = user.track;
           
       if (track.album) {
-        ctx.reply(`Last.fm has additional data about this track:\n\n${track.artist}\n${track.name}\n${track.album}\n\nWould you like to scrobble this track with the new data or leave it as is?`,
+        ctx.reply(`Last.fm has additional data about this track:\n\n${artist}\n${name}\n${album}\n\nWould you like to scrobble this track with the new data or leave it as is?`,
           Extra.webPreview(false).markup(Markup.inlineKeyboard([
             [
               Markup.callbackButton('Scr with new data', 'SCR'),
@@ -63,16 +67,16 @@ searchSongScene.on('text', async ctx => {
   }
 });
 
-searchSongScene.on('callback_query', async ctx => {
+searchTrackScene.on('callback_query', async ctx => {
   switch (ctx.callbackQuery.data) {
-    case 'SCR': scrobbleSong(ctx); break;
-    case 'LEAVE': scrobbleSong(ctx, false); break;
+    case 'SCR': scrobbleTrack(ctx); break;
+    case 'LEAVE': scrobbleTrack(ctx, false); break;
     case 'YES': ctx.flow.enter('edit_track_album'); break;
-    case 'NO': scrobbleSong(ctx, false); break;
+    case 'NO': scrobbleTrack(ctx, false); break;
     case 'CANCEL':
       ctx.editMessageText('Canceled.');
       ctx.flow.leave();
   }
 });
 
-export default searchSongScene;
+export default searchTrackScene;

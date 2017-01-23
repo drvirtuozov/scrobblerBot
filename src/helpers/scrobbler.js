@@ -4,9 +4,9 @@ import config from '../config';
 import { findUserById, findUserByIdAndUpdate } from './dbmanager';
 
 
-export async function scrobbleSong(ctx, isAlbum) {
+export async function scrobbleTrack(ctx, isAlbum = true) {
   try {
-    if (ctx.message.text) {
+    if (ctx.message && ctx.message.text) {
       let track = ctx.message.text.split('\n'),
         song = getRandomFavSong();
       
@@ -15,10 +15,8 @@ export async function scrobbleSong(ctx, isAlbum) {
       } else {
         let user = await findUserById(ctx.from.id);
 
-        if (Date.now() - user.last_scrobble <= 30000) {
-          ctx.reply(`You can\'t scrobble songs more than once in 30 seconds. If you need to scrobble a list of songs you can do that via /scrobble command.`);
-        } else {
-          let res = await scrobbleSongs([{ 
+        if (checkLastScrobble(ctx, user)) {
+          let res = await scrobbleTracks([{ 
             artist: track[0], 
             name: track[1], 
             album: track[2] || '', 
@@ -31,20 +29,16 @@ export async function scrobbleSong(ctx, isAlbum) {
           successfulScrobble(ctx);
         }
       }
-    } else if (ctx.callbackQuery) {
-      isAlbum = typeof isAlbum === 'undefined' ? true : isAlbum;
-      
+    } else {      
       let user = await findUserById(ctx.from.id);
 
-      if (Date.now() - user.last_scrobble <= 30000) {
-        ctx.reply('You can\'t scrobble songs more than once in 30 seconds. If you need to scrobble a list of songs you can do that via /scrobble command.');
-      } else {
+      if (checkLastScrobble(ctx, user)) {
         let track = user.track;
       
-        let res = await scrobbleSongs([{ 
+        let res = await scrobbleTracks([{ 
           artist: track.artist, 
           name: track.name, 
-          album: track.album, 
+          album: isAlbum ? track.album : '', 
           duration: 0 
         }], ctx.callbackQuery.date, user.key);
 
@@ -59,7 +53,16 @@ export async function scrobbleSong(ctx, isAlbum) {
   }
 }
 
-export function scrobbleSongs(tracks, timestamp, key) {
+function checkLastScrobble(ctx, user) {
+  if (Date.now() - user.last_scrobble <= 30000) {
+    ctx.reply('You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that via /scrobble command.');
+    return false;
+  }
+
+  return true;
+}
+
+function scrobbleTracks(tracks, timestamp, key) {
   let startTimestamp = (timestamp || Math.floor(Date.now() / 1000)) - tracks
       .map(track => track.duration)
       .reduce((prev, next) => prev + next),
@@ -80,17 +83,22 @@ export function scrobbleSongs(tracks, timestamp, key) {
 }
 
 export async function scrobbleAlbum(ctx) {
-  let user = await findUserById(ctx.from.id),
-    tracks = user.album.tracks.map(track => {
-      return {
-        name: track.name,
-        artist: user.album.artist,
-        album: user.album.title,
-        duration: track.duration
-      };
-    });
-  
-  return scrobbleSongs(tracks, user.key);
+  try {
+    let user = await findUserById(ctx.from.id),
+      tracks = user.album.tracks.map(track => {
+        return {
+          name: track.name,
+          artist: user.album.artist,
+          album: user.album.title,
+          duration: track.duration
+        };
+      });
+    
+    await scrobbleTracks(tracks, null, user.key);
+    successfulScrobble(ctx);
+  } catch (e) {
+    error(ctx, e);
+  }
 }
 
 export async function successfulScrobble(ctx, text) {
@@ -110,4 +118,47 @@ export async function successfulScrobble(ctx, text) {
   }
   
   if (ctx.flow) ctx.flow.leave();
+}
+
+export async function scrobbleTracklist(ctx) {
+  try {
+    let tracks = ctx.message.text.split('\n')
+      .map(string => {
+        if (string.split('|').length < 2) {
+          return ctx.reply('Please, send me valid data with this syntax:\n\nArtist | Track Name | Album Title');
+        }
+        
+        let track = string.split('|');
+        
+        return {
+          name: track[1],
+          artist: track[0],
+          album: track[2] || '',
+          duration: 300
+        };
+      }),
+      parts = [];
+      
+    while (tracks[0]) {
+      parts.push(tracks.slice(0, 50));
+      tracks = tracks.slice(50);
+    }
+    
+    let user = await findUserById(ctx.from.id),
+      results = await Promise.all(parts.map(part => scrobbleTracks(part, null, user.key))),
+      ignored = [];
+        
+    results.forEach(result => {
+      result.data.scrobbles.scrobble
+        .filter(scrobble => scrobble.ignoredMessage.code === '1')
+        .forEach(scr => ignored.push(scr));
+    });
+    
+    if (ignored.length)
+      return successfulScrobble(ctx, `Success, but...\nThe following tracks have been ignored:\n\n${ignored.map(track => `${track.artist['#text']} | ${track.track['#text']} | ${track.album['#text']}`).join('\n')}`);
+    
+    successfulScrobble(ctx);
+  } catch (e) {
+    error(ctx, e);
+  }
 }

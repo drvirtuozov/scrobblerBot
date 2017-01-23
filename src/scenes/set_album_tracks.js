@@ -1,17 +1,17 @@
 import { Markup } from 'telegraf';
 import { Scene } from 'telegraf-flow';
-import { scrobbleAlbum, successfulScrobble } from '../helpers/scrobble';
+import { scrobbleAlbum } from '../helpers/scrobbler';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 
 
-const setTracksScene = new Scene('set_tracks');
+const setAlbumTracksScene = new Scene('set_album_tracks');
 
-setTracksScene.enter(ctx => {
+setAlbumTracksScene.enter(ctx => {
   ctx.editMessageText('Just send me song names of the album separated by new lines.',
     Markup.inlineKeyboard([ Markup.callbackButton('Cancel', 'CANCEL') ]));
 });
 
-setTracksScene.on('text', async ctx => {
+setAlbumTracksScene.on('text', async ctx => {
   try {
     let tracks = ctx.message.text.split('\n')
       .map(track => ({ name: track }));
@@ -20,14 +20,13 @@ setTracksScene.on('text', async ctx => {
       return ctx.reply('Send me song names separated by new lines.');
     
     await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks });
-    await scrobbleAlbum(ctx);
-    successfulScrobble(ctx);
+    scrobbleAlbum(ctx);
   } catch (e) {
     error(ctx, e);
   }
 });
 
-setTracksScene.on('callback_query', async ctx => {
+setAlbumTracksScene.on('callback_query', async ctx => {
   switch (ctx.callbackQuery.data) {
     case 'CANCEL':
       await ctx.editMessageText('Canceled.');
@@ -35,4 +34,4 @@ setTracksScene.on('callback_query', async ctx => {
   }
 });
 
-export default setTracksScene;
+export default setAlbumTracksScene;

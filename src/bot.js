@@ -1,6 +1,6 @@
 import Bot from 'telegraf';
 import config from './config';
-import { scrobbleSong } from './helpers/scrobble';
+import { scrobbleTrack } from './helpers/scrobbler';
 import { searchFromLastfmAndAnswerInlineQuery } from './helpers/actions';
 import scenes from './middlewares/scenes';
 import auth from './middlewares/auth';
@@ -14,7 +14,9 @@ bot.use(Bot.memorySession({
 
 bot.use(scenes);
 
-bot.on('text', auth, scrobbleSong);
-bot.on('inline_query', searchFromLastfmAndAnswerInlineQuery);
+bot.on('text', auth, scrobbleTrack);
+bot.on('inline_query', ctx => {
+  searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
+});
 
 export default bot;
