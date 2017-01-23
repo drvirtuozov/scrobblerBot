@@ -20,23 +20,25 @@ const vars = [
   'SCROBBLERBOT_DISCOGS_KEY', 'SCROBBLERBOT_DISCOGS_SECRET'
 ];
 
-let undefineds = 0;
+let undefineds = 0,
+  step = 0;
 
-function checkUndefined(obj) {
+function checkUndefineds(obj) {
   let keys = Object.keys(obj);
 
   for (let i = 0; i < keys.length; i++) {
     if (typeof obj[keys[i]] === 'undefined') {
+      if (!step) throw new Error(`Scrobbler bot requires ${keys[i]} env variable.`);
       undefineds++;
     } else if (typeof obj[keys[i]] === 'object') {
-      checkUndefined(obj[keys[i]]);
+      checkUndefineds(obj[keys[i]]);
     } else {
       vars.splice(vars.indexOf(keys[i]), 1);
     }
   }
 }
 
-checkUndefined(config);
+checkUndefineds(config);
 if (undefineds) throw new Error(`Scrobbler bot requires all the environment variables: ${vars.join(', ')}`);
 
 export default config;
