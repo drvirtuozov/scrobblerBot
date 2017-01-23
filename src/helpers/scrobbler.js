@@ -149,9 +149,16 @@ export async function scrobbleTracklist(ctx) {
       ignored = [];
         
     results.forEach(result => {
-      result.data.scrobbles.scrobble
-        .filter(scrobble => scrobble.ignoredMessage.code === '1')
-        .forEach(scr => ignored.push(scr));
+      let scrobbles = result.data.scrobbles.scrobble;
+      
+      if (Array.isArray(scrobbles)) {
+        scrobbles
+          .filter(scrobble => scrobble.ignoredMessage.code === '1')
+          .forEach(scr => ignored.push(scr));
+      } else {
+        if (scrobbles.ignoredMessage.code === '1') 
+          ignored.push(scrobbles);
+      }
     });
     
     if (ignored.length)
