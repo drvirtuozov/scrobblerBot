@@ -97,16 +97,20 @@ searchAlbumScene.on('text', async ctx => {
   }
 });
 
-searchAlbumScene.on('callback_query', async ctx => {
-  switch (ctx.callbackQuery.data) {
-    case 'OK': scrobbleAlbum(ctx); break;
-    case 'EDIT': ctx.flow.enter('edit_album'); break;
-    case 'PREV': nextAlbum(ctx, 'PREV'); break;
-    case 'NEXT': nextAlbum(ctx, 'NEXT'); break;
-    case 'CANCEL': 
-      await ctx.editMessageText('Canceled.');
-      ctx.flow.leave();
-  }
+searchAlbumScene.action('OK', ctx => {
+  scrobbleAlbum(ctx);
+});
+
+searchAlbumScene.action('EDIT', ctx => {
+  ctx.flow.enter('edit_album');
+});
+
+searchAlbumScene.action('PREV', ctx => {
+  nextAlbum(ctx, 'PREV');
+});
+
+searchAlbumScene.action('NEXT', ctx => {
+  nextAlbum(ctx, 'NEXT');
 });
 
 export default searchAlbumScene;

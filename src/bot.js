@@ -15,8 +15,14 @@ bot.use(Bot.memorySession({
 bot.use(scenes);
 
 bot.on('text', auth, scrobbleTrack);
+
 bot.on('inline_query', ctx => {
   searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
+});
+
+bot.action('CANCEL', async ctx => {
+  await ctx.editMessageText('Canceled.');
+  ctx.flow.leave();
 });
 
 export default bot;

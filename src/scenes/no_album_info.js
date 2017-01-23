@@ -13,13 +13,8 @@ noAlbumInfoScene.enter(ctx => {
   );
 });
 
-noAlbumInfoScene.on('callback_query', async ctx => {
-  switch (ctx.callbackQuery.data) {
-    case 'YES': ctx.flow.enter('set_album_tracks'); break;
-    case 'CANCEL':
-      await ctx.editMessageText('Canceled.');
-      ctx.flow.leave();
-  }
+noAlbumInfoScene.action('YES', ctx => {
+  ctx.flow.enter('set_album_tracks');
 });
 
 export default noAlbumInfoScene;

@@ -26,12 +26,4 @@ setAlbumTracksScene.on('text', async ctx => {
   }
 });
 
-setAlbumTracksScene.on('callback_query', async ctx => {
-  switch (ctx.callbackQuery.data) {
-    case 'CANCEL':
-      await ctx.editMessageText('Canceled.');
-      ctx.flow.leave();
-  }
-});
-
 export default setAlbumTracksScene;

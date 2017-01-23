@@ -17,13 +17,4 @@ tracklistScene.on('text', async ctx => {
   scrobbleTracklist(ctx);
 });
 
-tracklistScene.on('callback_query', async ctx => {
-  switch (ctx.callbackQuery.data) {
-    case 'CANCEL': 
-      await ctx.editMessageText('Canceled.'); 
-      ctx.flow.leave(); 
-      break;
-  }
-});
-
 export default tracklistScene;

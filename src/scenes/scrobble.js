@@ -12,15 +12,16 @@ scrobbleScene.enter(ctx => {
   ], [ Markup.callbackButton('Cancel', 'CANCEL') ]]).extra());
 });
 
-scrobbleScene.on('callback_query', async ctx => {
-  switch (ctx.callbackQuery.data) {
-    case 'TRACK': ctx.flow.enter('search_track'); break;
-    case 'LIST': ctx.flow.enter('tracklist'); break;
-    case 'ALBUM': ctx.flow.enter('search_album'); break;
-    case 'CANCEL': 
-      await ctx.editMessageText('Canceled.');
-      ctx.flow.leave();
-  }
+scrobbleScene.action('TRACK', ctx => {
+  ctx.flow.enter('search_track');
+});
+
+scrobbleScene.action('LIST', ctx => {
+  ctx.flow.enter('tracklist');
+});
+
+scrobbleScene.action('ALBUM', ctx => {
+  ctx.flow.enter('search_album');
 });
 
 export default scrobbleScene;

@@ -67,16 +67,20 @@ searchTrackScene.on('text', async ctx => {
   }
 });
 
-searchTrackScene.on('callback_query', async ctx => {
-  switch (ctx.callbackQuery.data) {
-    case 'SCR': scrobbleTrack(ctx); break;
-    case 'LEAVE': scrobbleTrack(ctx, false); break;
-    case 'YES': ctx.flow.enter('edit_track_album'); break;
-    case 'NO': scrobbleTrack(ctx, false); break;
-    case 'CANCEL':
-      ctx.editMessageText('Canceled.');
-      ctx.flow.leave();
-  }
+searchTrackScene.action('SCR', ctx => {
+  scrobbleTrack(ctx);
+});
+
+searchTrackScene.action('LEAVE', ctx => {
+  scrobbleTrack(ctx, false);
+});
+
+searchTrackScene.action('YES', ctx => {
+  ctx.flow.enter('edit_track_album');
+});
+
+searchTrackScene.action('NO', ctx => {
+  scrobbleTrack(ctx, false);
 });
 
 export default searchTrackScene;

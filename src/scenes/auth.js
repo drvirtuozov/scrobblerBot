@@ -23,28 +23,26 @@ authScene.enter(async ctx => {
   }
 });
 
-authScene.on('callback_query', async ctx => {
+authScene.action('ACCESS_GRANTED', async ctx => {
   try {
-    if (ctx.callbackQuery.data === 'ACCESS_GRANTED') {
-      let user = await findUserById(ctx.from.id),
-        token = user.token,
-        sig = md5(`api_key${config.lastfm.key}methodauth.getsessiontoken${token}${config.lastfm.secret}`),
-        song = getRandomFavSong(),
-        res = await axios(`${config.lastfm.url}auth.getsession&format=json&token=${token}&api_key=${config.lastfm.key}&api_sig=${sig}`),
-        username = res.data.session.name;
-              
-      await findUserByIdAndUpdate(ctx.from.id, {
-        account: res.data.session.name, 
-        key: res.data.session.key
-      });
-      
-      await ctx.editMessageText(
-        `Glad to see you, <a href="http://www.last.fm/user/${username}">${username}</a>!\n\nNow you can scrobble your first song. To do it just type artist name, song name and album title separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nType /help for more info.`,
-        Extra.HTML().webPreview(false)
-      );
-      
-      ctx.flow.leave();
-    }
+    let user = await findUserById(ctx.from.id),
+      token = user.token,
+      sig = md5(`api_key${config.lastfm.key}methodauth.getsessiontoken${token}${config.lastfm.secret}`),
+      song = getRandomFavSong(),
+      res = await axios(`${config.lastfm.url}auth.getsession&format=json&token=${token}&api_key=${config.lastfm.key}&api_sig=${sig}`),
+      username = res.data.session.name;
+            
+    await findUserByIdAndUpdate(ctx.from.id, {
+      account: res.data.session.name, 
+      key: res.data.session.key
+    });
+    
+    await ctx.editMessageText(
+      `Glad to see you, <a href="http://www.last.fm/user/${username}">${username}</a>!\n\nNow you can scrobble your first song. To do it just type artist name, song name and album title separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nType /help for more info.`,
+      Extra.HTML().webPreview(false)
+    );
+    
+    ctx.flow.leave();
   } catch (e) {
     error(ctx, e);
   }

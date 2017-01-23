@@ -1,16 +1,16 @@
 import { sendToAdmin } from '../helpers/utils';
 import { Scene } from 'telegraf-flow';
+import { Markup } from 'telegraf';
 
 
 const reportScene = new Scene('report');
 
 reportScene.enter(ctx => {
-  ctx.reply('Ok, I\'m listening. Tell me about a bug... /cancel');
-});
-
-reportScene.command('cancel', async ctx => {
-  await ctx.reply('Canceled.');
-  ctx.flow.leave();
+  ctx.reply('Ok, I\'m listening yo you. Tell me about a bug...', 
+    Markup.inlineKeyboard([
+      Markup.callbackButton('Cancel', 'CANCEL')
+    ]).extra()
+  );
 });
 
 reportScene.on('text', async ctx => {
