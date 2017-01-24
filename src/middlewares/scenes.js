@@ -16,7 +16,10 @@ import auth from './auth';
 
 const flow = new TelegrafFlow();
 
-flow.command('start', start);
+flow.command('start', (ctx, next) => {
+  start(ctx, next);
+});
+
 flow.command('help', help);
 flow.command('whoami', auth, whoami);
 flow.command('recent', auth, recentTracks);

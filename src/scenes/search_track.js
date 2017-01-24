@@ -11,7 +11,7 @@ import { searchFromLastfmAndAnswerInlineQuery } from '../helpers/actions';
 const searchTrackScene = new Scene('search_track');
 
 searchTrackScene.enter(async ctx => {
-  await ctx.editMessageText('Ok. In order to start searching a track click the button below. Or you can type song info in this format manually:\n\nArtist\nTrack Name\nAlbum Title',
+  await ctx.editMessageText('Ok. In order to start searching a track click the button below. Or you can type track info in this format manually:\n\nArtist\nTrack Name\nAlbum Title',
     Markup.inlineKeyboard([
       Markup.switchToCurrentChatButton('Search...', ''),
       Markup.callbackButton('Cancel', 'CANCEL')

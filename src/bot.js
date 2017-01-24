@@ -22,6 +22,10 @@ bot.use(Bot.memorySession({
 
 bot.use(scenes);
 
+bot.hears(/\/\w+/, ctx => {
+  ctx.reply('If you are confused type /help.');
+});
+
 bot.on('text', auth, scrobbleTrack);
 
 bot.on('inline_query', ctx => {

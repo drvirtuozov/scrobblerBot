@@ -1,24 +1,24 @@
 import axios from 'axios';
-import { error } from './utils';
-import { findUserById, findUserByIdAndUpdate } from './dbmanager';
+import { error, sendToAdmin } from './utils';
+import { findUserById, findUserByIdAndUpdate, findOrCreateUserById } from './dbmanager';
 import { Extra, Markup } from 'telegraf';
 import config from '../config';
 
 
-export async function start(ctx) {
+export async function start(ctx, next) {
   let res = await findOrCreateUserById(ctx.from.id);
   
   if (res.created) {
-    await ctx.reply(`Hello, ${ctx.from.first_name}!\n\nThis bot provides you ability to scrobble songs, albums or song lists in text mode. To take advantage of these opportunities you have to grant access to your Last.fm account...`);
+    await ctx.reply(`Hello, ${ctx.from.first_name}!\n\nThis bot provides you ability to scrobble songs, albums or tracklists in text mode. To take advantage of these opportunities you have to grant access to your Last.fm account...`);
     ctx.flow.enter('auth');
     sendToAdmin(`We've got a new user! @${ctx.from.username}`);
   } else {
-    ctx.reply('user already exists');
+    next();
   }
 }
 
 export function help(ctx) {
-  ctx.reply(`To scrobble a single song just type its info in this format:\n\nArtist\nSong Name\nAlbum Title\n\nIf you want to find a song or scrobble either a song list or an album use our guide via /scrobble command.\n\nGrant access or change account - /auth.\n\nIf you have any ideas or improvements for the bot please tell us about them via /wish command.`);
+  ctx.reply(`To scrobble a single track just type its info in this format:\n\nArtist\nTrack Name\nAlbum Title\n\nIf you want to find a song or scrobble either a tracklist or an album use our guide via /scrobble command.\n\nGrant access or change account - /auth.\n\nIf you have any ideas or improvements for the bot please tell us about them via /wish command.`);
 }
 
 export async function whoami(ctx) {
