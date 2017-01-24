@@ -46,16 +46,17 @@ searchTrackScene.on('text', async ctx => {
         ctx.reply(`Last.fm has additional data about this track:\n\n${artist}\n${name}\n${album}\n\nWould you like to scrobble this track with the new data or leave it as is?`,
           Extra.webPreview(false).markup(Markup.inlineKeyboard([
             [
-              Markup.callbackButton('Scr with new data', 'SCR'),
-              Markup.callbackButton('Leave it as is', 'LEAVE')
+              Markup.callbackButton('Scrobble', 'SCR'),
+              Markup.callbackButton('Edit album', 'EDIT_TRACK_ALBUM'),
+              Markup.callbackButton('Leave', 'SCR_WITHOUT_ALBUM')
             ], [ Markup.callbackButton('Cancel', 'CANCEL') ]
           ])
         ));
       } else {
         ctx.reply(`Last.fm has no album data about this track. Would you like to enter album title manually?`,
           Extra.webPreview(false).markup(Markup.inlineKeyboard([
-            Markup.callbackButton('Yes', 'YES'),
-            Markup.callbackButton('No', 'NO')
+            Markup.callbackButton('Yes', 'EDIT_TRACK_ALBUM'),
+            Markup.callbackButton('No', 'SCR_WITHOUT_ALBUM')
           ])
         ));
       }
@@ -71,15 +72,11 @@ searchTrackScene.action('SCR', ctx => {
   scrobbleTrack(ctx);
 });
 
-searchTrackScene.action('LEAVE', ctx => {
-  scrobbleTrack(ctx, false);
-});
-
-searchTrackScene.action('YES', ctx => {
+searchTrackScene.action('EDIT_TRACK_ALBUM', ctx => {
   ctx.flow.enter('edit_track_album');
 });
 
-searchTrackScene.action('NO', ctx => {
+searchTrackScene.action('SCR_WITHOUT_ALBUM', ctx => {
   scrobbleTrack(ctx, false);
 });
 

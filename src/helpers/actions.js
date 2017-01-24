@@ -9,7 +9,7 @@ export async function start(ctx, next) {
   let res = await findOrCreateUserById(ctx.from.id);
   
   if (res.created) {
-    await ctx.reply(`Hello, ${ctx.from.first_name}!\n\nThis bot provides you ability to scrobble songs, albums or tracklists in text mode. To take advantage of these opportunities you have to grant access to your Last.fm account...`);
+    await ctx.reply(`Hello, ${ctx.from.first_name}!\n\nThis bot provides you the ability to scrobble songs, albums or tracklists in text mode. To take advantage of these opportunities you have to grant access to your Last.fm account...`);
     ctx.flow.enter('auth');
     sendToAdmin(`We've got a new user! @${ctx.from.username}`);
   } else {
@@ -18,7 +18,7 @@ export async function start(ctx, next) {
 }
 
 export function help(ctx) {
-  ctx.reply(`To scrobble a single track just type its info in this format:\n\nArtist\nTrack Name\nAlbum Title\n\nIf you want to find a song or scrobble either a tracklist or an album use our guide via /scrobble command.\n\nGrant access or change account - /auth.\n\nIf you have any ideas or improvements for the bot please tell us about them via /wish command.`);
+  ctx.reply(`To scrobble a single track just type its info in this format:\n\nArtist\nTrack Name\nAlbum Title\n\nIf you want to find a song or scrobble either a tracklist or an album use our guide via /scrobble command.\n\nGrant access or change account - /auth\nGet recent scrobbled tracks from your account - /recent\n\nIf you have any ideas or improvements for the bot please tell us about them via /wish command.`);
 }
 
 export async function whoami(ctx) {

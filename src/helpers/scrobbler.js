@@ -40,7 +40,7 @@ export async function scrobbleTrack(ctx, isAlbum = true) {
           name: track.name, 
           album: isAlbum ? track.album : '', 
           duration: 0 
-        }], ctx.callbackQuery.date, user.key);
+        }], null, user.key);
 
         if (res.data.scrobbles['@attr'].ingored) 
           return successfulScrobble(ctx, 'Error. Track has been ignored.');
