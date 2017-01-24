@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import bot from '../bot';
 import songs from '../songs';
+import { Extra } from 'telegraf';
 
 
 export function sendToAdmin(text) {
@@ -19,17 +20,24 @@ export function getRandomFavSong() {
 
 export async function error(ctx, e) {
   console.log('ERROR!!!', e);
-
+  
   if (e.response && e.response.data) {
     let error = e.response.data.error;
 
     if (error === 14 || error === 4 || error === 9) {
-      await ctx.editMessageText('Access has not been granted. Please re-authenticate.')
+      await ctx.telegram.sendMessage(ctx.from.id, 
+        'Access has not been granted. Please re-authenticate.');
       return ctx.flow.enter('auth');
+    } else if (error === 29) {
+      await ctx.telegram.sendMessage(ctx.from.id, 
+        'Unfortunately, Last.fm\'s server restrictions don\'t allow us sending too many requests. Retry after a while.',
+        Extra.webPreview(false));
+      sendToAdmin('Rate limit exceeded - Your IP has made too many requests in a short period.');
     }
   }
   
-  await ctx.reply('Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command.');
+  await ctx.telegram.sendMessage(ctx.from.id,
+    'Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command.');
   ctx.flow.leave();
 }
 

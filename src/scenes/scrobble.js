@@ -7,8 +7,8 @@ const scrobbleScene = new Scene('scrobble');
 scrobbleScene.enter(ctx => {
   ctx.reply('What do you want to scrobble?', Markup.inlineKeyboard([[
     Markup.callbackButton('Track', 'TRACK'),
-    Markup.callbackButton('Tracklist', 'LIST'),
-    Markup.callbackButton('Album', 'ALBUM')
+    Markup.callbackButton('Album', 'ALBUM'),
+    Markup.callbackButton('Tracklist', 'LIST')
   ], [ Markup.callbackButton('Cancel', 'CANCEL') ]]).extra());
 });
 

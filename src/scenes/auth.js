@@ -12,7 +12,7 @@ authScene.enter(async ctx => {
   try {
     let res = await axios(`${config.lastfm.url}auth.gettoken&api_key=${config.lastfm.key}&format=json`),
       token = res.data.token;
-    await ctx.reply('Please click the link below to grant access to your Last.fm account and then click OK button.',
+    await ctx.reply('Please, click the link below to grant access to your Last.fm account and then click OK button.',
       Markup.inlineKeyboard([
         Markup.urlButton('Grant access...', `http://www.last.fm/api/auth?api_key=${config.lastfm.key}&token=${token}`),
         Markup.callbackButton('OK', 'ACCESS_GRANTED')

@@ -18,7 +18,7 @@ export async function start(ctx, next) {
 }
 
 export function help(ctx) {
-  ctx.reply(`To scrobble a single track just type its info in this format:\n\nArtist\nTrack Name\nAlbum Title\n\nIf you want to find a song or scrobble either a tracklist or an album use our guide via /scrobble command.\n\nGrant access or change account - /auth\nGet recent scrobbled tracks from your account - /recent\n\nIf you have any ideas or improvements for the bot please tell us about them via /wish command.`);
+  ctx.reply(`To scrobble a single track just type its info in this format:\n\nArtist\nTrack Name\nAlbum Title\n\nIf you want to scrobble an album or a tracklist use our guide via /scrobble command.\n\nGrant access or change account - /auth\nGet recent scrobbled tracks from your account - /recent\n\nIf you have any ideas or improvements for the bot please tell us about them via /wish command.`);
 }
 
 export async function whoami(ctx) {
