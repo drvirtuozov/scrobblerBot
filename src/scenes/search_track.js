@@ -41,8 +41,8 @@ searchTrackScene.on('text', async ctx => {
         album = track.album.title || '';
       
       let user = await findUserByIdAndUpdate(ctx.from.id, { track: { name, artist, album }});
-          
-      if (track.album) {
+       
+      if (Object.keys(track.album).length) {
         ctx.reply(`Last.fm has additional data about this track:\n\n${artist}\n${name}\n${album}\n\nWould you like to scrobble this track with the new data or leave it as is?`,
           Extra.webPreview(false).markup(Markup.inlineKeyboard([
             [
@@ -56,7 +56,8 @@ searchTrackScene.on('text', async ctx => {
         ctx.reply(`Last.fm has no album data about this track. Would you like to enter album title manually?`,
           Extra.webPreview(false).markup(Markup.inlineKeyboard([
             Markup.callbackButton('Yes', 'EDIT_TRACK_ALBUM'),
-            Markup.callbackButton('No', 'SCR_WITHOUT_ALBUM')
+            Markup.callbackButton('No, scrobble', 'SCR_WITHOUT_ALBUM'),
+            Markup.callbackButton('Cancel', 'CANCEL')
           ])
         ));
       }
