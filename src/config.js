@@ -12,6 +12,7 @@ const config = {
   NODE_ENV: process.env.NODE_ENV,
   IP: process.env.IP,
   PORT: process.env.PORT,
+  SCROBBLERBOT_HOST: process.env.SCROBBLERBOT_HOST,
   MONGODB: process.env.MONGODB
 };
 
