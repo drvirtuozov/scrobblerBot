@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 
 const userSchema = mongoose.Schema({
@@ -15,22 +15,22 @@ const userSchema = mongoose.Schema({
     artist: String,
     tracks: [{
       name: String,
-      duration: { 
-        type: Number, 
-        default: 300, 
-        set: function (duration) { 
-          duration = duration || 300;
-          return duration < 30 ? 30 : duration; 
-        }
-      }
-    }]
+      duration: {
+        type: Number,
+        default: 300,
+        set(duration) {
+          const dur = duration || 300;
+          return dur < 30 ? 30 : dur;
+        },
+      },
+    }],
   },
   track: {
     name: String,
     artist: String,
-    album: String
+    album: String,
   },
-  discogs_results: Array
+  discogs_results: Array,
 }, { collection: 'scrobbler-users' });
 
-export default mongoose.model('User', userSchema);
+module.exports = mongoose.model('User', userSchema);

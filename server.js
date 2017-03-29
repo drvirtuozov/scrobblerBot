@@ -1,34 +1,20 @@
-import express from 'express';
-import config from './src/config';
-import bot from './src/bot';
-import db from './src/db';
-import { sendToAdmin } from './src/helpers/utils';
+const fs = require('fs');
+const { NODE_ENV, PORT, SCROBBLERBOT_TOKEN, NOW_LOGS_SECRET } = require('./config');
+const bot = require('./src/bot');
+const db = require('./src/db');
+const nowLogs = require('now-logs');
 
 
-const app = express();
+if (NODE_ENV === 'production') {
+  nowLogs(NOW_LOGS_SECRET);
+  bot.startWebhook(`/${SCROBBLERBOT_TOKEN}`, null, PORT);
+} else if (NODE_ENV === 'development') {
+  const sslOptions = {
+    key: fs.readFileSync('key.key'),
+    cert: fs.readFileSync('cert.pem'),
+  };
 
-app.use(bot.webhookCallback(`/${config.token}`));
-
-if (config.NODE_ENV === 'production') {
-  bot.setWebhook(`${config.SCROBBLERBOT_HOST}/${config.token}`)
-    .then(() => {
-      sendToAdmin(`Webhook was set on ${config.SCROBBLERBOT_HOST}`);
-    });
-
-  app.listen(config.PORT, () => {
-    console.log(`Server listening at ${config.IP}:${config.PORT}`);
-  });
-} else if (config.NODE_ENV === 'development') {
-  const https = require('https'),
-    fs = require('fs'),
-    sslOptions = {
-      key: fs.readFileSync('key.key'),
-      cert: fs.readFileSync('cert.pem'),
-      passphrase: 'test'
-    };
-
-  https.createServer(sslOptions, app)
-    .listen(config.PORT, () => {
-      console.log(`Server listening at ${config.IP}:${config.PORT}`);
-    });
+  bot.startWebhook(`/${SCROBBLERBOT_TOKEN}`, sslOptions, PORT);
 }
+
+console.log(`Server is listening to localhost:${PORT}`);

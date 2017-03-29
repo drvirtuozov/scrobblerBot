@@ -1,8 +1,9 @@
-import { branch } from 'telegraf';
-import { isUserAuthorized } from '../helpers/dbmanager';
+const { branch } = require('telegraf');
+const { isUserAuthorized } = require('../helpers/dbmanager');
 
-export default branch(isUserAuthorized, (ctx, next) => {
+
+module.exports = branch(isUserAuthorized, (ctx, next) => {
   next();
-}, ctx => {
+}, (ctx) => {
   ctx.flow.enter('auth');
 });

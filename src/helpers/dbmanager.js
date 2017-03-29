@@ -1,27 +1,34 @@
-import User from '../models/user';
+const User = require('../models/user');
 
 
-export async function findOrCreateUserById(id) {
+async function findOrCreateUserById(id) {
   let user = await User.findById(id);
-  
+
   if (user) {
     return { user, created: false };
-  } else {
-    user = await User.create({ _id: id });
-    return { user, created: true };
   }
+
+  user = await User.create({ _id: id });
+  return { user, created: true };
 }
 
-export function findUserById(id, query) {
+function findUserById(id, query) {
   return User.findById(id, query);
 }
 
-export function findUserByIdAndUpdate(id, updates, opts) {
+function findUserByIdAndUpdate(id, updates, opts) {
   return User.findByIdAndUpdate(id, updates, opts);
 }
 
-export async function isUserAuthorized(ctx) {
+async function isUserAuthorized(ctx) {
   let user = await User.findById(ctx.from.id);
   user = user || {};
   return user.key ? true : false;
 }
+
+module.exports = {
+  findOrCreateUserById,
+  findUserById,
+  findUserByIdAndUpdate,
+  isUserAuthorized,
+};

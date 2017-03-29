@@ -1,17 +1,17 @@
-import TelegrafFlow from 'telegraf-flow';
-import reportScene from '../scenes/report';
-import wishScene from '../scenes/wish';
-import authScene from '../scenes/auth';
-import scrobbleScene from '../scenes/scrobble';
-import searchTrackScene from '../scenes/search_track';
-import tracklistScene from '../scenes/tracklist';
-import searchAlbumScene from '../scenes/search_album';
-import noAlbumInfoScene from '../scenes/no_album_info';
-import editAlbumScene from '../scenes/edit_album';
-import setAlbumTracksScene from '../scenes/set_album_tracks';
-import editTrackAlbumScene from '../scenes/edit_track_album';
-import { start, whoami, help, recentTracks } from '../helpers/actions';
-import auth from './auth';
+const TelegrafFlow = require('telegraf-flow');
+const reportScene = require('../scenes/report');
+const wishScene = require('../scenes/wish');
+const authScene = require('../scenes/auth');
+const scrobbleScene = require('../scenes/scrobble');
+const searchTrackScene = require('../scenes/searchTrack');
+const tracklistScene = require('../scenes/tracklist');
+const searchAlbumScene = require('../scenes/searchAlbum');
+const noAlbumInfoScene = require('../scenes/noAlbumInfo');
+const editAlbumScene = require('../scenes/editAlbum');
+const setAlbumTracksScene = require('../scenes/setAlbumTracks');
+const editTrackAlbumScene = require('../scenes/editTrackAlbum');
+const { start, whoami, help, recentTracks } = require('../helpers/actions');
+const auth = require('./auth');
 
 
 const flow = new TelegrafFlow();
@@ -24,19 +24,19 @@ flow.command('help', help);
 flow.command('whoami', auth, whoami);
 flow.command('recent', auth, recentTracks);
 
-flow.command('auth', ctx => {
+flow.command('auth', (ctx) => {
   ctx.flow.enter('auth');
 });
 
-flow.command('scrobble', auth, ctx => {
+flow.command('scrobble', auth, (ctx) => {
   ctx.flow.enter('scrobble');
 });
 
-flow.command('wish', ctx => {
+flow.command('wish', (ctx) => {
   ctx.flow.enter('wish');
 });
 
-flow.command('report', ctx => {
+flow.command('report', (ctx) => {
   ctx.flow.enter('report');
 });
 
@@ -52,4 +52,4 @@ flow.register(editAlbumScene);
 flow.register(setAlbumTracksScene);
 flow.register(editTrackAlbumScene);
 
-export default flow.middleware();
+module.exports = flow.middleware();
