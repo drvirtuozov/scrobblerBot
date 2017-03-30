@@ -18,7 +18,7 @@ authScene.enter(async (ctx) => {
         Markup.urlButton('Grant access...', `http://www.last.fm/api/auth?api_key=${LASTFM_KEY}&token=${token}`),
         Markup.callbackButton('OK', 'ACCESS_GRANTED'),
       ]).extra());
-    await findUserByIdAndUpdate(ctx.from.id, { token });
+    await findUserByIdAndUpdate(ctx.from.id, { token }, { upsert: true });
   } catch (e) {
     error(ctx, e);
   }

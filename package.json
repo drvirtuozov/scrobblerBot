@@ -1,7 +1,7 @@
 {
   "name": "scrobblerbot",
   "version": "1.0.0",
-  "description": "An unofficial Last.fm Scrobbler for Telegram.",
+  "description": "An unofficial Last.fm Scrobbler for Telegram",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
