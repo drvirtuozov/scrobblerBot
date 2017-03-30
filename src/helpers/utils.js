@@ -1,13 +1,12 @@
 const { Extra } = require('telegraf');
 const crypto = require('crypto');
-const bot = require('../bot');
 const songs = require('../songs');
 const { findUserByIdAndUpdate } = require('./dbmanager');
 const { ADMIN_ID } = require('../../config');
 
 
-function sendToAdmin(text) {
-  return bot.telegram.sendMessage(ADMIN_ID, text);
+function sendToAdmin(ctx, text) {
+  return ctx.telegram.sendMessage(ADMIN_ID, text);
 }
 
 function md5(text) {
@@ -27,18 +26,18 @@ async function error(ctx, e) {
 
     if (err === 14 || err === 4 || err === 9) {
       await ctx.telegram.sendMessage(ctx.from.id,
-        'Access has not been granted. Please re-authenticate.');
+        'Access has not been granted. Please re-authenticate');
       return ctx.flow.enter('auth');
     } else if (err === 29) {
       await ctx.telegram.sendMessage(ctx.from.id,
-        'Unfortunately, Last.fm\'s server restrictions don\'t allow us sending too many requests. Retry after a while.',
+        'Unfortunately, Last.fm\'s server restrictions don\'t allow us sending too many requests. Retry after a while',
         Extra.webPreview(false));
-      return sendToAdmin('Rate limit exceeded - Your IP has made too many requests in a short period.');
+      return sendToAdmin('Rate limit exceeded - Your IP has made too many requests in a short period');
     }
   }
 
   await ctx.telegram.sendMessage(ctx.from.id,
-    'Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command.');
+    'Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command');
   return ctx.flow.leave();
 }
 

@@ -10,7 +10,7 @@ const authScene = new Scene('auth');
 
 authScene.enter(async (ctx) => {
   try {
-    const res = await axios(`${LASTFM_KEY}?method=auth.gettoken&api_key=${LASTFM_KEY}&format=json`);
+    const res = await axios(`${LASTFM_URL}?method=auth.gettoken&api_key=${LASTFM_KEY}&format=json`);
     const token = res.data.token;
 
     await ctx.reply('Please, click the link below to grant access to your Last.fm account and then click OK button.',

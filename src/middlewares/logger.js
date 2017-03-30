@@ -18,9 +18,10 @@ module.exports = (ctx, next) => {
 
     case 'inline_query':
       content = ctx.inlineQuery.query;
+      break;
   }
 
-  const text = `${ctx.me}:${username ? ` [${username}]` : ''} ${firstName + (lastName ? ` ${lastName}` : '')} (${id}): <${ctx.updateSubType || ctx.updateType}> ${content.replace(/\n/g, ' ')}`;
+  const text = `${ctx.me ? `${ctx.me} => ` : ''}${username ? `[${username}]` : ''} ${firstName + (lastName ? ` ${lastName}` : '')} (${id}): <${ctx.updateSubType || ctx.updateType}> ${content.replace(/\n/g, ' ')}`;
   console.log(text.length > 200 ? `${text.slice(0, 200)}...` : text);
   next();
 };
