@@ -23,4 +23,5 @@ module.exports = {
   DISCOGS_KEY: process.env.DISCOGS_KEY,
   DISCOGS_SECRET: process.env.DISCOGS_SECRET,
   ADMIN_ID: process.env.ADMIN_ID,
+  NOW_LOGS_SECRET: process.env.NOW_LOGS_SECRET,
 };
