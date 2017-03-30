@@ -3,7 +3,7 @@ const { scrobbleTrack } = require('./helpers/scrobbler');
 const { searchFromLastfmAndAnswerInlineQuery } = require('./helpers/actions');
 const scenes = require('./middlewares/scenes');
 const auth = require('./middlewares/auth');
-const logger = require('./middlewares/logger');
+const logger = require('telegraf-logger');
 const { SCROBBLERBOT_TOKEN } = require('../config');
 
 
@@ -14,7 +14,7 @@ bot.telegram.getMe()
     bot.options.username = data.username;
   });
 
-bot.use(logger);
+bot.use(logger());
 
 bot.use(Bot.memorySession({
   getSessionKey: ctx => ctx.from.id,
