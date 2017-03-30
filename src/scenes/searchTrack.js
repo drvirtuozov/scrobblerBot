@@ -11,15 +11,19 @@ const { searchFromLastfmAndAnswerInlineQuery } = require('../helpers/actions');
 const searchTrackScene = new Scene('search_track');
 
 searchTrackScene.enter((ctx) => {
-  ctx.editMessageText('Ok. In order to start searching a track click the button below. Or you can type track info in this format manually:\n\nArtist\nTrack Name\nAlbum Title',
+  ctx.editMessageText('OK. In order to start searching a track click the button below. Or you can type track info in this format manually:\n\nArtist\nTrack Name\nAlbum Title',
     Markup.inlineKeyboard([
       Markup.switchToCurrentChatButton('Search...', ''),
       Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
 });
 
-searchTrackScene.on('inline_query', (ctx) => {
-  searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
+searchTrackScene.on('inline_query', async (ctx) => {
+  try {
+    await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
+  } catch (e) {
+    error(ctx, e);
+  }
 });
 
 searchTrackScene.on('text', async (ctx) => {
@@ -46,8 +50,8 @@ searchTrackScene.on('text', async (ctx) => {
           Extra.webPreview(false).markup(Markup.inlineKeyboard([
             [
               Markup.callbackButton('Scrobble', 'SCR'),
-              Markup.callbackButton('Edit album', 'EDIT_TRACK_ALBUM'),
               Markup.callbackButton('Leave', 'SCR_WITHOUT_ALBUM'),
+              Markup.callbackButton('Edit album', 'EDIT_TRACK_ALBUM'),
             ], [
               Markup.callbackButton('Cancel', 'CANCEL'),
             ],
@@ -68,16 +72,24 @@ searchTrackScene.on('text', async (ctx) => {
   }
 });
 
-searchTrackScene.action('SCR', (ctx) => {
-  scrobbleTrack(ctx);
+searchTrackScene.action('SCR', async (ctx) => {
+  try {
+    await scrobbleTrack(ctx);
+  } catch (e) {
+    error(ctx, e);
+  }
 });
 
 searchTrackScene.action('EDIT_TRACK_ALBUM', (ctx) => {
   ctx.flow.enter('edit_track_album');
 });
 
-searchTrackScene.action('SCR_WITHOUT_ALBUM', (ctx) => {
-  scrobbleTrack(ctx, false);
+searchTrackScene.action('SCR_WITHOUT_ALBUM', async (ctx) => {
+  try {
+    await scrobbleTrack(ctx, false);
+  } catch (e) {
+    error(ctx, e);
+  }
 });
 
 module.exports = searchTrackScene;

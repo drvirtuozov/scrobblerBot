@@ -23,12 +23,14 @@ function scrobbleTracks(tracks, timestamp, key) {
 }
 
 async function scrobbleTrack(ctx, isAlbum = true) {
+  const cantScrobbleText = 'You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that via /scrobble command. Please, wait and try again';
+
   if (ctx.message && ctx.message.text) {
     const track = ctx.message.text.split('\n');
     const song = getRandomFavSong();
 
     if (track.length < 2 || track.length > 3) {
-      return ctx.reply(`Please, send me valid data separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nAlbum title is an optional parameter. Type /help for more info.`);
+      return ctx.reply(`Please, send me valid data separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nAlbum title is an optional parameter. Type /help for more info`);
     }
 
     const user = await findUserById(ctx.from.id);
@@ -42,13 +44,13 @@ async function scrobbleTrack(ctx, isAlbum = true) {
       }], ctx.message.date, user.key);
 
       if (res.data.scrobbles['@attr'].ingored) {
-        return successfulScrobble(ctx, 'Error. Track has been ignored.');
+        return successfulScrobble(ctx, 'Error. Track has been ignored');
       }
 
       return successfulScrobble(ctx);
     }
 
-    return ctx.reply('You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that via /scrobble command.');
+    return ctx.reply(cantScrobbleText);
   }
 
   const user = await findUserById(ctx.from.id);
@@ -63,13 +65,17 @@ async function scrobbleTrack(ctx, isAlbum = true) {
     }], null, user.key);
 
     if (res.data.scrobbles['@attr'].ingored) {
-      return successfulScrobble(ctx, 'Error. Track has been ignored.');
+      return successfulScrobble(ctx, 'Error. Track has been ignored');
     }
 
     return successfulScrobble(ctx);
   }
 
-  return ctx.reply('You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that via /scrobble command.');
+  if (ctx.callbackQuery) {
+    return ctx.answerCallbackQuery(cantScrobbleText, undefined, true);
+  }
+
+  return ctx.reply(cantScrobbleText);
 }
 
 async function scrobbleAlbum(ctx) {

@@ -12,15 +12,19 @@ const toTitleCase = require('to-title-case');
 const searchAlbumScene = new Scene('search_album');
 
 searchAlbumScene.enter((ctx) => {
-  ctx.editMessageText('Ok. In order to start searching an album click the button below. Or you can type album info in this format manually:\n\nArtist\nAlbum Title',
+  ctx.editMessageText('OK. In order to start searching an album click the button below. Or you can type album info in this format manually:\n\nArtist\nAlbum Title',
     Markup.inlineKeyboard([
       Markup.switchToCurrentChatButton('Search...', ''),
       Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
 });
 
-searchAlbumScene.on('inline_query', (ctx) => {
-  searchFromLastfmAndAnswerInlineQuery(ctx, 'album');
+searchAlbumScene.on('inline_query', async (ctx) => {
+  try {
+    await searchFromLastfmAndAnswerInlineQuery(ctx, 'album');
+  } catch (e) {
+    error(ctx, e);
+  }
 });
 
 searchAlbumScene.on('text', async (ctx) => {
@@ -108,20 +112,32 @@ searchAlbumScene.on('text', async (ctx) => {
   }
 });
 
-searchAlbumScene.action('OK', (ctx) => {
-  scrobbleAlbum(ctx);
+searchAlbumScene.action('OK', async (ctx) => {
+  try {
+    await scrobbleAlbum(ctx);
+  } catch (e) {
+    error(ctx, e);
+  }
 });
 
 searchAlbumScene.action('EDIT', (ctx) => {
   ctx.flow.enter('edit_album');
 });
 
-searchAlbumScene.action('PREV', (ctx) => {
-  nextAlbum(ctx, 'PREV');
+searchAlbumScene.action('PREV', async (ctx) => {
+  try {
+    await nextAlbum(ctx, 'PREV');
+  } catch (e) {
+    error(ctx, e);
+  }
 });
 
-searchAlbumScene.action('NEXT', (ctx) => {
-  nextAlbum(ctx, 'NEXT');
+searchAlbumScene.action('NEXT', async (ctx) => {
+  try {
+    await nextAlbum(ctx, 'NEXT');
+  } catch (e) {
+    error(ctx, e);
+  }
 });
 
 module.exports = searchAlbumScene;

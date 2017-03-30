@@ -11,19 +11,19 @@ async function start(ctx, next) {
   if (res.created) {
     await ctx.reply(`Hello, ${ctx.from.first_name}!\n\nThis bot provides you the ability to scrobble songs, albums or tracklists in text mode. To take advantage of these opportunities you have to grant access to your Last.fm account...`);
     ctx.flow.enter('auth');
-    return sendToAdmin(`We've got a new user! @${ctx.from.username}`);
+    return sendToAdmin(ctx, `We've got a new user! @${ctx.from.username}`);
   }
 
   return next();
 }
 
 function help(ctx) {
-  ctx.reply('To scrobble a single track just type its info in this format:\n\nArtist\nTrack Name\nAlbum Title\n\nIf you want to scrobble an album or a tracklist use our guide via /scrobble command.\n\nGrant access or change account - /auth\nGet recent scrobbled tracks from your account - /recent\n\nIf you have any ideas or improvements for the bot please tell us about them via /wish command.');
+  ctx.reply('To scrobble a single track just type its info in this format:\n\nArtist\nTrack Name\nAlbum Title\n\nIf you want to scrobble an album or a tracklist use our guide via /scrobble command\n\nGrant access or change account - /auth\nGet recent scrobbled tracks from your account - /recent\n\nIf you have any ideas or improvements for the bot please tell us about them via /wish command');
 }
 
 async function whoami(ctx) {
   const user = await findUserById(ctx.from.id);
-  return ctx.reply(`You are logged in as <a href="http://www.last.fm/user/${user.account}">${user.account}</a>.`, Extra.HTML().webPreview(false));
+  return ctx.reply(`You are logged in as <a href="http://www.last.fm/user/${user.account}">${user.account}</a>`, Extra.HTML().webPreview(false));
 }
 
 async function nextAlbum(ctx, which) {
@@ -46,7 +46,7 @@ async function nextAlbum(ctx, which) {
     user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true });
   } else {
     user = await findUserByIdAndUpdate(ctx.from.id, {
-      'album.tracks': ['There are no any tracks in this result.'],
+      'album.tracks': ['There are no any tracks in this result'],
     }, { new: true });
   }
 

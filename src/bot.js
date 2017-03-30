@@ -5,6 +5,7 @@ const scenes = require('./middlewares/scenes');
 const auth = require('./middlewares/auth');
 const logger = require('telegraf-logger');
 const { SCROBBLERBOT_TOKEN } = require('../config');
+const { error } = require('./helpers/utils');
 
 
 const bot = new Bot(SCROBBLERBOT_TOKEN);
@@ -26,10 +27,20 @@ bot.hears(/\/\w+/, (ctx) => {
   ctx.reply('If you are confused type /help');
 });
 
-bot.on('text', auth, scrobbleTrack);
+bot.on('text', auth, async (ctx) => {
+  try {
+    await scrobbleTrack(ctx);
+  } catch (e) {
+    error(ctx, e);
+  }
+});
 
-bot.on('inline_query', (ctx) => {
-  searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
+bot.on('inline_query', async (ctx) => {
+  try {
+    await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
+  } catch (e) {
+    error(e, ctx);
+  }
 });
 
 bot.action('CANCEL', async (ctx) => {

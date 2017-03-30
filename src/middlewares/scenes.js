@@ -12,12 +12,17 @@ const setAlbumTracksScene = require('../scenes/setAlbumTracks');
 const editTrackAlbumScene = require('../scenes/editTrackAlbum');
 const { start, whoami, help, recentTracks } = require('../helpers/actions');
 const auth = require('./auth');
+const { error } = require('../helpers/utils');
 
 
 const flow = new TelegrafFlow();
 
-flow.command('start', (ctx, next) => {
-  start(ctx, next);
+flow.command('start', async (ctx, next) => {
+  try {
+    await start(ctx, next);
+  } catch (e) {
+    error(ctx, e);
+  }
 });
 
 flow.command('help', help);

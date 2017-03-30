@@ -13,7 +13,7 @@ authScene.enter(async (ctx) => {
     const res = await axios(`${LASTFM_URL}?method=auth.gettoken&api_key=${LASTFM_KEY}&format=json`);
     const token = res.data.token;
 
-    await ctx.reply('Please, click the link below to grant access to your Last.fm account and then click OK button.',
+    await ctx.reply('Please, click the link below to grant access to your Last.fm account and then click OK button',
       Markup.inlineKeyboard([
         Markup.urlButton('Grant access...', `http://www.last.fm/api/auth?api_key=${LASTFM_KEY}&token=${token}`),
         Markup.callbackButton('OK', 'ACCESS_GRANTED'),
@@ -39,7 +39,7 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
     });
 
     await ctx.editMessageText(
-      `Glad to see you, <a href="http://www.last.fm/user/${username}">${username}</a>!\n\nNow you can scrobble your first song. To do it just type artist name, song name and album title separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nType /help for more info.`,
+      `Glad to see you, <a href="http://www.last.fm/user/${username}">${username}</a>!\n\nNow you can scrobble your first song. To do it just type artist name, song name and album title separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nType /help for more info`,
       Extra.HTML().webPreview(false));
 
     ctx.flow.leave();
