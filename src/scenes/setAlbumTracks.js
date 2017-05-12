@@ -11,7 +11,7 @@ setAlbumTracksScene.enter((ctx) => {
   ctx.editMessageText('Just send me song names of the album separated by new lines',
     Markup.inlineKeyboard([
       Markup.callbackButton('Cancel', 'CANCEL'),
-    ]));
+    ]).extra());
 });
 
 setAlbumTracksScene.on('text', async (ctx) => {
@@ -19,13 +19,18 @@ setAlbumTracksScene.on('text', async (ctx) => {
     const tracks = ctx.message.text.split('\n')
       .map(track => ({ name: track }));
 
-    if (tracks.length <= 1) return ctx.reply('Send me song names separated by new lines');
+    if (tracks.length <= 1) {
+      ctx.reply('Send me song names separated by new lines',
+        Markup.inlineKeyboard([
+          Markup.callbackButton('Cancel', 'CANCEL'),
+        ]).extra());
+      return;
+    }
 
     await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks });
     await scrobbleAlbum(ctx);
-    return Promise.resolve();
   } catch (e) {
-    return error(ctx, e);
+    error(ctx, e);
   }
 });
 
