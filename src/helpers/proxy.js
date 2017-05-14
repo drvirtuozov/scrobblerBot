@@ -7,18 +7,22 @@ const proxy = {
 };
 
 async function changeProxy() {
-  console.log('Changing proxy...');
   proxy.host = null;
   proxy.port = null;
   const res = await axios('https://gimmeproxy.com/api/getProxy?post=true&http=true&maxCheckPeriod=300');
   proxy.host = res.data.ip;
   proxy.port = res.data.port;
-  console.log(`New proxy ${proxy.host}:${proxy.port}`);
   return Promise.resolve();
 }
 
-changeProxy().catch(e => console.log('Change proxy error:', e.message));
-setInterval(changeProxy, 60000 * 5);
+setInterval(() => {
+  console.log('Changing proxy...');
+  changeProxy()
+    .then(() => {
+      console.log(`New proxy ${proxy.host}:${proxy.port}`);
+    })
+    .catch(e => console.log('Change proxy error:', e.message));
+}, 60000 * 5);
 
 module.exports = {
   proxy,
