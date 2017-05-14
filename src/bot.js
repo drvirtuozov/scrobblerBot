@@ -13,6 +13,9 @@ const bot = new Bot(SCROBBLERBOT_TOKEN);
 bot.telegram.getMe()
   .then((data) => {
     bot.options.username = data.username;
+  })
+  .catch((err) => {
+    console.log('Bot\'s getMe error:', err.message);
   });
 
 bot.use(logger());
@@ -46,6 +49,10 @@ bot.on('inline_query', async (ctx) => {
 bot.action('CANCEL', async (ctx) => {
   await ctx.editMessageText('Canceled');
   ctx.flow.leave();
+});
+
+bot.catch((err) => {
+  console.log('Bot error:', err.message);
 });
 
 module.exports = bot;
