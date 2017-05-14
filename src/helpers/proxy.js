@@ -8,6 +8,8 @@ const proxy = {
 
 async function changeProxy() {
   console.log('Changing proxy...');
+  proxy.host = null;
+  proxy.port = null;
   const res = await axios('https://gimmeproxy.com/api/getProxy?post=true&http=true&maxCheckPeriod=300');
   proxy.host = res.data.ip;
   proxy.port = res.data.port;
@@ -15,7 +17,7 @@ async function changeProxy() {
   return Promise.resolve();
 }
 
-changeProxy();
+changeProxy().catch(e => console.log('Change proxy error:', e.message));
 setInterval(changeProxy, 60000 * 5);
 
 module.exports = {

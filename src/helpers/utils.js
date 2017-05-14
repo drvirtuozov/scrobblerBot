@@ -1,9 +1,7 @@
-const { Extra } = require('telegraf');
 const crypto = require('crypto');
 const songs = require('../songs');
 const { findUserByIdAndUpdate } = require('./dbmanager');
 const { ADMIN_ID } = require('../../config');
-const { changeProxy } = require('./proxy');
 
 
 function sendToAdmin(ctx, text) {
@@ -29,17 +27,17 @@ async function error(ctx, e) {
       await ctx.telegram.sendMessage(ctx.from.id,
         'Access has not been granted. Please re-authenticate');
       return ctx.flow.enter('auth');
-    } else if (err === 29) {
-      await ctx.telegram.sendMessage(ctx.from.id,
-        'Unfortunately, Last.fm\'s server restrictions don\'t allow us sending too many requests. Retry after a while',
-        Extra.webPreview(false));
-      return sendToAdmin('Rate limit exceeded - Your IP has made too many requests in a short period');
     }
   }
 
-  await ctx.telegram.sendMessage(ctx.from.id, 
-    'Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command');
-  await changeProxy();
+  const errText = 'Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command';
+
+  if (ctx.callbackQuery) {
+    await ctx.editMessageText(errText);
+  } else {
+    await ctx.reply(errText);
+  }
+
   return ctx.flow.leave();
 }
 
@@ -57,13 +55,15 @@ async function successfulScrobble(ctx, text, messageId) {
     discogs_results: [],
   });
 
+  const respText = text ? text : '✅ Success!';
+
   if (ctx.callbackQuery) {
-    await ctx.editMessageText(text ? text : 'Success!');
+    await ctx.editMessageText(respText);
   } else {
     if (messageId) {
-      await ctx.telegram.editMessageText(ctx.chat.id, messageId, null, text ? text : 'Success!');
+      await ctx.telegram.editMessageText(ctx.chat.id, messageId, null, respText);
     } else {
-      await ctx.reply(text ? text : 'Success!');
+      await ctx.reply(respText);
     }
   }
 
@@ -78,6 +78,20 @@ function canScrobble(user) {
   return true;
 }
 
+async function customError(ctx, e, messageId) {
+  if (ctx.callbackQuery) {
+    await ctx.editMessageText(e.message);
+  } else {
+    if (messageId) {
+      await ctx.telegram.editMessageText(ctx.chat.id, messageId, null, e.message);
+    } else {
+      await ctx.reply(e.message);
+    }
+  }
+
+  return ctx.flow.leave();
+}
+
 module.exports = {
   sendToAdmin,
   md5,
@@ -86,4 +100,5 @@ module.exports = {
   successfulScrobble,
   canScrobble,
   error,
+  customError,
 };

@@ -1,6 +1,9 @@
 const { Extra } = require('telegraf');
 const axios = require('axios');
-const { getRandomFavSong, md5, utf8, successfulScrobble, canScrobble } = require('./utils');
+const {
+  getRandomFavSong, md5, utf8, successfulScrobble,
+  canScrobble, error, customError,
+} = require('./utils');
 const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
 const { findUserById } = require('./dbmanager');
 const { proxy } = require('./proxy');
@@ -19,10 +22,10 @@ function scrobbleTracks(tracks, timestamp, key) {
   const queryTimestamps = timestamps.map((ms, i) => `&timestamp[${i}]=${ms}`).sort().join('');
   const queryTracks = names.map((name, i) => `&track[${i}]=${encodeURIComponent(name)}`).sort().join('');
   const apiSig = md5(utf8(`${queryAlbums}api_key${LASTFM_KEY}${queryArtists}methodtrack.scrobblesk${key}${queryTimestamps}${queryTracks}${LASTFM_SECRET}`.replace(/[&=]/g, '')));
-  console.log("SCROBBLING VIA", proxy)
+
   return axios.post(LASTFM_URL,
     `${queryAlbums.slice(1)}&api_key=${LASTFM_KEY}&api_sig=${apiSig}${queryArtists}&format=json&method=track.scrobble&sk=${key}${queryTimestamps}${queryTracks}`, {
-      proxy,
+      proxy: proxy.host ? proxy : null,
     });
 }
 
@@ -37,10 +40,10 @@ async function scrobbleTrack(ctx, isAlbum = true) {
       return ctx.reply(`Please, send me valid data separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nAlbum title is an optional parameter. Type /help for more info`);
     }
 
-    const msg = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
     const user = await findUserById(ctx.from.id);
 
     if (canScrobble(user)) {
+      const msg = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
       const res = await scrobbleTracks([{
         artist: track[0],
         name: track[1],
@@ -49,38 +52,36 @@ async function scrobbleTrack(ctx, isAlbum = true) {
       }], ctx.message.date, user.key);
 
       if (res.data.scrobbles['@attr'].ingored) {
-        return successfulScrobble(ctx, 'Error. Track has been ignored', msg.message_id);
+        return customError(ctx, new Error('❌ Error: Track has been ignored by Last.fm'), msg.message_id);
       }
 
       return successfulScrobble(ctx, null, msg.message_id);
     }
 
     return ctx.reply(cantScrobbleText);
-  }
+  } else if (ctx.callbackQuery) {
+    const user = await findUserById(ctx.from.id);
 
-  const user = await findUserById(ctx.from.id);
+    if (canScrobble(user)) {
+      const track = user.track;
+      const res = await scrobbleTracks([{
+        artist: track.artist,
+        name: track.name,
+        album: isAlbum ? track.album : '',
+        duration: 0,
+      }], null, user.key);
 
-  if (canScrobble(user)) {
-    const track = user.track;
-    const res = await scrobbleTracks([{
-      artist: track.artist,
-      name: track.name,
-      album: isAlbum ? track.album : '',
-      duration: 0,
-    }], null, user.key);
+      if (res.data.scrobbles['@attr'].ingored) {
+        return customError(ctx, new Error('❌ Error: Track has been ignored by Last.fm'));
+      }
 
-    if (res.data.scrobbles['@attr'].ingored) {
-      return successfulScrobble(ctx, 'Error. Track has been ignored');
+      return successfulScrobble(ctx);
     }
 
-    return successfulScrobble(ctx);
-  }
-
-  if (ctx.callbackQuery) {
     return ctx.answerCallbackQuery(cantScrobbleText, undefined, true);
   }
 
-  return ctx.reply(cantScrobbleText);
+  return error(ctx, new Error(`No scrobbling handler of this type: ${ctx.updateType}`));
 }
 
 async function scrobbleAlbum(ctx) {
@@ -97,10 +98,11 @@ async function scrobbleAlbum(ctx) {
 }
 
 async function scrobbleTracklist(ctx) {
+  let isValid = true;
   let tracks = ctx.message.text.split('\n')
     .map((string) => {
       if (string.split('|').length < 2) {
-        return ctx.reply('Please, send me valid data with this syntax:\n\nArtist | Track Name | Album Title');
+        isValid = false;
       }
 
       const track = string.split('|');
@@ -113,6 +115,10 @@ async function scrobbleTracklist(ctx) {
       };
     });
   const parts = [];
+
+  if (!isValid) {
+    return ctx.reply('Please, send me valid data with this syntax:\n\nArtist | Track Name | Album Title');
+  }
 
   while (tracks[0]) {
     parts.push(tracks.slice(0, 50));
