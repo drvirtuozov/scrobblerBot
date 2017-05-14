@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const songs = require('../songs');
 const { findUserByIdAndUpdate } = require('./dbmanager');
 const { ADMIN_ID } = require('../../config');
+const { changeProxy } = require('./proxy');
 
 
 function sendToAdmin(ctx, text) {
@@ -36,8 +37,9 @@ async function error(ctx, e) {
     }
   }
 
-  await ctx.telegram.sendMessage(ctx.from.id,
+  await ctx.telegram.sendMessage(ctx.from.id, 
     'Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command');
+  await changeProxy();
   return ctx.flow.leave();
 }
 
