@@ -47,7 +47,7 @@ function utf8(text) {
   return decodeURI(decodeURIComponent(text));
 }
 
-async function successfulScrobble(ctx, text) {
+async function successfulScrobble(ctx, text, messageId) {
   await findUserByIdAndUpdate(ctx.from.id, {
     $inc: { scrobbles: 1 },
     username: ctx.from.username,
@@ -60,7 +60,11 @@ async function successfulScrobble(ctx, text) {
   if (ctx.callbackQuery) {
     await ctx.editMessageText(text ? text : 'Success!');
   } else {
-    await ctx.reply(text ? text : 'Success!');
+    if (messageId) {
+      await ctx.telegram.editMessageText(ctx.chat.id, messageId, null, text ? text : 'Success!');
+    } else {
+      await ctx.reply(text ? text : 'Success!');
+    }
   }
 
   if (ctx.flow) ctx.flow.leave();
