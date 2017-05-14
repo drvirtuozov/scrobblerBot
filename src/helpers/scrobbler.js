@@ -85,6 +85,7 @@ async function scrobbleTrack(ctx, isAlbum = true) {
 }
 
 async function scrobbleAlbum(ctx) {
+  await ctx.editMessageText('<i>Scrobbling...</>', Extra.HTML());
   const user = await findUserById(ctx.from.id);
   const tracks = user.album.tracks.map(track => ({
     name: track.name,
