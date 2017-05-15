@@ -11,7 +11,7 @@ mongoose.connect(process.env.MONGODB)
   });
 
 db.on('error', (err) => {
-  console.log('Failed to connect to database server:', err);
+  console.log('Failed to connect to database server:', err.message);
 });
 
 db.once('open', () => {

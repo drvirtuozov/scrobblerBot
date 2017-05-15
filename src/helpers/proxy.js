@@ -1,30 +1,55 @@
-const axios = require('axios');
+const proxyLists = require('proxy-lists');
 
 
-const proxy = {
-  host: null,
-  port: null,
-};
+let uncheckedProxies = [];
 
-async function changeProxy() {
-  proxy.host = null;
-  proxy.port = null;
-  const res = await axios('https://gimmeproxy.com/api/getProxy?post=true&http=true&maxCheckPeriod=300');
-  proxy.host = res.data.ip;
-  proxy.port = res.data.port;
-  return Promise.resolve();
+async function getUncheckedProxies() {
+  const results = [];
+  const gettingProxies = proxyLists.getProxies({
+    countries: null,
+    protocols: ['http'],
+    ipTypes: ['ipv4'],
+  });
+
+  return new Promise((resolve) => {
+    gettingProxies.on('data', (proxies) => {
+      results.push(...proxies);
+    });
+
+    gettingProxies.on('error', (err) => {
+      console.log('Getting proxy error:', err.message);
+    });
+
+    gettingProxies.once('end', () => {
+      console.log('Done getting proxies\n');
+      resolve(results);
+    });
+  });
 }
 
-setInterval(() => {
-  console.log('Changing proxy...');
-  changeProxy()
-    .then(() => {
-      console.log(`New proxy ${proxy.host}:${proxy.port}`);
-    })
-    .catch(e => console.log('Change proxy error:', e.message));
-}, 60000 * 5);
+getUncheckedProxies()
+  .then((proxies) => {
+    uncheckedProxies = proxies;
+  })
+  .catch((err) => {
+    console.log('Getting unchecked proxies error:', err.message);
+  });
+
+function getRandomChekedProxy() {
+  if (uncheckedProxies.length) {
+    const proxy = uncheckedProxies[Math.floor(Math.random() * uncheckedProxies.length)];
+    return {
+      host: proxy.ipAddress,
+      port: proxy.port,
+    };
+  }
+
+  return {
+    host: null,
+    port: null,
+  };
+}
 
 module.exports = {
-  proxy,
-  changeProxy,
+  getRandomChekedProxy,
 };

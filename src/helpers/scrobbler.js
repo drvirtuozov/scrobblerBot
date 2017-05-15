@@ -1,12 +1,11 @@
 const { Extra } = require('telegraf');
-const axios = require('axios');
 const {
   getRandomFavSong, md5, utf8, successfulScrobble,
   canScrobble, error, customError,
 } = require('./utils');
 const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
 const { findUserById } = require('./dbmanager');
-const { proxy } = require('./proxy');
+const { proxyPost } = require('./requests');
 
 
 function scrobbleTracks(tracks, timestamp, key) {
@@ -23,10 +22,8 @@ function scrobbleTracks(tracks, timestamp, key) {
   const queryTracks = names.map((name, i) => `&track[${i}]=${encodeURIComponent(name)}`).sort().join('');
   const apiSig = md5(utf8(`${queryAlbums}api_key${LASTFM_KEY}${queryArtists}methodtrack.scrobblesk${key}${queryTimestamps}${queryTracks}${LASTFM_SECRET}`.replace(/[&=]/g, '')));
 
-  return axios.post(LASTFM_URL,
-    `${queryAlbums.slice(1)}&api_key=${LASTFM_KEY}&api_sig=${apiSig}${queryArtists}&format=json&method=track.scrobble&sk=${key}${queryTimestamps}${queryTracks}`, {
-      proxy: proxy.host ? proxy : null,
-    });
+  return proxyPost(LASTFM_URL,
+    `${queryAlbums.slice(1)}&api_key=${LASTFM_KEY}&api_sig=${apiSig}${queryArtists}&format=json&method=track.scrobble&sk=${key}${queryTimestamps}${queryTracks}`);
 }
 
 async function scrobbleTrack(ctx, isAlbum = true) {
