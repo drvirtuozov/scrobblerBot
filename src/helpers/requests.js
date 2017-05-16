@@ -3,11 +3,24 @@ const { getRandomChekedProxy } = require('./proxy');
 
 
 async function proxyPost(url, data) {
-  const proxy = getRandomChekedProxy();
-  return axios.post(url, data, {
-    proxy: proxy.host ? proxy : null,
-    timeout: 10000,
-  });
+  let err = {};
+
+  for (let i = 0; i < 3; i++) { // 3 attempts
+    const proxy = getRandomChekedProxy();
+
+    try {
+      const res = await axios.post(url, data, {
+        proxy: proxy.host ? proxy : null,
+        timeout: 6000,
+      });
+
+      return Promise.resolve(res);
+    } catch (e) {
+      err = e;
+    }
+  }
+
+  return Promise.reject(err);
 }
 
 module.exports = {

@@ -36,7 +36,7 @@ async function getCheckedProxies() {
   return new Promise((resolve) => {
     uncheckedProxies.forEach((proxy) => {
       axios.post(config.LASTFM_URL, null, {
-        timeout: 3000,
+        timeout: 5000,
       })
         .catch((err) => {
           if (err.response && err.response.status === 400) {
