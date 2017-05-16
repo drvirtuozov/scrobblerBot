@@ -18,7 +18,7 @@ function getRandomFavSong() {
 }
 
 async function error(ctx, e) {
-  console.log('ERROR!!!', e);
+  console.log(e);
 
   if (e.response && e.response.data) {
     const err = e.response.data.error;

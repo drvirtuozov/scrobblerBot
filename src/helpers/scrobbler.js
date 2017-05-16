@@ -27,7 +27,7 @@ function scrobbleTracks(tracks, timestamp, key) {
 }
 
 async function scrobbleTrack(ctx, isAlbum = true) {
-  const cantScrobbleText = 'You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that via /scrobble command. Please, wait and try again';
+  const cantScrobbleText = 'You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that via /scrobble command';
 
   if (ctx.message && ctx.message.text) {
     const track = ctx.message.text.split('\n');
