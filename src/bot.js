@@ -10,6 +10,8 @@ const { error } = require('./helpers/utils');
 
 const bot = new Bot(SCROBBLERBOT_TOKEN);
 
+bot.context.messageToEdit = null;
+
 bot.telegram.getMe()
   .then((data) => {
     bot.options.username = data.username;

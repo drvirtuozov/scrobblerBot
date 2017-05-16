@@ -40,7 +40,7 @@ async function scrobbleTrack(ctx, isAlbum = true) {
     const user = await findUserById(ctx.from.id);
 
     if (canScrobble(user)) {
-      const msg = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
+      ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
       const res = await scrobbleTracks([{
         artist: track[0],
         name: track[1],
@@ -49,10 +49,10 @@ async function scrobbleTrack(ctx, isAlbum = true) {
       }], ctx.message.date, user.key);
 
       if (res.data.scrobbles['@attr'].ingored) {
-        return customError(ctx, new Error('❌ Error: Track has been ignored by Last.fm'), msg.message_id);
+        return customError(ctx, new Error('❌ Error: Track has been ignored by Last.fm'));
       }
 
-      return successfulScrobble(ctx, null, msg.message_id);
+      return successfulScrobble(ctx);
     }
 
     return ctx.reply(cantScrobbleText);
@@ -118,7 +118,7 @@ async function scrobbleTracklist(ctx) {
     return ctx.reply('Please, send me valid data with this syntax:\n\nArtist | Track Name | Album Title');
   }
 
-  const msg = await ctx.reply('<i>Scrobbling...</>', Extra.HTML());
+  ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</>', Extra.HTML());
 
   while (tracks[0]) {
     parts.push(tracks.slice(0, 50));
@@ -143,11 +143,10 @@ async function scrobbleTracklist(ctx) {
 
   if (ignored.length) {
     return successfulScrobble(ctx,
-      `Success, but...\nThe following tracks have been ignored:\n\n${ignored.map(track => `${track.artist['#text']} | ${track.track['#text']} | ${track.album['#text']}`).join('\n')}`,
-      msg.message_id);
+      `✅ Success, but...\nThe following tracks have been ignored:\n\n${ignored.map(track => `${track.artist['#text']} | ${track.track['#text']} | ${track.album['#text']}`).join('\n')}`);
   }
 
-  return successfulScrobble(ctx, null, msg.message_id);
+  return successfulScrobble(ctx);
 }
 
 module.exports = {

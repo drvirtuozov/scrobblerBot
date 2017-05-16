@@ -45,7 +45,7 @@ function utf8(text) {
   return decodeURI(decodeURIComponent(text));
 }
 
-async function successfulScrobble(ctx, text, messageId) {
+async function successfulScrobble(ctx, text) {
   await findUserByIdAndUpdate(ctx.from.id, {
     $inc: { scrobbles: 1 },
     username: ctx.from.username,
@@ -60,8 +60,8 @@ async function successfulScrobble(ctx, text, messageId) {
   if (ctx.callbackQuery) {
     await ctx.editMessageText(respText);
   } else {
-    if (messageId) {
-      await ctx.telegram.editMessageText(ctx.chat.id, messageId, null, respText);
+    if (ctx.messageToEdit) {
+      await ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null, respText);
     } else {
       await ctx.reply(respText);
     }
@@ -78,12 +78,12 @@ function canScrobble(user) {
   return true;
 }
 
-async function customError(ctx, e, messageId) {
+async function customError(ctx, e) {
   if (ctx.callbackQuery) {
     await ctx.editMessageText(e.message);
   } else {
-    if (messageId) {
-      await ctx.telegram.editMessageText(ctx.chat.id, messageId, null, e.message);
+    if (ctx.messageToEdit) {
+      await ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null, e.message);
     } else {
       await ctx.reply(e.message);
     }
