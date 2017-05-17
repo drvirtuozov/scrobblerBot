@@ -29,25 +29,35 @@ async function getUncheckedProxies() {
   });
 }
 
-async function getCheckedProxies() {
+function getCheckedProxies() {
   let checkedCount = 0;
   const result = [];
+  const incrementCount = (resolve) => {
+    if (++checkedCount === uncheckedProxies.length) {
+      console.log('Proxies checked. Working count:', result.length);
+      resolve(result);
+    }
+  };
 
   return new Promise((resolve) => {
-    uncheckedProxies.forEach((proxy) => {
-      axios.post(config.LASTFM_URL, null, {
-        timeout: 5000,
-      })
-        .catch((err) => {
-          if (err.response && err.response.status === 400) {
-            result.push(proxy);
-          }
-
-          if (++checkedCount === uncheckedProxies.length) {
-            console.log('Proxies checked. Working count:', result.length);
-            resolve(result);
-          }
+    uncheckedProxies.forEach(async (proxy) => {
+      try {
+        await axios.post(config.LASTFM_URL, null, {
+          timeout: 5000,
+          proxy: {
+            host: proxy.ipAddress,
+            port: proxy.port,
+          },
         });
+
+        incrementCount(resolve);
+      } catch (e) {
+        if (e.response && e.response.status === 400) {
+          result.push(proxy);
+        }
+
+        incrementCount(resolve);
+      }
     });
   });
 }
@@ -68,12 +78,12 @@ function getRandomChekedProxy() {
 }
 
 getUncheckedProxies()
-  .then((proxies) => {
-    uncheckedProxies = proxies;
+  .then((unchecked) => {
+    uncheckedProxies = unchecked;
+    return getCheckedProxies();
   })
-  .then(() => getCheckedProxies())
-  .then((result) => {
-    checkedProxies = result;
+  .then((checked) => {
+    checkedProxies = checked;
   });
 
 setInterval(async () => {
