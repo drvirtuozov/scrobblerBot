@@ -19,17 +19,6 @@ function getRandomFavSong() {
 
 async function error(ctx, e) {
   console.log(e);
-
-  if (e.response && e.response.data) {
-    const err = e.response.data.error;
-
-    if (err === 14 || err === 4 || err === 9) {
-      await ctx.telegram.sendMessage(ctx.from.id,
-        'Access has not been granted. Please re-authenticate');
-      return ctx.flow.enter('auth');
-    }
-  }
-
   const errText = 'Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command';
 
   if (ctx.callbackQuery) {
@@ -92,6 +81,20 @@ async function customError(ctx, e) {
   return ctx.flow.leave();
 }
 
+async function requestError(ctx, e) {
+  if (e.response && e.response.data) {
+    const err = e.response.data.error;
+
+    if (err === 14 || err === 4 || err === 9) {
+      await ctx.telegram.sendMessage(ctx.from.id,
+        'Access has not been granted. Please re-authenticate');
+      return ctx.flow.enter('auth');
+    }
+  }
+
+  return customError(ctx, new Error('❌ Failed'));
+}
+
 module.exports = {
   sendToAdmin,
   md5,
@@ -101,4 +104,5 @@ module.exports = {
   canScrobble,
   error,
   customError,
+  requestError,
 };

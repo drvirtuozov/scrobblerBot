@@ -11,7 +11,7 @@ async function proxyPost(url, data) {
     try {
       const res = await axios.post(url, data, {
         proxy: proxy.host ? proxy : null,
-        timeout: 6000,
+        timeout: 5000,
       });
 
       return Promise.resolve(res);
