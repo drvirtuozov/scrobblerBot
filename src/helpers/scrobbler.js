@@ -96,7 +96,12 @@ async function scrobbleTrackFromText(ctx) {
 }
 
 async function scrobbleAlbum(ctx) {
-  await ctx.editMessageText('<i>Scrobbling...</>', Extra.HTML());
+  if (ctx.callbackQuery) {
+    ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</>', Extra.HTML());
+  } else {
+    ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</>', Extra.HTML());
+  }
+
   const tracks = ctx.user.album.tracks.map(track => ({
     name: track.name,
     artist: ctx.user.album.artist,
