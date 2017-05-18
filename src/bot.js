@@ -1,5 +1,5 @@
 const Bot = require('telegraf');
-const { scrobbleTrack } = require('./helpers/scrobbler');
+const { scrobbleTrackFromText } = require('./helpers/scrobbler');
 const { searchFromLastfmAndAnswerInlineQuery } = require('./helpers/actions');
 const scenes = require('./middlewares/scenes');
 const auth = require('./middlewares/auth');
@@ -34,7 +34,7 @@ bot.hears(/\/\w+/, (ctx) => {
 
 bot.on('text', auth, async (ctx) => {
   try {
-    await scrobbleTrack(ctx);
+    await scrobbleTrackFromText(ctx);
   } catch (e) {
     error(ctx, e);
   }

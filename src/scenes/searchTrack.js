@@ -2,7 +2,7 @@ const { Markup, Extra } = require('telegraf');
 const { Scene } = require('telegraf-flow');
 const axios = require('axios');
 const { LASTFM_URL, LASTFM_KEY } = require('../../config');
-const { scrobbleTrack } = require('../helpers/scrobbler');
+const { scrobbleTrackFromDB, scrobbleTrackFromText } = require('../helpers/scrobbler');
 const { error } = require('../helpers/utils');
 const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 const { searchFromLastfmAndAnswerInlineQuery } = require('../helpers/actions');
@@ -31,11 +31,11 @@ searchTrackScene.on('text', async (ctx) => {
     const parsedTrack = ctx.message.text.split('\n');
 
     if (parsedTrack.length > 2) {
-      return scrobbleTrack(ctx);
+      return scrobbleTrackFromText(ctx);
     } else if (parsedTrack.length === 2) {
       const res = await axios(encodeURI(`${LASTFM_URL}?method=track.getInfo&api_key=${LASTFM_KEY}&artist=${parsedTrack[0]}&track=${parsedTrack[1]}&format=json`));
 
-      if (res.data.error) return scrobbleTrack(ctx);
+      if (res.data.error) return scrobbleTrackFromText(ctx);
 
       const track = res.data.track || {};
       track.album = track.album || {};
@@ -74,7 +74,7 @@ searchTrackScene.on('text', async (ctx) => {
 
 searchTrackScene.action('SCR', async (ctx) => {
   try {
-    await scrobbleTrack(ctx);
+    await scrobbleTrackFromDB(ctx);
   } catch (e) {
     error(ctx, e);
   }
@@ -86,7 +86,7 @@ searchTrackScene.action('EDIT_TRACK_ALBUM', (ctx) => {
 
 searchTrackScene.action('SCR_WITHOUT_ALBUM', async (ctx) => {
   try {
-    await scrobbleTrack(ctx, false);
+    await scrobbleTrackFromDB(ctx, false);
   } catch (e) {
     error(ctx, e);
   }

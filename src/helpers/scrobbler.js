@@ -1,12 +1,14 @@
 const { Extra } = require('telegraf');
 const {
   getRandomFavSong, md5, utf8, successfulScrobble,
-  canScrobble, error, customError, requestError,
+  canScrobble, customError, requestError,
 } = require('./utils');
 const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
 const { findUserById } = require('./dbmanager');
 const { proxyPost } = require('./requests');
 
+
+const cantScrobbleText = 'You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that via /scrobble command';
 
 function scrobbleTracks(tracks, timestamp, key) { // low-level function
   let startTimestamp = (timestamp || Math.floor(Date.now() / 1000)) - tracks
@@ -26,35 +28,37 @@ function scrobbleTracks(tracks, timestamp, key) { // low-level function
     `${queryAlbums.slice(1)}&api_key=${LASTFM_KEY}&api_sig=${apiSig}${queryArtists}&format=json&method=track.scrobble&sk=${key}${queryTimestamps}${queryTracks}`);
 }
 
-async function scrobbleTrack(ctx, isAlbum = true) {
-  const cantScrobbleText = 'You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that via /scrobble command';
+async function scrobbleTrackFromDB(ctx, isAlbum = true) {
+  const user = await findUserById(ctx.from.id);
+  const trackToScrobble = {
+    artist: user.track.artist,
+    name: user.track.name,
+    album: isAlbum ? user.track.album : '',
+    duration: 0,
+  };
+
+  if (canScrobble(user)) {
+    try {
+      const res = await scrobbleTracks([trackToScrobble], null, user.key);
+
+      if (res.data.scrobbles['@attr'].ingored) {
+        return customError(ctx, new Error('❌ Error: Track has been ignored by Last.fm'));
+      }
+
+      return successfulScrobble(ctx);
+    } catch (e) {
+      return requestError(ctx, e);
+    }
+  }
 
   if (ctx.callbackQuery) {
-    const user = await findUserById(ctx.from.id);
-    const trackToScrobble = {
-      artist: user.track.artist,
-      name: user.track.name,
-      album: isAlbum ? user.track.album : '',
-      duration: 0,
-    };
-
-    if (canScrobble(user)) {
-      try {
-        const res = await scrobbleTracks([trackToScrobble], null, user.key);
-
-        if (res.data.scrobbles['@attr'].ingored) {
-          return customError(ctx, new Error('❌ Error: Track has been ignored by Last.fm'));
-        }
-
-        return successfulScrobble(ctx);
-      } catch (e) {
-        return requestError(ctx, e);
-      }
-    }
-
     return ctx.answerCallbackQuery(cantScrobbleText, undefined, true);
   }
 
+  return ctx.reply(cantScrobbleText);
+}
+
+async function scrobbleTrackFromText(ctx) {
   const track = ctx.message.text.split('\n');
   const song = getRandomFavSong();
 
@@ -158,7 +162,8 @@ async function scrobbleTracklist(ctx) {
 }
 
 module.exports = {
-  scrobbleTrack,
+  scrobbleTrackFromDB,
+  scrobbleTrackFromText,
   scrobbleAlbum,
   scrobbleTracklist,
 };
