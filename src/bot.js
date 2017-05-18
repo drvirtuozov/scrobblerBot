@@ -8,6 +8,7 @@ const logger = require('telegraf-logger');
 const { SCROBBLERBOT_TOKEN, LASTFM_URL } = require('../config');
 const { error, successfulScrobble, requestError } = require('./helpers/utils');
 const { proxyPost } = require('./helpers/requests');
+const { findUserByIdAndUpdate } = require('./helpers/dbmanager');
 
 
 const bot = new Telegraf(SCROBBLERBOT_TOKEN);
@@ -59,13 +60,27 @@ bot.action('CANCEL', async (ctx) => {
 
 bot.action('RETRY', async (ctx) => {
   try {
+    const messageId = ctx.callbackQuery.message.message_id;
     const data = ctx.user.failed
-      .filter(fail => fail.message_id === ctx.callbackQuery.message.message_id)[0].data;
+      .filter(fail => fail.message_id === messageId)[0].data;
     ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Telegraf.Extra.HTML());
-    await proxyPost(LASTFM_URL, data);
+
+    try {
+      await proxyPost(LASTFM_URL, data);
+    } catch (e) {
+      requestError(ctx, e);
+    }
+
     await successfulScrobble(ctx);
+    await findUserByIdAndUpdate(ctx.from.id, {
+      $pull: {
+        failed: {
+          message_id: messageId,
+        },
+      },
+    });
   } catch (e) {
-    requestError(ctx, e);
+    error(ctx, e);
   }
 });
 
