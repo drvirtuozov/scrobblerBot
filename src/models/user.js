@@ -31,6 +31,10 @@ const userSchema = mongoose.Schema({
     album: String,
   },
   discogs_results: Array,
+  failed: [{
+    message_id: Number,
+    data: String,
+  }],
 }, { collection: 'scrobbler-users' });
 
 module.exports = mongoose.model('User', userSchema);

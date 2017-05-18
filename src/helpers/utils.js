@@ -1,3 +1,4 @@
+const { Markup } = require('telegraf');
 const crypto = require('crypto');
 const songs = require('../songs');
 const { findUserByIdAndUpdate } = require('./dbmanager');
@@ -68,13 +69,31 @@ function canScrobble(user) {
 }
 
 async function customError(ctx, e) {
+  const extra = Markup.inlineKeyboard([
+    Markup.callbackButton('Retry', 'RETRY'),
+  ]).extra();
+
+  if (ctx.messageToEdit) {
+    await findUserByIdAndUpdate(ctx.from.id, {
+      $addToSet: {
+        failed: {
+          message_id: ctx.messageToEdit.message_id,
+          data: e.config.data,
+        },
+      },
+    });
+  }
+
   if (ctx.callbackQuery) {
-    await ctx.editMessageText(e.message);
+    if (ctx.messageToEdit.text !== e.message) {
+      await ctx.editMessageText(e.message, extra);
+    }
   } else {
     if (ctx.messageToEdit) {
-      await ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null, e.message);
+      await ctx.telegram.editMessageText(ctx.chat.id,
+        ctx.messageToEdit.message_id, null, e.message, extra);
     } else {
-      await ctx.reply(e.message);
+      await ctx.reply(e.message, extra);
     }
   }
 
@@ -92,7 +111,8 @@ async function requestError(ctx, e) {
     }
   }
 
-  return customError(ctx, new Error('❌ Failed'));
+  e.message = '❌ Failed';
+  return customError(ctx, e);
 }
 
 async function isUserAuthorized(ctx) {

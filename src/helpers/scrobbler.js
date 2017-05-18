@@ -109,7 +109,12 @@ async function scrobbleAlbum(ctx) {
     duration: track.duration,
   }));
 
-  await scrobbleTracks(tracks, null, ctx.user.key);
+  try {
+    await scrobbleTracks(tracks, null, ctx.user.key);
+  } catch (e) {
+    return requestError(ctx, e);
+  }
+
   return successfulScrobble(ctx);
 }
 
@@ -130,6 +135,7 @@ async function scrobbleTracklist(ctx) {
         duration: 300,
       };
     });
+
   const parts = [];
 
   if (!isValid) {
@@ -143,7 +149,14 @@ async function scrobbleTracklist(ctx) {
     tracks = tracks.slice(50);
   }
 
-  const results = await Promise.all(parts.map(part => scrobbleTracks(part, null, ctx.user.key)));
+  let results;
+
+  try {
+    results = await Promise.all(parts.map(part => scrobbleTracks(part, null, ctx.user.key)));
+  } catch (e) {
+    return requestError(ctx, e);
+  }
+
   const ignored = [];
 
   results.forEach((result) => {

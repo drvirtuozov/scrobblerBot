@@ -1,15 +1,16 @@
-const Bot = require('telegraf');
+const Telegraf = require('telegraf');
 const { scrobbleTrackFromText } = require('./helpers/scrobbler');
 const { searchFromLastfmAndAnswerInlineQuery } = require('./helpers/actions');
 const user = require('./middlewares/user');
 const scenes = require('./middlewares/scenes');
 const auth = require('./middlewares/auth');
 const logger = require('telegraf-logger');
-const { SCROBBLERBOT_TOKEN } = require('../config');
-const { error } = require('./helpers/utils');
+const { SCROBBLERBOT_TOKEN, LASTFM_URL } = require('../config');
+const { error, successfulScrobble, requestError } = require('./helpers/utils');
+const { proxyPost } = require('./helpers/requests');
 
 
-const bot = new Bot(SCROBBLERBOT_TOKEN);
+const bot = new Telegraf(SCROBBLERBOT_TOKEN);
 
 bot.context.user = null;
 bot.context.messageToEdit = null;
@@ -24,7 +25,7 @@ bot.telegram.getMe()
 
 bot.use(logger());
 
-bot.use(Bot.memorySession({
+bot.use(Telegraf.memorySession({
   getSessionKey: ctx => ctx.from.id,
 }));
 
@@ -54,6 +55,18 @@ bot.on('inline_query', async (ctx) => {
 bot.action('CANCEL', async (ctx) => {
   await ctx.editMessageText('Canceled');
   ctx.flow.leave();
+});
+
+bot.action('RETRY', async (ctx) => {
+  try {
+    const data = ctx.user.failed
+      .filter(fail => fail.message_id === ctx.callbackQuery.message.message_id)[0].data;
+    ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Telegraf.Extra.HTML());
+    await proxyPost(LASTFM_URL, data);
+    await successfulScrobble(ctx);
+  } catch (e) {
+    requestError(ctx, e);
+  }
 });
 
 bot.catch((err) => {
