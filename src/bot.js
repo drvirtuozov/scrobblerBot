@@ -1,6 +1,7 @@
 const Bot = require('telegraf');
 const { scrobbleTrackFromText } = require('./helpers/scrobbler');
 const { searchFromLastfmAndAnswerInlineQuery } = require('./helpers/actions');
+const user = require('./middlewares/user');
 const scenes = require('./middlewares/scenes');
 const auth = require('./middlewares/auth');
 const logger = require('telegraf-logger');
@@ -10,6 +11,7 @@ const { error } = require('./helpers/utils');
 
 const bot = new Bot(SCROBBLERBOT_TOKEN);
 
+bot.context.user = null;
 bot.context.messageToEdit = null;
 
 bot.telegram.getMe()
@@ -26,6 +28,7 @@ bot.use(Bot.memorySession({
   getSessionKey: ctx => ctx.from.id,
 }));
 
+bot.use(user);
 bot.use(scenes);
 
 bot.hears(/\/\w+/, (ctx) => {

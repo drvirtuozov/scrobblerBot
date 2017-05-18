@@ -1,7 +1,7 @@
 const { Markup, Extra } = require('telegraf');
 const { Scene } = require('telegraf-flow');
 const axios = require('axios');
-const { findUserById, findUserByIdAndUpdate } = require('../helpers/dbmanager');
+const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 const { md5, getRandomFavSong, error } = require('../helpers/utils');
 const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
 
@@ -26,8 +26,7 @@ authScene.enter(async (ctx) => {
 
 authScene.action('ACCESS_GRANTED', async (ctx) => {
   try {
-    const user = await findUserById(ctx.from.id);
-    const token = user.token;
+    const token = ctx.user.token;
     const sig = md5(`api_key${LASTFM_KEY}methodauth.getsessiontoken${token}${LASTFM_SECRET}`);
     const song = getRandomFavSong();
     const res = await axios(`${LASTFM_URL}?method=auth.getsession&format=json&token=${token}&api_key=${LASTFM_KEY}&api_sig=${sig}`);

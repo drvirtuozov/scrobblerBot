@@ -4,7 +4,6 @@ const {
   canScrobble, customError, requestError,
 } = require('./utils');
 const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
-const { findUserById } = require('./dbmanager');
 const { proxyPost } = require('./requests');
 
 
@@ -29,17 +28,16 @@ function scrobbleTracks(tracks, timestamp, key) { // low-level function
 }
 
 async function scrobbleTrackFromDB(ctx, isAlbum = true) {
-  const user = await findUserById(ctx.from.id);
   const trackToScrobble = {
-    artist: user.track.artist,
-    name: user.track.name,
-    album: isAlbum ? user.track.album : '',
+    artist: ctx.user.track.artist,
+    name: ctx.user.track.name,
+    album: isAlbum ? ctx.user.track.album : '',
     duration: 0,
   };
 
-  if (canScrobble(user)) {
+  if (canScrobble(ctx.user)) {
     try {
-      const res = await scrobbleTracks([trackToScrobble], null, user.key);
+      const res = await scrobbleTracks([trackToScrobble], null, ctx.user.key);
 
       if (res.data.scrobbles['@attr'].ingored) {
         return customError(ctx, new Error('❌ Error: Track has been ignored by Last.fm'));
@@ -66,9 +64,7 @@ async function scrobbleTrackFromText(ctx) {
     return ctx.reply(`Please, send me valid data separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nAlbum title is an optional parameter. Type /help for more info`);
   }
 
-  const user = await findUserById(ctx.from.id);
-
-  if (canScrobble(user)) {
+  if (canScrobble(ctx.user)) {
     ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
     const trackToScrobble = {
       artist: track[0],
@@ -78,7 +74,7 @@ async function scrobbleTrackFromText(ctx) {
     };
 
     try {
-      const res = await scrobbleTracks([trackToScrobble], ctx.message.date, user.key);
+      const res = await scrobbleTracks([trackToScrobble], ctx.message.date, ctx.user.key);
 
       if (res.data.scrobbles['@attr'].ingored) {
         return customError(ctx, new Error('❌ Error: Track has been ignored by Last.fm'));
@@ -95,15 +91,14 @@ async function scrobbleTrackFromText(ctx) {
 
 async function scrobbleAlbum(ctx) {
   await ctx.editMessageText('<i>Scrobbling...</>', Extra.HTML());
-  const user = await findUserById(ctx.from.id);
-  const tracks = user.album.tracks.map(track => ({
+  const tracks = ctx.user.album.tracks.map(track => ({
     name: track.name,
-    artist: user.album.artist,
-    album: user.album.title,
+    artist: ctx.user.album.artist,
+    album: ctx.user.album.title,
     duration: track.duration,
   }));
 
-  await scrobbleTracks(tracks, null, user.key);
+  await scrobbleTracks(tracks, null, ctx.user.key);
   return successfulScrobble(ctx);
 }
 
@@ -137,8 +132,7 @@ async function scrobbleTracklist(ctx) {
     tracks = tracks.slice(50);
   }
 
-  const user = await findUserById(ctx.from.id);
-  const results = await Promise.all(parts.map(part => scrobbleTracks(part, null, user.key)));
+  const results = await Promise.all(parts.map(part => scrobbleTracks(part, null, ctx.user.key)));
   const ignored = [];
 
   results.forEach((result) => {

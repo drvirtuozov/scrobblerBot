@@ -1,5 +1,5 @@
 const { branch } = require('telegraf');
-const { isUserAuthorized } = require('../helpers/dbmanager');
+const { isUserAuthorized } = require('../helpers/utils');
 
 
 module.exports = branch(isUserAuthorized, (ctx, next) => {

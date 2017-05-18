@@ -95,6 +95,10 @@ async function requestError(ctx, e) {
   return customError(ctx, new Error('❌ Failed'));
 }
 
+async function isUserAuthorized(ctx) {
+  return ctx.user.key ? true : false;
+}
+
 module.exports = {
   sendToAdmin,
   md5,
@@ -105,4 +109,5 @@ module.exports = {
   error,
   customError,
   requestError,
+  isUserAuthorized,
 };
