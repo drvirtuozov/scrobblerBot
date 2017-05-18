@@ -36,6 +36,12 @@ async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   };
 
   if (canScrobble(ctx.user)) {
+    if (ctx.callbackQuery) {
+      ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Extra.HTML());
+    } else {
+      ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
+    }
+
     try {
       const res = await scrobbleTracks([trackToScrobble], null, ctx.user.key);
 

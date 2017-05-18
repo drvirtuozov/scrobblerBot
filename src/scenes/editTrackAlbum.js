@@ -19,9 +19,8 @@ editTrackAlbumScene.on('text', async (ctx) => {
     const album = ctx.message.text;
     await findUserByIdAndUpdate(ctx.from.id, { 'track.album': album });
     await scrobbleTrackFromDB(ctx);
-    return Promise.resolve();
   } catch (e) {
-    return error(ctx, e);
+    error(ctx, e);
   }
 });
 
