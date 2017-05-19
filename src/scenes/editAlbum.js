@@ -18,9 +18,7 @@ editAlbumScene.enter(async (ctx) => {
 editAlbumScene.on('text', async (ctx) => {
   try {
     const tracks = ctx.message.text.split('\n').map(name => ({ name }));
-    ctx.user = await findUserByIdAndUpdate(ctx.from.id,
-      { 'album.tracks': tracks },
-      { new: true });
+    ctx.user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true });
     await scrobbleAlbum(ctx);
   } catch (e) {
     error(ctx, e);
