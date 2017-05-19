@@ -68,11 +68,11 @@ bot.action('RETRY', async (ctx) => {
     try {
       await proxyPost(LASTFM_URL, data);
     } catch (e) {
-      requestError(ctx, e);
+      return requestError(ctx, e);
     }
 
     await successfulScrobble(ctx);
-    await findUserByIdAndUpdate(ctx.from.id, {
+    return findUserByIdAndUpdate(ctx.from.id, {
       $pull: {
         failed: {
           message_id: messageId,
@@ -80,7 +80,7 @@ bot.action('RETRY', async (ctx) => {
       },
     });
   } catch (e) {
-    error(ctx, e);
+    return error(ctx, e);
   }
 });
 

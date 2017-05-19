@@ -73,7 +73,8 @@ async function customError(ctx, e) {
     Markup.callbackButton('Retry', 'RETRY'),
   ]).extra();
 
-  if (ctx.messageToEdit) {
+  if (ctx.messageToEdit &&
+    !ctx.user.failed.filter(fail => fail.message_id === ctx.messageToEdit.message_id).length) {
     await findUserByIdAndUpdate(ctx.from.id, {
       $addToSet: {
         failed: {
