@@ -1,10 +1,15 @@
-const axios = require('axios');
-const { getRandomFavSong, md5, utf8, successfulScrobble, canScrobble } = require('./utils');
+const { Extra } = require('telegraf');
+const {
+  getRandomFavSong, md5, utf8, successfulScrobble,
+  canScrobble, customError, requestError,
+} = require('./utils');
 const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
-const { findUserById } = require('./dbmanager');
+const { proxyPost } = require('./requests');
 
 
-function scrobbleTracks(tracks, timestamp, key) {
+const cantScrobbleText = 'You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that via /scrobble command';
+
+function scrobbleTracks(tracks, timestamp, key) { // low-level function
   let startTimestamp = (timestamp || Math.floor(Date.now() / 1000)) - tracks
     .map(track => track.duration)
     .reduce((prev, next) => prev + next);
@@ -18,57 +23,36 @@ function scrobbleTracks(tracks, timestamp, key) {
   const queryTracks = names.map((name, i) => `&track[${i}]=${encodeURIComponent(name)}`).sort().join('');
   const apiSig = md5(utf8(`${queryAlbums}api_key${LASTFM_KEY}${queryArtists}methodtrack.scrobblesk${key}${queryTimestamps}${queryTracks}${LASTFM_SECRET}`.replace(/[&=]/g, '')));
 
-  return axios.post(LASTFM_URL,
+  return proxyPost(LASTFM_URL,
     `${queryAlbums.slice(1)}&api_key=${LASTFM_KEY}&api_sig=${apiSig}${queryArtists}&format=json&method=track.scrobble&sk=${key}${queryTimestamps}${queryTracks}`);
 }
 
-async function scrobbleTrack(ctx, isAlbum = true) {
-  const cantScrobbleText = 'You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that via /scrobble command. Please, wait and try again';
+async function scrobbleTrackFromDB(ctx, isAlbum = true) {
+  const trackToScrobble = {
+    artist: ctx.user.track.artist,
+    name: ctx.user.track.name,
+    album: isAlbum ? ctx.user.track.album : '',
+    duration: 0,
+  };
 
-  if (ctx.message && ctx.message.text) {
-    const track = ctx.message.text.split('\n');
-    const song = getRandomFavSong();
-
-    if (track.length < 2 || track.length > 3) {
-      return ctx.reply(`Please, send me valid data separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nAlbum title is an optional parameter. Type /help for more info`);
+  if (canScrobble(ctx.user)) {
+    if (ctx.callbackQuery) {
+      ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Extra.HTML());
+    } else {
+      ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
     }
 
-    const user = await findUserById(ctx.from.id);
-
-    if (canScrobble(user)) {
-      const res = await scrobbleTracks([{
-        artist: track[0],
-        name: track[1],
-        album: track[2] || '',
-        duration: 0,
-      }], ctx.message.date, user.key);
+    try {
+      const res = await scrobbleTracks([trackToScrobble], null, ctx.user.key);
 
       if (res.data.scrobbles['@attr'].ingored) {
-        return successfulScrobble(ctx, 'Error. Track has been ignored');
+        return customError(ctx, new Error('❌ Error: Track has been ignored by Last.fm'));
       }
 
       return successfulScrobble(ctx);
+    } catch (e) {
+      return requestError(ctx, e);
     }
-
-    return ctx.reply(cantScrobbleText);
-  }
-
-  const user = await findUserById(ctx.from.id);
-
-  if (canScrobble(user)) {
-    const track = user.track;
-    const res = await scrobbleTracks([{
-      artist: track.artist,
-      name: track.name,
-      album: isAlbum ? track.album : '',
-      duration: 0,
-    }], null, user.key);
-
-    if (res.data.scrobbles['@attr'].ingored) {
-      return successfulScrobble(ctx, 'Error. Track has been ignored');
-    }
-
-    return successfulScrobble(ctx);
   }
 
   if (ctx.callbackQuery) {
@@ -78,24 +62,68 @@ async function scrobbleTrack(ctx, isAlbum = true) {
   return ctx.reply(cantScrobbleText);
 }
 
+async function scrobbleTrackFromText(ctx) {
+  const track = ctx.message.text.split('\n');
+  const song = getRandomFavSong();
+
+  if (track.length < 2 || track.length > 3) {
+    return ctx.reply(`Please, send me valid data separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nAlbum title is an optional parameter. Type /help for more info`);
+  }
+
+  if (canScrobble(ctx.user)) {
+    ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
+    const trackToScrobble = {
+      artist: track[0],
+      name: track[1],
+      album: track[2] || '',
+      duration: 0,
+    };
+
+    try {
+      const res = await scrobbleTracks([trackToScrobble], ctx.message.date, ctx.user.key);
+
+      if (res.data.scrobbles['@attr'].ingored) {
+        return customError(ctx, new Error('❌ Error: Track has been ignored by Last.fm'));
+      }
+
+      return successfulScrobble(ctx);
+    } catch (e) {
+      return requestError(ctx, e);
+    }
+  }
+
+  return ctx.reply(cantScrobbleText);
+}
+
 async function scrobbleAlbum(ctx) {
-  const user = await findUserById(ctx.from.id);
-  const tracks = user.album.tracks.map(track => ({
+  if (ctx.callbackQuery) {
+    ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</>', Extra.HTML());
+  } else {
+    ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</>', Extra.HTML());
+  }
+
+  const tracks = ctx.user.album.tracks.map(track => ({
     name: track.name,
-    artist: user.album.artist,
-    album: user.album.title,
+    artist: ctx.user.album.artist,
+    album: ctx.user.album.title,
     duration: track.duration,
   }));
 
-  await scrobbleTracks(tracks, null, user.key);
+  try {
+    await scrobbleTracks(tracks, null, ctx.user.key);
+  } catch (e) {
+    return requestError(ctx, e);
+  }
+
   return successfulScrobble(ctx);
 }
 
 async function scrobbleTracklist(ctx) {
+  let isValid = true;
   let tracks = ctx.message.text.split('\n')
     .map((string) => {
       if (string.split('|').length < 2) {
-        return ctx.reply('Please, send me valid data with this syntax:\n\nArtist | Track Name | Album Title');
+        isValid = false;
       }
 
       const track = string.split('|');
@@ -107,15 +135,28 @@ async function scrobbleTracklist(ctx) {
         duration: 300,
       };
     });
+
   const parts = [];
+
+  if (!isValid) {
+    return ctx.reply('Please, send me valid data with this syntax:\n\nArtist | Track Name | Album Title');
+  }
+
+  ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</>', Extra.HTML());
 
   while (tracks[0]) {
     parts.push(tracks.slice(0, 50));
     tracks = tracks.slice(50);
   }
 
-  const user = await findUserById(ctx.from.id);
-  const results = await Promise.all(parts.map(part => scrobbleTracks(part, null, user.key)));
+  let results;
+
+  try {
+    results = await Promise.all(parts.map(part => scrobbleTracks(part, null, ctx.user.key)));
+  } catch (e) {
+    return requestError(ctx, e);
+  }
+
   const ignored = [];
 
   results.forEach((result) => {
@@ -131,15 +172,16 @@ async function scrobbleTracklist(ctx) {
   });
 
   if (ignored.length) {
-    return successfulScrobble(ctx, `Success, but...\nThe following tracks have been ignored:\n\n${ignored.map(track => `${track.artist['#text']} | ${track.track['#text']} | ${track.album['#text']}`).join('\n')}`);
+    return successfulScrobble(ctx,
+      `✅ Success, but...\nThe following tracks have been ignored:\n\n${ignored.map(track => `${track.artist['#text']} | ${track.track['#text']} | ${track.album['#text']}`).join('\n')}`);
   }
 
   return successfulScrobble(ctx);
 }
 
 module.exports = {
-  scrobbleTracks,
-  scrobbleTrack,
+  scrobbleTrackFromDB,
+  scrobbleTrackFromText,
   scrobbleAlbum,
   scrobbleTracklist,
 };

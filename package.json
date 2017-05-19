@@ -24,6 +24,7 @@
     "dotenv": "^4.0.0",
     "mongoose": "^4.7.7",
     "now-logs": "0.0.7",
+    "proxy-lists": "^1.11.1",
     "telegraf": "^3.6.4",
     "telegraf-flow": "^8.1.1",
     "telegraf-logger": "^0.1.0",

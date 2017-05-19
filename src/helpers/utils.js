@@ -1,4 +1,4 @@
-const { Extra } = require('telegraf');
+const { Markup } = require('telegraf');
 const crypto = require('crypto');
 const songs = require('../songs');
 const { findUserByIdAndUpdate } = require('./dbmanager');
@@ -19,25 +19,15 @@ function getRandomFavSong() {
 }
 
 async function error(ctx, e) {
-  console.log('ERROR!!!', e);
+  console.log(e);
+  const errText = 'Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command';
 
-  if (e.response && e.response.data) {
-    const err = e.response.data.error;
-
-    if (err === 14 || err === 4 || err === 9) {
-      await ctx.telegram.sendMessage(ctx.from.id,
-        'Access has not been granted. Please re-authenticate');
-      return ctx.flow.enter('auth');
-    } else if (err === 29) {
-      await ctx.telegram.sendMessage(ctx.from.id,
-        'Unfortunately, Last.fm\'s server restrictions don\'t allow us sending too many requests. Retry after a while',
-        Extra.webPreview(false));
-      return sendToAdmin('Rate limit exceeded - Your IP has made too many requests in a short period');
-    }
+  if (ctx.callbackQuery) {
+    await ctx.editMessageText(errText);
+  } else {
+    await ctx.reply(errText);
   }
 
-  await ctx.telegram.sendMessage(ctx.from.id,
-    'Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command');
   return ctx.flow.leave();
 }
 
@@ -55,10 +45,16 @@ async function successfulScrobble(ctx, text) {
     discogs_results: [],
   });
 
+  const respText = text ? text : '✅ Success!';
+
   if (ctx.callbackQuery) {
-    await ctx.editMessageText(text ? text : 'Success!');
+    await ctx.editMessageText(respText);
   } else {
-    await ctx.reply(text ? text : 'Success!');
+    if (ctx.messageToEdit) {
+      await ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null, respText);
+    } else {
+      await ctx.reply(respText);
+    }
   }
 
   if (ctx.flow) ctx.flow.leave();
@@ -72,6 +68,58 @@ function canScrobble(user) {
   return true;
 }
 
+async function customError(ctx, e) {
+  const extra = Markup.inlineKeyboard([
+    Markup.callbackButton('Retry', 'RETRY'),
+  ]).extra();
+
+  if (ctx.messageToEdit &&
+    !ctx.user.failed.filter(fail => fail.message_id === ctx.messageToEdit.message_id).length) {
+    await findUserByIdAndUpdate(ctx.from.id, {
+      $addToSet: {
+        failed: {
+          message_id: ctx.messageToEdit.message_id,
+          data: e.config.data,
+        },
+      },
+    });
+  }
+
+  if (ctx.callbackQuery) {
+    if (ctx.messageToEdit.text !== e.message) {
+      await ctx.editMessageText(e.message, extra);
+    }
+  } else {
+    if (ctx.messageToEdit) {
+      await ctx.telegram.editMessageText(ctx.chat.id,
+        ctx.messageToEdit.message_id, null, e.message, extra);
+    } else {
+      await ctx.reply(e.message, extra);
+    }
+  }
+
+  return ctx.flow.leave();
+}
+
+async function requestError(ctx, e) {
+  if (e.response && e.response.data) {
+    const err = e.response.data.error;
+
+    if (err === 14 || err === 4 || err === 9) {
+      await ctx.telegram.sendMessage(ctx.from.id,
+        'Access has not been granted. Please re-authenticate');
+      return ctx.flow.enter('auth');
+    }
+  }
+
+  e.message = '❌ Failed';
+  return customError(ctx, e);
+}
+
+async function isUserAuthorized(ctx) {
+  return ctx.user.key ? true : false;
+}
+
 module.exports = {
   sendToAdmin,
   md5,
@@ -80,4 +128,7 @@ module.exports = {
   successfulScrobble,
   canScrobble,
   error,
+  customError,
+  requestError,
+  isUserAuthorized,
 };

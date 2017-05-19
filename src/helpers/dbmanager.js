@@ -12,23 +12,16 @@ async function findOrCreateUserById(id) {
   return { user, created: true };
 }
 
-function findUserById(id, query) {
-  return User.findById(id, query);
+function findUserById(id) {
+  return User.findById(id);
 }
 
 function findUserByIdAndUpdate(id, updates, opts) {
   return User.findByIdAndUpdate(id, updates, opts);
 }
 
-async function isUserAuthorized(ctx) {
-  let user = await User.findById(ctx.from.id);
-  user = user || {};
-  return user.key ? true : false;
-}
-
 module.exports = {
   findOrCreateUserById,
   findUserById,
   findUserByIdAndUpdate,
-  isUserAuthorized,
 };
