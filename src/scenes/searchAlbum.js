@@ -30,14 +30,15 @@ searchAlbumScene.on('inline_query', async (ctx) => {
 searchAlbumScene.on('text', async (ctx) => {
   try {
     const parsedAlbum = ctx.message.text.split('\n');
+
+    if (parsedAlbum.length < 2) return ctx.reply('Format:\n\nArtist\nAlbum Title');
+
     const parsedTitle = toTitleCase(parsedAlbum[1]);
     const parsedArtist = toTitleCase(parsedAlbum[0]);
 
     let foundOn = '';
     let discogsResults = [];
     let tracks = [];
-
-    if (parsedAlbum.length < 2) return ctx.reply('Format:\n\nArtist\nAlbum Title');
 
     await findUserByIdAndUpdate(ctx.from.id, {
       $set: {
