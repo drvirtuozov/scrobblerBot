@@ -62,7 +62,7 @@ async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   return ctx.reply(cantScrobbleText);
 }
 
-async function scrobbleTrackFromText(ctx) {
+async function scrobbleTrackFromText(ctx, fromScene = false) {
   const track = ctx.message.text.split('\n');
   const song = getRandomFavSong();
 
@@ -71,7 +71,10 @@ async function scrobbleTrackFromText(ctx) {
   }
 
   if (canScrobble(ctx.user)) {
-    ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
+    ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>', {
+      parse_mode: 'HTML',
+      reply_to_message_id: fromScene ? null : ctx.message.message_id,
+    });
     const trackToScrobble = {
       artist: track[0],
       name: track[1],

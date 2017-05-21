@@ -31,11 +31,11 @@ searchTrackScene.on('text', async (ctx) => {
     const parsedTrack = ctx.message.text.split('\n');
 
     if (parsedTrack.length > 2) {
-      return scrobbleTrackFromText(ctx);
+      return scrobbleTrackFromText(ctx, true);
     } else if (parsedTrack.length === 2) {
       const res = await axios(encodeURI(`${LASTFM_URL}?method=track.getInfo&api_key=${LASTFM_KEY}&artist=${parsedTrack[0]}&track=${parsedTrack[1]}&format=json`));
 
-      if (res.data.error) return scrobbleTrackFromText(ctx);
+      if (res.data.error) return scrobbleTrackFromText(ctx, true);
 
       const track = res.data.track || {};
       track.album = track.album || {};
