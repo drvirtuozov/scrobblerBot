@@ -8,8 +8,8 @@ const userSchema = mongoose.Schema({
   account: String,
   token: String,
   scrobbles: { type: Number, default: 0 },
-  timestamp: { type: Number, default: Date.now },
-  last_scrobble: Number,
+  timestamp: { type: Date, default: () => new Date() },
+  last_scrobble: Date,
   album: {
     title: String,
     artist: String,

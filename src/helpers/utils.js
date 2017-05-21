@@ -39,7 +39,7 @@ async function successfulScrobble(ctx, text) {
   await findUserByIdAndUpdate(ctx.from.id, {
     $inc: { scrobbles: 1 },
     username: ctx.from.username,
-    last_scrobble: Date.now(),
+    last_scrobble: new Date(),
     album: {},
     track: {},
     discogs_results: [],
@@ -61,7 +61,7 @@ async function successfulScrobble(ctx, text) {
 }
 
 function canScrobble(user) {
-  if (Date.now() - user.last_scrobble <= 30000) {
+  if (Date.now() - +user.last_scrobble <= 30000) {
     return false;
   }
 
