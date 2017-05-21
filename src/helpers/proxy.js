@@ -76,14 +76,16 @@ function getRandomChekedProxy() {
   };
 }
 
-getUncheckedProxies()
-  .then((unchecked) => {
-    uncheckedProxies = unchecked;
-    return getCheckedProxies(unchecked);
-  })
-  .then((checked) => {
-    checkedProxies = checked;
-  });
+if (config.NODE_ENV === 'production') {
+  getUncheckedProxies()
+    .then((unchecked) => {
+      uncheckedProxies = unchecked;
+      return getCheckedProxies(unchecked);
+    })
+    .then((checked) => {
+      checkedProxies = checked;
+    });
+}
 
 setInterval(async () => {
   checkedProxies = await getCheckedProxies(uncheckedProxies);
