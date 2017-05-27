@@ -91,10 +91,6 @@ setInterval(async () => {
   checkedProxies = await getCheckedProxies(uncheckedProxies);
 }, 600000); // every 10 minutes
 
-setInterval(async () => {
-  uncheckedProxies = await getUncheckedProxies();
-}, 3600000); // every 1 hour
-
 module.exports = {
   getRandomChekedProxy,
 };
