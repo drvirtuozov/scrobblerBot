@@ -106,8 +106,14 @@ async function requestError(ctx, e) {
     const err = e.response.data.error;
 
     if (err === 14 || err === 4 || err === 9) {
-      await ctx.telegram.sendMessage(ctx.from.id,
-        'Access has not been granted. Please re-authenticate');
+      const text = '❌ Access has not been granted. Please re-authenticate';
+
+      if (ctx.callbackQuery) {
+        await ctx.editMessageText(text);
+      } else {
+        await ctx.reply(text);
+      }
+
       return ctx.flow.enter('auth');
     }
   }

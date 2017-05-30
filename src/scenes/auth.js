@@ -2,7 +2,7 @@ const { Markup, Extra } = require('telegraf');
 const { Scene } = require('telegraf-flow');
 const axios = require('axios');
 const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
-const { md5, getRandomFavSong, error } = require('../helpers/utils');
+const { md5, getRandomFavSong, error, requestError } = require('../helpers/utils');
 const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
 
 
@@ -29,7 +29,14 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
     const token = ctx.user.token;
     const sig = md5(`api_key${LASTFM_KEY}methodauth.getsessiontoken${token}${LASTFM_SECRET}`);
     const song = getRandomFavSong();
-    const res = await axios(`${LASTFM_URL}?method=auth.getsession&format=json&token=${token}&api_key=${LASTFM_KEY}&api_sig=${sig}`);
+    let res = null;
+
+    try {
+      res = await axios(`${LASTFM_URL}?method=auth.getsession&format=json&token=${token}&api_key=${LASTFM_KEY}&api_sig=${sig}`);
+    } catch (e) {
+      return requestError(ctx, e);
+    }
+
     const username = res.data.session.name;
 
     await findUserByIdAndUpdate(ctx.from.id, {
@@ -41,9 +48,9 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
       `Glad to see you, <a href="http://www.last.fm/user/${username}">${username}</a>!\n\nNow you can scrobble your first song. To do it just type artist name, song name and album title separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nType /help for more info`,
       Extra.HTML().webPreview(false));
 
-    ctx.flow.leave();
+    return ctx.flow.leave();
   } catch (e) {
-    error(ctx, e);
+    return error(ctx, e);
   }
 });
 
