@@ -4,6 +4,7 @@ const songs = require('../songs');
 const { findUserByIdAndUpdate } = require('./dbmanager');
 const { ADMIN_ID } = require('../../config');
 
+const GLOBAL_KEYBOARD = Markup.keyboard([['🎵 Track', '💽 Album', '📃 Tracklist']]).resize().extra();
 
 function sendToAdmin(ctx, text) {
   return ctx.telegram.sendMessage(ADMIN_ID, text);
@@ -35,7 +36,7 @@ function utf8(text) {
   return decodeURI(decodeURIComponent(text));
 }
 
-async function successfulScrobble(ctx, text) {
+async function successfulScrobble(ctx, text = '✅ Success!') {
   await findUserByIdAndUpdate(ctx.from.id, {
     $inc: { scrobbles: 1 },
     username: ctx.from.username,
@@ -45,16 +46,12 @@ async function successfulScrobble(ctx, text) {
     discogs_results: [],
   });
 
-  const respText = text ? text : '✅ Success!';
-
   if (ctx.callbackQuery) {
-    await ctx.editMessageText(respText);
+    await ctx.editMessageText(text);
+  } else if (ctx.messageToEdit) {
+    await ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null, text);
   } else {
-    if (ctx.messageToEdit) {
-      await ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null, respText);
-    } else {
-      await ctx.reply(respText);
-    }
+    await ctx.reply(text);
   }
 
   if (ctx.flow) ctx.flow.leave();
@@ -89,13 +86,11 @@ async function customError(ctx, e) {
     if (ctx.messageToEdit.text !== e.message) {
       await ctx.editMessageText(e.message, extra);
     }
+  } else if (ctx.messageToEdit) {
+    await ctx.telegram.editMessageText(ctx.chat.id,
+      ctx.messageToEdit.message_id, null, e.message, extra);
   } else {
-    if (ctx.messageToEdit) {
-      await ctx.telegram.editMessageText(ctx.chat.id,
-        ctx.messageToEdit.message_id, null, e.message, extra);
-    } else {
-      await ctx.reply(e.message, extra);
-    }
+    await ctx.reply(e.message, extra);
   }
 
   return ctx.flow.leave();
@@ -123,7 +118,7 @@ async function requestError(ctx, e) {
 }
 
 async function isUserAuthorized(ctx) {
-  return ctx.user.key ? true : false;
+  return !!ctx.user.key;
 }
 
 module.exports = {
@@ -137,4 +132,5 @@ module.exports = {
   customError,
   requestError,
   isUserAuthorized,
+  GLOBAL_KEYBOARD,
 };

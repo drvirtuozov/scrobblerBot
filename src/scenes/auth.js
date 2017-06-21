@@ -45,7 +45,10 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
     });
 
     await ctx.editMessageText(
-      `Glad to see you, <a href="http://www.last.fm/user/${username}">${username}</a>!\n\nNow you can scrobble your first song. To do it just type artist name, song name and album title separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nType /help for more info`,
+      `Glad to see you, <a href="http://www.last.fm/user/${username}">${username}</a>!
+
+Now you can scrobble your first song. To do it just type artist name, song name and album title separated by new lines. \
+Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nType /help for more info`,
       Extra.HTML().webPreview(false));
 
     return ctx.flow.leave();

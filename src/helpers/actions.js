@@ -1,6 +1,6 @@
 const { Extra, Markup } = require('telegraf');
 const axios = require('axios');
-const { sendToAdmin } = require('./utils');
+const { sendToAdmin, GLOBAL_KEYBOARD } = require('./utils');
 const { findUserByIdAndUpdate, findOrCreateUserById } = require('./dbmanager');
 const { LASTFM_URL, LASTFM_KEY } = require('../../config');
 
@@ -9,7 +9,10 @@ async function start(ctx, next) {
   const res = await findOrCreateUserById(ctx.from.id);
 
   if (res.created) {
-    await ctx.reply(`Hello, ${ctx.from.first_name}!\n\nThis bot provides you the ability to scrobble songs, albums or tracklists in text mode. To take advantage of these opportunities you have to grant access to your Last.fm account...`);
+    await ctx.reply(`Hello, ${ctx.from.first_name}!
+    
+This bot allows you to scrobble songs, albums and tracklists in text mode. \
+To take advantage of these opportunities you have to grant access to your Last.fm account...`, GLOBAL_KEYBOARD);
     ctx.flow.enter('auth');
     return sendToAdmin(ctx, `We've got a new user! @${ctx.from.username}`);
   }
@@ -18,11 +21,19 @@ async function start(ctx, next) {
 }
 
 function help(ctx) {
-  ctx.reply('To scrobble a single track just type its info in this format:\n\nArtist\nTrack Name\nAlbum Title\n\nIf you want to scrobble an album or a tracklist use our guide via /scrobble command\n\nGrant access or change account - /auth\nGet recent scrobbled tracks from your account - /recent\n\nIf you have any ideas or improvements for the bot please tell us about them via /wish command');
+  ctx.reply(`To scrobble a track you can simply type its info in this format:
+  
+Artist\nTrack Name\nAlbum Title
+
+/auth - grant access or change account
+/recent - get recent scrobbled tracks from your account
+
+If you have any ideas or improvements for the bot please tell us about them via /wish command`, GLOBAL_KEYBOARD);
 }
 
 async function whoami(ctx) {
-  return ctx.reply(`You are logged in as <a href="http://www.last.fm/user/${ctx.user.account}">${ctx.user.account}</a>`, Extra.HTML().webPreview(false));
+  return ctx.reply(`You are logged in as <a href="http://www.last.fm/user/${ctx.user.account}">${ctx.user.account}</a>`,
+    Extra.HTML().webPreview(false));
 }
 
 async function nextAlbum(ctx, which) {
@@ -53,7 +64,11 @@ async function nextAlbum(ctx, which) {
   return ctx.editMessageText(
     `You are about to scrobble [${title}](${encodeURI(
     `http://www.last.fm/music/${artist}/${title}`)}) by [${artist}](${encodeURI(
-    `http://www.last.fm/music/${artist}`)}). The following tracks have been found on Discogs.com and will be scrobbled:\n\n${ctx.user.album.tracks.map(track => track.name).join('\n')}\n\nResults: ${i} of ${ctx.user.discogs_results.length - 1}`,
+    `http://www.last.fm/music/${artist}`)}). The following tracks have been found on Discogs.com and will be scrobbled:
+    
+${ctx.user.album.tracks.map(track => track.name).join('\n')}
+
+Results: ${i} of ${ctx.user.discogs_results.length - 1}`,
     Extra.markdown().webPreview(false).markup(Markup.inlineKeyboard([[
       Markup.callbackButton('Edit', 'EDIT'),
       Markup.callbackButton('⬅️', 'PREV'),
@@ -118,7 +133,10 @@ async function recentTracks(ctx) {
       url: track.url,
     }));
 
-  return ctx.reply(`Here are the very last 15 scrobbled tracks from your account:\n\n${(tracks.map(track => `<a href="${encodeURI(`http://www.last.fm/music/${track.artist}`)}">${track.artist}</a> — <a href="${track.url}">${track.name}</a>`)
+  return ctx.reply(`Here are the very last 15 scrobbled tracks from your account:
+  
+${(tracks.map(track => `<a href="${encodeURI(`http://www.last.fm/music/${track.artist}`)}">${track.artist}</a> — \
+<a href="${track.url}">${track.name}</a>`)
     .join('\n'))}`,
       Extra.HTML().webPreview(false));
 }

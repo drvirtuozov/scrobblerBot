@@ -12,11 +12,17 @@ const toTitleCase = require('to-title-case');
 const searchAlbumScene = new Scene('search_album');
 
 searchAlbumScene.enter((ctx) => {
-  ctx.editMessageText('OK. In order to start searching an album click the button below. Or you can type album info in this format manually:\n\nArtist\nAlbum Title',
-    Markup.inlineKeyboard([
-      Markup.switchToCurrentChatButton('Search...', ''),
-      Markup.callbackButton('Cancel', 'CANCEL'),
-    ]).extra());
+  const text = 'OK. In order to start searching an album click the button below. Or you can type album info in this format manually:\n\nArtist\nAlbum Title';
+  const extra = Markup.inlineKeyboard([
+    Markup.switchToCurrentChatButton('Search...', ''),
+    Markup.callbackButton('Cancel', 'CANCEL'),
+  ]).extra();
+
+  if (ctx.callbackQuery) {
+    return ctx.editMessageText(text, extra);
+  }
+
+  return ctx.reply(text, extra);
 });
 
 searchAlbumScene.on('inline_query', async (ctx) => {

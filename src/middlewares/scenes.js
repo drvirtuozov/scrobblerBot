@@ -2,7 +2,6 @@ const TelegrafFlow = require('telegraf-flow');
 const reportScene = require('../scenes/report');
 const wishScene = require('../scenes/wish');
 const authScene = require('../scenes/auth');
-const scrobbleScene = require('../scenes/scrobble');
 const searchTrackScene = require('../scenes/searchTrack');
 const tracklistScene = require('../scenes/tracklist');
 const searchAlbumScene = require('../scenes/searchAlbum');
@@ -12,10 +11,22 @@ const setAlbumTracksScene = require('../scenes/setAlbumTracks');
 const editTrackAlbumScene = require('../scenes/editTrackAlbum');
 const { start, whoami, help, recentTracks } = require('../helpers/actions');
 const auth = require('./auth');
-const { error } = require('../helpers/utils');
+const { error, GLOBAL_KEYBOARD } = require('../helpers/utils');
 
 
 const flow = new TelegrafFlow();
+
+flow.hears('🎵 Track', auth, (ctx) => {
+  ctx.flow.enter('search_track');
+});
+
+flow.hears('💽 Album', auth, (ctx) => {
+  ctx.flow.enter('search_album');
+});
+
+flow.hears('📃 Tracklist', auth, (ctx) => {
+  ctx.flow.enter('tracklist');
+});
 
 flow.command('start', async (ctx, next) => {
   try {
@@ -34,7 +45,7 @@ flow.command('auth', (ctx) => {
 });
 
 flow.command('scrobble', auth, (ctx) => {
-  ctx.flow.enter('scrobble');
+  ctx.reply('Deprecated command. Use a new keyboard below', GLOBAL_KEYBOARD);
 });
 
 flow.command('wish', (ctx) => {
@@ -48,7 +59,6 @@ flow.command('report', (ctx) => {
 flow.register(reportScene);
 flow.register(wishScene);
 flow.register(authScene);
-flow.register(scrobbleScene);
 flow.register(searchTrackScene);
 flow.register(tracklistScene);
 flow.register(searchAlbumScene);

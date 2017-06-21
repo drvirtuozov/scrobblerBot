@@ -11,11 +11,17 @@ const { searchFromLastfmAndAnswerInlineQuery } = require('../helpers/actions');
 const searchTrackScene = new Scene('search_track');
 
 searchTrackScene.enter((ctx) => {
-  ctx.editMessageText('OK. In order to start searching a track click the button below. Or you can type track info in this format manually:\n\nArtist\nTrack Name\nAlbum Title',
-    Markup.inlineKeyboard([
-      Markup.switchToCurrentChatButton('Search...', ''),
-      Markup.callbackButton('Cancel', 'CANCEL'),
-    ]).extra());
+  const text = 'OK. In order to start searching a track click the button below. Or you can type track info in this format manually:\n\nArtist\nTrack Name\nAlbum Title';
+  const extra = Markup.inlineKeyboard([
+    Markup.switchToCurrentChatButton('Search...', ''),
+    Markup.callbackButton('Cancel', 'CANCEL'),
+  ]).extra();
+
+  if (ctx.callbackQuery) {
+    return ctx.editMessageText(text, extra);
+  }
+
+  return ctx.reply(text, extra);
 });
 
 searchTrackScene.on('inline_query', async (ctx) => {
