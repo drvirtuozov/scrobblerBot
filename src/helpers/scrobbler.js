@@ -7,7 +7,7 @@ const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
 const { proxyPost } = require('./requests');
 
 
-const cantScrobbleText = 'You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that via /scrobble command';
+const cantScrobbleText = 'You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that by using tracklist scrobbling';
 
 function scrobbleTracks(tracks, timestamp, key) { // low-level function
   let startTimestamp = (timestamp || Math.floor(Date.now() / 1000)) - tracks
@@ -67,7 +67,10 @@ async function scrobbleTrackFromText(ctx, fromScene = false) {
   const song = getRandomFavSong();
 
   if (track.length < 2 || track.length > 3) {
-    return ctx.reply(`Please, send me valid data separated by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album}\n\nAlbum title is an optional parameter. Type /help for more info`);
+    return ctx.reply(`Please, send me valid data separated by new lines. Example:
+    
+${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for more info`,
+      Extra.HTML().webPreview(false));
   }
 
   if (canScrobble(ctx.user)) {
@@ -100,9 +103,9 @@ async function scrobbleTrackFromText(ctx, fromScene = false) {
 
 async function scrobbleAlbum(ctx) {
   if (ctx.callbackQuery) {
-    ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</>', Extra.HTML());
+    ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Extra.HTML());
   } else {
-    ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</>', Extra.HTML());
+    ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
   }
 
   const tracks = ctx.user.album.tracks.map(track => ({
@@ -145,7 +148,7 @@ async function scrobbleTracklist(ctx) {
     return ctx.reply('Please, send me valid data with this syntax:\n\nArtist | Track Name | Album Title');
   }
 
-  ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</>', Extra.HTML());
+  ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
 
   while (tracks[0]) {
     parts.push(tracks.slice(0, 50));
@@ -169,14 +172,16 @@ async function scrobbleTracklist(ctx) {
       scrobbles
         .filter(scrobble => scrobble.ignoredMessage.code === '1')
         .forEach(scr => ignored.push(scr));
-    } else {
-      if (scrobbles.ignoredMessage.code === '1') ignored.push(scrobbles);
+    } else if (scrobbles.ignoredMessage.code === '1') {
+      ignored.push(scrobbles);
     }
   });
 
   if (ignored.length) {
     return successfulScrobble(ctx,
-      `✅ Success, but...\nThe following tracks have been ignored:\n\n${ignored.map(track => `${track.artist['#text']} | ${track.track['#text']} | ${track.album['#text']}`).join('\n')}`);
+      `✅ Success, but...\nThe following tracks have been ignored:
+      
+${ignored.map(track => `${track.artist['#text']} | ${track.track['#text']} | ${track.album['#text']}`).join('\n')}`);
   }
 
   return successfulScrobble(ctx);

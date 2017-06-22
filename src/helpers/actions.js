@@ -25,8 +25,10 @@ function help(ctx) {
   
 Artist\nTrack Name\nAlbum Title
 
-/auth - grant access or change account
-/recent - get recent scrobbled tracks from your account
+Use the keyboard below for album and tracklist scrobbling.
+
+/auth — grant access or change account
+/recent — see recent scrobbled tracks from your account
 
 If you have any ideas or improvements for the bot please tell us about them via /wish command`, GLOBAL_KEYBOARD);
 }

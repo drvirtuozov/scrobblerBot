@@ -118,7 +118,7 @@ async function requestError(ctx, e) {
 }
 
 async function isUserAuthorized(ctx) {
-  return !!ctx.user.key;
+  return ctx.user && ctx.user.key;
 }
 
 module.exports = {

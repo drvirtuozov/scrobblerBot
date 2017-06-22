@@ -45,7 +45,7 @@ flow.command('auth', (ctx) => {
 });
 
 flow.command('scrobble', auth, (ctx) => {
-  ctx.reply('Deprecated command. Use a new keyboard below', GLOBAL_KEYBOARD);
+  ctx.reply('Deprecated command. Use the new keyboard below', GLOBAL_KEYBOARD);
 });
 
 flow.command('wish', (ctx) => {
