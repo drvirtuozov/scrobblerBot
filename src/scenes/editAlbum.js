@@ -9,7 +9,8 @@ const editAlbumScene = new Scene('edit_album');
 
 editAlbumScene.enter(async (ctx) => {
   const tracks = ctx.user.album.tracks;
-  return ctx.editMessageText(`Edit the tracklist and send it back to me:\n\n${tracks.map(track => track.name).join('\n')}`,
+  await ctx.editMessageText('Edit the tracklist and send it back to me:');
+  ctx.reply(`${tracks.map(track => track.name).join('\n')}`,
     Markup.inlineKeyboard([
       Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
