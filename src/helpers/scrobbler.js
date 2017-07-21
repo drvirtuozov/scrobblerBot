@@ -1,4 +1,4 @@
-const { Extra } = require('telegraf');
+const { Markup, Extra } = require('telegraf');
 const {
   getRandomFavSong, md5, utf8, successfulScrobble,
   canScrobble, customError, requestError,
@@ -145,7 +145,10 @@ async function scrobbleTracklist(ctx) {
   const parts = [];
 
   if (!isValid) {
-    return ctx.reply('Please, send me valid data with this syntax:\n\nArtist | Track Name | Album Title');
+    return ctx.reply('Please, send me valid data with this syntax:\n\nArtist | Track Name | Album Title',
+      Markup.inlineKeyboard([
+        Markup.callbackButton('Cancel', 'CANCEL'),
+      ]).extra());
   }
 
   ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
