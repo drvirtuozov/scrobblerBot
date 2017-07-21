@@ -11,7 +11,7 @@ const toTitleCase = require('to-title-case');
 
 const searchAlbumScene = new Scene('search_album');
 
-searchAlbumScene.enter((ctx) => {
+searchAlbumScene.enter(async (ctx) => {
   const text = 'OK. In order to start searching an album click the button below. Or you can type album info in this format manually:\n\nArtist\nAlbum Title';
   const extra = Markup.inlineKeyboard([
     Markup.switchToCurrentChatButton('Search...', ''),
@@ -85,7 +85,7 @@ searchAlbumScene.on('text', async (ctx) => {
 
       foundOn = 'Last.fm';
     } else {
-      return ctx.flow.enter('no_album_info');
+      return ctx.enterScene('no_album_info');
     }
 
     const user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true });
@@ -128,7 +128,7 @@ searchAlbumScene.action('OK', async (ctx) => {
 });
 
 searchAlbumScene.action('EDIT', (ctx) => {
-  ctx.flow.enter('edit_album');
+  ctx.enterScene('edit_album');
 });
 
 searchAlbumScene.action('PREV', async (ctx) => {

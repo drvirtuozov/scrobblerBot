@@ -13,7 +13,7 @@ async function start(ctx, next) {
     
 This bot allows you to scrobble songs, albums and tracklists in text mode. \
 To take advantage of these opportunities you have to grant access to your Last.fm account...`, GLOBAL_KEYBOARD);
-    ctx.flow.enter('auth');
+    ctx.enterScene('auth');
     return sendToAdmin(ctx, `We've got a new user! @${ctx.from.username}`);
   }
 
