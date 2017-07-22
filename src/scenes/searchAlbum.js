@@ -11,7 +11,7 @@ const toTitleCase = require('to-title-case');
 
 const searchAlbumScene = new Scene('search_album');
 
-searchAlbumScene.enter(async (ctx) => {
+searchAlbumScene.enter((ctx) => {
   const text = 'OK. In order to start searching an album click the button below. Or you can type album info in this format manually:\n\nArtist\nAlbum Title';
   const extra = Markup.inlineKeyboard([
     Markup.switchToCurrentChatButton('Search...', ''),

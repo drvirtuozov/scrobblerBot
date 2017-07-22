@@ -18,14 +18,15 @@ bot.context.user = null;
 bot.context.messageToEdit = null;
 
 bot.context.enterScene = function (name) {
-  this.flow.enter(name);
-  session.saveSession(session.options.getSessionKey(this), this.session);
+  const ctx = this;
+  ctx.flow.enter(name);
+  session.saveSession(session.options.getSessionKey(ctx), ctx.session);
 };
 
 bot.context.leaveScene = function () {
-  this.flow.leave();
-  this.session = null;
-  session.saveSession(session.options.getSessionKey(this), this.session);
+  const ctx = this;
+  ctx.flow.leave();
+  session.saveSession(session.options.getSessionKey(ctx), ctx.session);
 };
 
 bot.telegram.getMe()
@@ -37,7 +38,7 @@ bot.telegram.getMe()
   });
 
 bot.use(logger());
-bot.use(sessionMiddleware)
+bot.use(sessionMiddleware);
 bot.use(user);
 bot.use(scenes);
 
