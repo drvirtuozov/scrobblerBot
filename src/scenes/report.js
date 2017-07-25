@@ -15,7 +15,7 @@ reportScene.enter((ctx) => {
 reportScene.on('text', async (ctx) => {
   await sendToAdmin(ctx, `A report from @${ctx.from.username}: ${ctx.message.text}`);
   await ctx.reply('Thanks! We have successfully received your bug report');
-  ctx.flow.leave();
+  ctx.leaveScene();
 });
 
 module.exports = reportScene;

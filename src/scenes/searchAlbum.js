@@ -85,7 +85,7 @@ searchAlbumScene.on('text', async (ctx) => {
 
       foundOn = 'Last.fm';
     } else {
-      return ctx.flow.enter('no_album_info');
+      return ctx.enterScene('no_album_info');
     }
 
     const user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true });
@@ -128,7 +128,7 @@ searchAlbumScene.action('OK', async (ctx) => {
 });
 
 searchAlbumScene.action('EDIT', (ctx) => {
-  ctx.flow.enter('edit_album');
+  ctx.enterScene('edit_album');
 });
 
 searchAlbumScene.action('PREV', async (ctx) => {

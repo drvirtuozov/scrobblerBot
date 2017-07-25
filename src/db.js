@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
+const config = require('../config');
 
 
 const db = mongoose.connection;
 
 mongoose.Promise = Promise;
-mongoose.connect(process.env.MONGODB)
+mongoose.connect(config.MONGODB_URL)
   .catch((err) => {
     console.log('Database connection error:', err.message);
   });

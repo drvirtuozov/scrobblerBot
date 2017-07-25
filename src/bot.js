@@ -4,6 +4,7 @@ const { searchFromLastfmAndAnswerInlineQuery } = require('./helpers/actions');
 const user = require('./middlewares/user');
 const scenes = require('./middlewares/scenes');
 const auth = require('./middlewares/auth');
+const { session, sessionMiddleware } = require('./middlewares/session');
 const logger = require('telegraf-logger');
 const { SCROBBLERBOT_TOKEN, LASTFM_URL } = require('../config');
 const { error, successfulScrobble, requestError } = require('./helpers/utils');
@@ -16,6 +17,18 @@ const bot = new Telegraf(SCROBBLERBOT_TOKEN);
 bot.context.user = null;
 bot.context.messageToEdit = null;
 
+bot.context.enterScene = function (name) {
+  const ctx = this;
+  ctx.flow.enter(name);
+  session.saveSession(session.options.getSessionKey(ctx), ctx.session);
+};
+
+bot.context.leaveScene = function () {
+  const ctx = this;
+  ctx.flow.leave();
+  session.saveSession(session.options.getSessionKey(ctx), ctx.session);
+};
+
 bot.telegram.getMe()
   .then((data) => {
     bot.options.username = data.username;
@@ -25,11 +38,7 @@ bot.telegram.getMe()
   });
 
 bot.use(logger());
-
-bot.use(Telegraf.memorySession({
-  getSessionKey: ctx => ctx.from.id,
-}));
-
+bot.use(sessionMiddleware);
 bot.use(user);
 bot.use(scenes);
 
@@ -55,7 +64,7 @@ bot.on('inline_query', async (ctx) => {
 
 bot.action('CANCEL', async (ctx) => {
   await ctx.editMessageText('Canceled');
-  ctx.flow.leave();
+  ctx.leaveScene();
 });
 
 bot.action('RETRY', async (ctx) => {

@@ -15,7 +15,7 @@ if (process.env.NODE_ENV === 'production') {
 module.exports = {
   NODE_ENV: process.env.NODE_ENV,
   PORT: process.env.PORT,
-  MONGODB: process.env.MONGODB,
+  MONGODB_URL: process.env.MONGODB_URL,
   SCROBBLERBOT_TOKEN: process.env.SCROBBLERBOT_TOKEN,
   LASTFM_URL: process.env.LASTFM_URL,
   LASTFM_KEY: process.env.LASTFM_KEY,
@@ -24,4 +24,5 @@ module.exports = {
   DISCOGS_SECRET: process.env.DISCOGS_SECRET,
   ADMIN_ID: process.env.ADMIN_ID,
   NOW_LOGS_SECRET: process.env.NOW_LOGS_SECRET,
+  REDIS_URL: process.env.REDIS_URL,
 };

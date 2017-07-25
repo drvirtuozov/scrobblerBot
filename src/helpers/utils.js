@@ -29,7 +29,7 @@ async function error(ctx, e) {
     await ctx.reply(errText);
   }
 
-  return ctx.flow.leave();
+  return ctx.leaveScene();
 }
 
 function utf8(text) {
@@ -54,7 +54,7 @@ async function successfulScrobble(ctx, text = '✅ Success!') {
     await ctx.reply(text);
   }
 
-  if (ctx.flow) ctx.flow.leave();
+  ctx.leaveScene();
 }
 
 function canScrobble(user) {
@@ -93,7 +93,7 @@ async function customError(ctx, e) {
     await ctx.reply(e.message, extra);
   }
 
-  return ctx.flow.leave();
+  return ctx.leaveScene();
 }
 
 async function requestError(ctx, e) {
@@ -109,7 +109,7 @@ async function requestError(ctx, e) {
         await ctx.reply(text);
       }
 
-      return ctx.flow.enter('auth');
+      return ctx.enterScene('auth');
     }
   }
 

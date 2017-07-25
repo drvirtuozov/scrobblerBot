@@ -87,7 +87,7 @@ searchTrackScene.action('SCR', async (ctx) => {
 });
 
 searchTrackScene.action('EDIT_TRACK_ALBUM', (ctx) => {
-  ctx.flow.enter('edit_track_album');
+  ctx.enterScene('edit_track_album');
 });
 
 searchTrackScene.action('SCR_WITHOUT_ALBUM', async (ctx) => {
