@@ -37,7 +37,11 @@ searchAlbumScene.on('text', async (ctx) => {
   try {
     const parsedAlbum = ctx.message.text.split('\n');
 
-    if (parsedAlbum.length < 2) return ctx.reply('Format:\n\nArtist\nAlbum Title');
+    if (parsedAlbum.length < 2) {
+      return ctx.reply('Format:\n\nArtist\nAlbum Title', Markup.inlineKeyboard([
+        Markup.callbackButton('Cancel', 'CANCEL'),
+      ]).extra());
+    }
 
     const parsedTitle = toTitleCase(parsedAlbum[1]);
     const parsedArtist = toTitleCase(parsedAlbum[0]);
