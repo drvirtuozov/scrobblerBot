@@ -72,7 +72,9 @@ searchTrackScene.on('text', async (ctx) => {
         ])));
     }
 
-    return ctx.reply('Format:\n\nArtist\nSong Name\nAlbum Title');
+    return ctx.reply('Format:\n\nArtist\nSong Name\nAlbum Title', Markup.inlineKeyboard([
+      Markup.callbackButton('Cancel', 'CANCEL'),
+    ]).extra());
   } catch (e) {
     return error(ctx, e);
   }
