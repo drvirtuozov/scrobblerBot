@@ -38,12 +38,28 @@ async function whoami(ctx) {
     Extra.HTML().webPreview(false));
 }
 
-async function nextAlbum(ctx, which) {
+async function nextAlbum(ctx, which = 'NEXT') {
+  let i = null;
+  let id = null;
   const pages = ctx.callbackQuery.message.text.slice(ctx.callbackQuery.message.text.search(/\d?\d of \d\d/)).split(' of ');
-  const i = which === 'NEXT'
-    ? +pages[0] + 1 > +pages[1] ? 1 : +pages[0] + 1
-    : +pages[0] - 1 < 1 ? +pages[1] : +pages[0] - 1;
-  const id = ctx.user.discogs_results[i].id;
+
+  switch (which) {
+    case 'NEXT':
+      i = +pages[0] + 1 > +pages[1] ? 1 : +pages[0] + 1;
+      break;
+    case 'PREV':
+      i = +pages[0] - 1 < 1 ? +pages[1] : +pages[0] - 1;
+      break;
+    default:
+      return;
+  }
+
+  if (ctx.user.discogs_results[i]) {
+    id = ctx.user.discogs_results[i].id;
+  } else {
+    return ctx.answerCallbackQuery('No more results');
+  }
+
   const res = await axios(`https://api.discogs.com/releases/${id}`);
 
   if (res.data.tracklist.length) {
