@@ -51,7 +51,7 @@ async function nextAlbum(ctx, which = 'NEXT') {
       i = +pages[0] - 1 < 1 ? +pages[1] : +pages[0] - 1;
       break;
     default:
-      return;
+      throw new Error(`Unexpected value: ${which}`);
   }
 
   if (ctx.user.discogs_results[i]) {
