@@ -37,15 +37,10 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
       return requestError(ctx, e);
     }
 
-    const username = res.data.session.name;
-
-    await findUserByIdAndUpdate(ctx.from.id, {
-      account: res.data.session.name,
-      key: res.data.session.key,
-    });
-
+    const { name: account, key } = res.data.session;
+    await findUserByIdAndUpdate(ctx.from.id, { account, key });
     await ctx.editMessageText(
-      `Glad to see you, <a href="http://www.last.fm/user/${username}">${username}</a>!
+      `Glad to see you, <a href="http://www.last.fm/user/${account}">${account}</a>!
 
 Now you can scrobble your first song. To do it just type artist name, song name and album title separated by new lines. \
 Example:\n\n${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for more info`,
