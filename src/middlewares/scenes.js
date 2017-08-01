@@ -1,5 +1,4 @@
 const TelegrafFlow = require('telegraf-flow');
-const reportScene = require('../scenes/report');
 const wishScene = require('../scenes/wish');
 const authScene = require('../scenes/auth');
 const searchTrackScene = require('../scenes/searchTrack');
@@ -52,11 +51,6 @@ flow.command('wish', (ctx) => {
   ctx.enterScene('wish');
 });
 
-flow.command('report', (ctx) => {
-  ctx.enterScene('report');
-});
-
-flow.register(reportScene);
 flow.register(wishScene);
 flow.register(authScene);
 flow.register(searchTrackScene);

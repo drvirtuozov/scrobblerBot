@@ -21,7 +21,7 @@ function getRandomFavSong() {
 
 async function error(ctx, e) {
   console.log(e);
-  const errText = 'Oops, something went wrong. Please try again later.\nIf it goes on constantly please let us know via /report command';
+  const errText = '❗️ Oops, something went wrong. Please try again later.';
 
   if (ctx.callbackQuery) {
     await ctx.editMessageText(errText);
@@ -29,7 +29,8 @@ async function error(ctx, e) {
     await ctx.reply(errText);
   }
 
-  return ctx.leaveScene();
+  ctx.leaveScene();
+  return sendToAdmin(ctx, '❗️ An error occured. Check the logs...');
 }
 
 function utf8(text) {
