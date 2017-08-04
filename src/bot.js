@@ -1,11 +1,11 @@
 const Telegraf = require('telegraf');
+const TelegrafLogger = require('telegraf-logger');
 const { scrobbleTrackFromText } = require('./helpers/scrobbler');
 const { searchFromLastfmAndAnswerInlineQuery } = require('./helpers/actions');
 const user = require('./middlewares/user');
 const scenes = require('./middlewares/scenes');
 const auth = require('./middlewares/auth');
 const { session, sessionMiddleware } = require('./middlewares/session');
-const logger = require('telegraf-logger');
 const { SCROBBLERBOT_TOKEN, LASTFM_URL } = require('../config');
 const { error, successfulScrobble, requestError } = require('./helpers/utils');
 const { proxyPost } = require('./helpers/requests');
@@ -13,6 +13,7 @@ const { findUserByIdAndUpdate } = require('./helpers/dbmanager');
 
 
 const bot = new Telegraf(SCROBBLERBOT_TOKEN);
+const logger = new TelegrafLogger();
 
 bot.context.user = null;
 bot.context.messageToEdit = null;
@@ -37,8 +38,8 @@ bot.telegram.getMe()
     console.log('Bot\'s getMe error:', err.message);
   });
 
-bot.use(logger());
 bot.use(sessionMiddleware);
+bot.use(logger.middleware());
 bot.use(user);
 bot.use(scenes);
 

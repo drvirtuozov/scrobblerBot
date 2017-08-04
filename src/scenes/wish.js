@@ -6,7 +6,7 @@ const { sendToAdmin } = require('../helpers/utils');
 const wishScene = new Scene('wish');
 
 wishScene.enter((ctx) => {
-  ctx.reply('Ok, I\'m listening to you. Tell me what feature you want...',
+  ctx.reply('Ok, I\'m listening to you. Tell me what feature do you want...',
     Markup.inlineKeyboard([
       Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());

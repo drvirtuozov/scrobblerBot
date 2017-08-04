@@ -27,7 +27,7 @@
     "proxy-lists": "^1.11.1",
     "telegraf": "^3.6.4",
     "telegraf-flow": "^8.1.1",
-    "telegraf-logger": "^0.1.0",
+    "telegraf-logger": "^1.0.0",
     "telegraf-session-redis": "^4.2.0",
     "to-title-case": "^1.0.0"
   },
