@@ -35,8 +35,6 @@ function getCheckedProxies() {
 
   return new Promise(async (resolve) => {
     uncheckedProxies.forEach(async (proxy) => {
-      const startMs = Date.now();
-
       try {
         await axios.post(config.LASTFM_URL, null, {
           timeout: 5000,
@@ -47,10 +45,7 @@ function getCheckedProxies() {
           },
         });
       } catch (e) {
-        const responseMs = Date.now() - startMs;
-
         if (e.response && e.response.status === 400) {
-          proxy.responseMs = responseMs;
           result.push(proxy);
         }
       }
@@ -81,12 +76,12 @@ function getRandomChekedProxy() {
   };
 }
 
-//if (config.NODE_ENV === 'production') {
+if (config.NODE_ENV === 'production') {
   setImmediate(async () => {
     uncheckedProxies = await getUncheckedProxies();
     checkedProxies = await getCheckedProxies();
   });
-//}
+}
 
 setInterval(async () => {
   checkedProxies = await getCheckedProxies();
