@@ -20,8 +20,6 @@ module.exports = {
   LASTFM_URL: process.env.LASTFM_URL,
   LASTFM_KEY: process.env.LASTFM_KEY,
   LASTFM_SECRET: process.env.LASTFM_SECRET,
-  DISCOGS_KEY: process.env.DISCOGS_KEY,
-  DISCOGS_SECRET: process.env.DISCOGS_SECRET,
   ADMIN_ID: process.env.ADMIN_ID,
   NOW_LOGS_SECRET: process.env.NOW_LOGS_SECRET,
   REDIS_URL: process.env.REDIS_URL,

@@ -1,11 +1,11 @@
 const { Markup, Extra } = require('telegraf');
 const { Scene } = require('telegraf-flow');
-const axios = require('axios');
 const { LASTFM_URL, LASTFM_KEY } = require('../../config');
 const { scrobbleTrackFromDB, scrobbleTrackFromText } = require('../helpers/scrobbler');
 const { error } = require('../helpers/utils');
 const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 const { searchFromLastfmAndAnswerInlineQuery } = require('../helpers/actions');
+const { proxyGet } = require('../helpers/requests');
 
 
 const searchTrackScene = new Scene('search_track');
@@ -39,7 +39,7 @@ searchTrackScene.on('text', async (ctx) => {
     if (parsedTrack.length > 2) {
       return scrobbleTrackFromText(ctx, true);
     } else if (parsedTrack.length === 2) {
-      const res = await axios(encodeURI(`${LASTFM_URL}?method=track.getInfo&api_key=${LASTFM_KEY}&artist=${parsedTrack[0]}&track=${parsedTrack[1]}&format=json`));
+      const res = await proxyGet(encodeURI(`${LASTFM_URL}?method=track.getInfo&api_key=${LASTFM_KEY}&artist=${parsedTrack[0]}&track=${parsedTrack[1]}&format=json`));
 
       if (res.data.error) return scrobbleTrackFromText(ctx, true);
 
