@@ -1,8 +1,8 @@
-const { Extra, Markup } = require('telegraf');
-const axios = require('axios');
+const { Extra } = require('telegraf');
 const { sendToAdmin, GLOBAL_KEYBOARD } = require('./utils');
-const { findUserByIdAndUpdate, findOrCreateUserById } = require('./dbmanager');
+const { findOrCreateUserById } = require('./dbmanager');
 const { LASTFM_URL, LASTFM_KEY } = require('../../config');
+const { proxyGet } = require('./requests');
 
 
 async function start(ctx, next) {
@@ -38,64 +38,6 @@ async function whoami(ctx) {
     Extra.HTML().webPreview(false));
 }
 
-async function nextAlbum(ctx, which = 'NEXT') {
-  let i = null;
-  let id = null;
-  const pages = ctx.callbackQuery.message.text.slice(ctx.callbackQuery.message.text.search(/\d?\d of \d\d/)).split(' of ');
-
-  switch (which) {
-    case 'NEXT':
-      i = +pages[0] + 1 > +pages[1] ? 1 : +pages[0] + 1;
-      break;
-    case 'PREV':
-      i = +pages[0] - 1 < 1 ? +pages[1] : +pages[0] - 1;
-      break;
-    default:
-      throw new Error(`Unexpected value: ${which}`);
-  }
-
-  if (ctx.user.discogs_results[i]) {
-    id = ctx.user.discogs_results[i].id;
-  } else {
-    return ctx.answerCallbackQuery('No more results');
-  }
-
-  const res = await axios(`https://api.discogs.com/releases/${id}`);
-
-  if (res.data.tracklist.length) {
-    const tracks = res.data.tracklist
-      .map((track) => {
-        const dur = track.duration.split(':');
-        return { name: track.title, duration: (dur[0] * 60) + +dur[1] };
-      });
-
-    ctx.user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true });
-  } else {
-    ctx.user = await findUserByIdAndUpdate(ctx.from.id, {
-      'album.tracks': ['There are no any tracks in this result'],
-    }, { new: true });
-  }
-
-  const title = ctx.user.album.title;
-  const artist = ctx.user.album.artist;
-
-  return ctx.editMessageText(
-    `You are about to scrobble [${title}](${encodeURI(
-    `http://www.last.fm/music/${artist}/${title}`)}) by [${artist}](${encodeURI(
-    `http://www.last.fm/music/${artist}`)}). The following tracks have been found on Discogs.com and will be scrobbled:
-    
-${ctx.user.album.tracks.map(track => track.name).join('\n')}
-
-Results: ${i} of ${ctx.user.discogs_results.length - 1}`,
-    Extra.markdown().webPreview(false).markup(Markup.inlineKeyboard([[
-      Markup.callbackButton('Edit', 'EDIT'),
-      Markup.callbackButton('⬅️', 'PREV'),
-      Markup.callbackButton('➡️', 'NEXT'),
-      Markup.callbackButton('Cancel', 'CANCEL'),
-    ], [Markup.callbackButton('OK', 'OK')],
-    ])));
-}
-
 async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
   if (!ctx.inlineQuery.query) {
     return ctx.answerInlineQuery([{
@@ -109,7 +51,7 @@ async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
   }
 
   const query = ctx.inlineQuery.query;
-  const res = await axios(encodeURI(
+  const res = await proxyGet(encodeURI(
     `${LASTFM_URL}?method=${type}.search&${type}=${query}&api_key=${LASTFM_KEY}&format=json`));
   const results = res.data.results[`${type}matches`][`${type}`];
   const inlineResults = results
@@ -135,7 +77,7 @@ async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
 }
 
 async function recentTracks(ctx) {
-  const res = await axios(`${LASTFM_URL}?method=user.getrecenttracks&user=${ctx.user.account}&limit=15&api_key=${LASTFM_KEY}&format=json`);
+  const res = await proxyGet(`${LASTFM_URL}?method=user.getrecenttracks&user=${ctx.user.account}&limit=15&api_key=${LASTFM_KEY}&format=json`);
   const tracks = res.data.recenttracks.track
     .filter((track) => {
       if (track['@attr']) {
@@ -163,7 +105,6 @@ module.exports = {
   start,
   help,
   whoami,
-  nextAlbum,
   searchFromLastfmAndAnswerInlineQuery,
   recentTracks,
 };
