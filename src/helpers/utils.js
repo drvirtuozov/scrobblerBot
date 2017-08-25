@@ -79,7 +79,7 @@ function multipleArray(array = [], multipleTimes = 1) {
   let multipliedArray = [];
 
   if (multipleTimes > 1) {
-    for (let i = 0; i < multipleTimes; i++) {
+    for (let i = 0; i < multipleTimes; i += 1) {
       multipliedArray = multipliedArray.concat(array);
     }
 
@@ -94,12 +94,11 @@ function fromQuerystringToTracksArray(querystr = '') {
   const obj = querystring.parse(querystr);
   const tracksCount = Object.keys(obj).filter(key => key.includes('track')).length;
 
-  for (let i = 0; i < tracksCount; i++) {
+  for (let i = 0; i < tracksCount; i += 1) {
     tracks.push({
       name: obj[`track[${i}]`],
       artist: obj[`artist[${i}]`],
       album: obj[`album[${i}]`],
-      duration: 300,
     });
   }
 
@@ -165,6 +164,21 @@ async function isUserAuthorized(ctx) {
   return ctx.user && ctx.user.key;
 }
 
+function validateTracksDurations(tracks = []) {
+  const defDur = 300;
+  return tracks.map((track) => {
+    let duration = 0;
+    const td = track.duration;
+
+    if (tracks.length === 1) {
+      return Object.assign(track, { duration });
+    }
+
+    duration = typeof td === 'undefined' ? defDur : +td || defDur;
+    return Object.assign(track, { duration });
+  });
+}
+
 module.exports = {
   sendToAdmin,
   md5,
@@ -180,4 +194,5 @@ module.exports = {
   multipleArray,
   fromQuerystringToTracksArray,
   fromTracksArrayToQuerystring,
+  validateTracksDurations,
 };
