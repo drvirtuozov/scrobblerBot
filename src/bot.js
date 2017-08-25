@@ -1,15 +1,14 @@
 const Telegraf = require('telegraf');
 const TelegrafLogger = require('telegraf-logger');
-const { scrobbleTrackFromText } = require('./helpers/scrobbler');
+const { scrobbleTracks, scrobbleTrackFromText } = require('./helpers/scrobbler');
 const { searchFromLastfmAndAnswerInlineQuery } = require('./helpers/actions');
 const user = require('./middlewares/user');
 const scenes = require('./middlewares/scenes');
 const auth = require('./middlewares/auth');
 const { session, sessionMiddleware } = require('./middlewares/session');
-const { SCROBBLERBOT_TOKEN, LASTFM_URL } = require('../config');
-const { error, successfulScrobble, requestError } = require('./helpers/utils');
-const { proxyPost } = require('./helpers/requests');
-const { findUserByIdAndUpdate } = require('./helpers/dbmanager');
+const { SCROBBLERBOT_TOKEN } = require('../config');
+const { error, successfulScrobble, requestError, multipleArray } = require('./helpers/utils');
+const { findSucceededMessageById, findFailedMessageById } = require('./helpers/dbmanager');
 
 
 const bot = new Telegraf(SCROBBLERBOT_TOKEN);
@@ -70,28 +69,86 @@ bot.action('CANCEL', async (ctx) => {
 
 bot.action('RETRY', async (ctx) => {
   try {
-    const messageId = ctx.callbackQuery.message.message_id;
-    const data = ctx.user.failed
-      .filter(fail => fail.message_id === messageId)[0].data;
     ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Telegraf.Extra.HTML());
+    const messageId = ctx.callbackQuery.message.message_id;
+    const message = await findFailedMessageById(messageId);
+
+    if (message) {
+      try {
+        await scrobbleTracks(message.tracks, null, ctx.user.key);
+      } catch (e) {
+        requestError(ctx, e);
+        return;
+      }
+
+      await successfulScrobble(ctx);
+    } else {
+      ctx.editMessageText('Expired');
+    }
+  } catch (e) {
+    error(ctx, e);
+  }
+});
+
+bot.action('REPEAT', async (ctx) => {
+  try {
+    const messageId = ctx.callbackQuery.message.message_id;
+    const message = await findSucceededMessageById(messageId);
+
+    if (message) {
+      ctx.editMessageText('How many times do you want to scrobble this again?', Telegraf.Markup.inlineKeyboard([
+        [
+          Telegraf.Markup.callbackButton('1', 'REPEAT:1'),
+          Telegraf.Markup.callbackButton('2', 'REPEAT:2'),
+          Telegraf.Markup.callbackButton('3', 'REPEAT:3'),
+          Telegraf.Markup.callbackButton('4', 'REPEAT:4'),
+          Telegraf.Markup.callbackButton('5', 'REPEAT:5'),
+        ],
+        [
+          Telegraf.Markup.callbackButton('6', 'REPEAT:6'),
+          Telegraf.Markup.callbackButton('7', 'REPEAT:7'),
+          Telegraf.Markup.callbackButton('8', 'REPEAT:8'),
+          Telegraf.Markup.callbackButton('9', 'REPEAT:9'),
+          Telegraf.Markup.callbackButton('10', 'REPEAT:10'),
+        ],
+        [
+          Telegraf.Markup.callbackButton('Custom', 'REPEAT:CUSTOM'),
+        ],
+      ]).extra());
+    } else {
+      ctx.editMessageText('Expired');
+    }
+  } catch (e) {
+    error(ctx, e);
+  }
+});
+
+bot.action(/REPEAT:\d?\d/, async (ctx) => {
+  try {
+    ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Telegraf.Extra.HTML());
+    const messageId = ctx.callbackQuery.message.message_id;
+    const message = await findSucceededMessageById(messageId);
+    const count = ctx.callbackQuery.data.split(':')[1];
 
     try {
-      await proxyPost(LASTFM_URL, data);
+      await scrobbleTracks(multipleArray(message.tracks, count), null, ctx.user.key);
     } catch (e) {
-      return requestError(ctx, e);
+      requestError(ctx, e);
+      return;
     }
 
-    await successfulScrobble(ctx);
-    return findUserByIdAndUpdate(ctx.from.id, {
-      $pull: {
-        failed: {
-          message_id: messageId,
-        },
-      },
-    });
+    await successfulScrobble(ctx, undefined, message.tracks);
   } catch (e) {
-    return error(ctx, e);
+    error(ctx, e);
   }
+});
+
+bot.action('REPEAT:CUSTOM', async (ctx) => {
+  await ctx.editMessageText('Enter a number:', Telegraf.Markup.inlineKeyboard([
+    Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
+  ]).extra());
+  ctx.session.messageId = ctx.callbackQuery.message.message_id;
+  ctx.enterScene('repeat_scrobble');
 });
 
 bot.catch((err) => {

@@ -9,7 +9,7 @@ const session = new RedisSession({
   getSessionKey(ctx) {
     return ctx.from.id;
   },
-})
+});
 
 module.exports = {
   session,

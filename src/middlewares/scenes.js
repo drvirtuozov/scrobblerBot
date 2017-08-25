@@ -8,6 +8,7 @@ const noAlbumInfoScene = require('../scenes/noAlbumInfo');
 const editAlbumScene = require('../scenes/editAlbum');
 const setAlbumTracksScene = require('../scenes/setAlbumTracks');
 const editTrackAlbumScene = require('../scenes/editTrackAlbum');
+const repeatScrobbleScene = require('../scenes/repeatScrobble');
 const { start, whoami, help, recentTracks } = require('../helpers/actions');
 const auth = require('./auth');
 const { error, GLOBAL_KEYBOARD } = require('../helpers/utils');
@@ -60,5 +61,6 @@ flow.register(noAlbumInfoScene);
 flow.register(editAlbumScene);
 flow.register(setAlbumTracksScene);
 flow.register(editTrackAlbumScene);
+flow.register(repeatScrobbleScene);
 
 module.exports = flow.middleware();

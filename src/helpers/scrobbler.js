@@ -1,8 +1,7 @@
 const { Markup, Extra } = require('telegraf');
 const {
   getRandomFavSong, md5, utf8, successfulScrobble,
-  canScrobble, customError, requestError,
-} = require('./utils');
+  canScrobble, scrobbleError, requestError } = require('./utils');
 const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
 const { proxyPost } = require('./requests');
 
@@ -14,8 +13,8 @@ function scrobbleTracks(tracks, timestamp, key) { // low-level function
     .map(track => track.duration)
     .reduce((prev, next) => prev + next);
   const names = tracks.map(track => track.name);
-  const albums = tracks.map(track => track.album);
   const artists = tracks.map(track => track.artist);
+  const albums = tracks.map(track => track.album || '');
   const timestamps = tracks.map(track => startTimestamp += track.duration);
   const queryAlbums = albums.map((album, i) => `&album[${i}]=${encodeURIComponent(album)}`).sort().join('');
   const queryArtists = artists.map((artist, i) => `&artist[${i}]=${encodeURIComponent(artist)}`).sort().join('');
@@ -31,7 +30,7 @@ async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   const trackToScrobble = {
     artist: ctx.user.track.artist,
     name: ctx.user.track.name,
-    album: isAlbum ? ctx.user.track.album : '',
+    album: isAlbum && ctx.user.track.album,
     duration: 0,
   };
 
@@ -46,10 +45,10 @@ async function scrobbleTrackFromDB(ctx, isAlbum = true) {
       const res = await scrobbleTracks([trackToScrobble], null, ctx.user.key);
 
       if (res.data.scrobbles['@attr'].ingored) {
-        return customError(ctx, new Error('❌ Error: Track has been ignored by Last.fm'));
+        return scrobbleError(ctx, new Error('❌ Error: The track was ignored by Last.fm'));
       }
 
-      return successfulScrobble(ctx);
+      return successfulScrobble(ctx, undefined, [trackToScrobble]);
     } catch (e) {
       return requestError(ctx, e);
     }
@@ -81,7 +80,7 @@ ${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for 
     const trackToScrobble = {
       artist: track[0],
       name: track[1],
-      album: track[2] || '',
+      album: track[2],
       duration: 0,
     };
 
@@ -89,10 +88,10 @@ ${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for 
       const res = await scrobbleTracks([trackToScrobble], ctx.message.date, ctx.user.key);
 
       if (res.data.scrobbles['@attr'].ingored) {
-        return customError(ctx, new Error('❌ Error: Track has been ignored by Last.fm'));
+        return scrobbleError(ctx, new Error('❌ Error: The track was ignored by Last.fm'));
       }
 
-      return successfulScrobble(ctx);
+      return successfulScrobble(ctx, undefined, [trackToScrobble]);
     } catch (e) {
       return requestError(ctx, e);
     }
@@ -112,16 +111,15 @@ async function scrobbleAlbum(ctx) {
     name: track.name,
     artist: ctx.user.album.artist,
     album: ctx.user.album.title,
-    duration: track.duration,
+    duration: track.duration || 300,
   }));
 
   try {
     await scrobbleTracks(tracks, null, ctx.user.key);
+    return successfulScrobble(ctx, undefined, tracks);
   } catch (e) {
     return requestError(ctx, e);
   }
-
-  return successfulScrobble(ctx);
 }
 
 async function scrobbleTracklist(ctx) {
@@ -137,7 +135,7 @@ async function scrobbleTracklist(ctx) {
       return {
         name: track[1],
         artist: track[0],
-        album: track[2] || '',
+        album: track[2],
         duration: 300,
       };
     });
@@ -167,6 +165,8 @@ async function scrobbleTracklist(ctx) {
   }
 
   const ignored = [];
+  const tracksArray = [];
+  parts.forEach(part => tracksArray.push(...part));
 
   results.forEach((result) => {
     const scrobbles = result.data.scrobbles.scrobble;
@@ -182,15 +182,17 @@ async function scrobbleTracklist(ctx) {
 
   if (ignored.length) {
     return successfulScrobble(ctx,
-      `✅ Success, but...\nThe following tracks have been ignored:
+      `✅ Success, but...\nThe following tracks were ignored:
       
-${ignored.map(track => `${track.artist['#text']} | ${track.track['#text']} | ${track.album['#text']}`).join('\n')}`);
+${ignored.map(track => `${track.artist['#text']} | ${track.track['#text']} | ${track.album['#text']}`).join('\n')}`,
+      tracksArray);
   }
 
-  return successfulScrobble(ctx);
+  return successfulScrobble(ctx, undefined, tracksArray);
 }
 
 module.exports = {
+  scrobbleTracks,
   scrobbleTrackFromDB,
   scrobbleTrackFromText,
   scrobbleAlbum,
