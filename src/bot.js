@@ -6,6 +6,7 @@ const user = require('./middlewares/user');
 const scenes = require('./middlewares/scenes');
 const auth = require('./middlewares/auth');
 const session = require('./middlewares/session');
+const limiter = require('./middlewares/limiter');
 const { SCROBBLERBOT_TOKEN } = require('../config');
 const { error, successfulScrobble, requestError, multipleArray } = require('./helpers/utils');
 const { findSucceededMessageById, findFailedMessageById } = require('./helpers/dbmanager');
@@ -34,7 +35,7 @@ bot.hears(/\/\w+/, (ctx) => {
   ctx.reply('If you are confused type /help');
 });
 
-bot.on('text', auth, async (ctx) => {
+bot.on('text', auth, limiter, async (ctx) => {
   try {
     await scrobbleTrackFromText(ctx);
   } catch (e) {
@@ -55,7 +56,7 @@ bot.action('CANCEL', async (ctx) => {
   ctx.flow.leave();
 });
 
-bot.action('RETRY', async (ctx) => {
+bot.action('RETRY', limiter, async (ctx) => {
   try {
     ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Telegraf.Extra.HTML());
     const messageId = ctx.callbackQuery.message.message_id;
@@ -76,7 +77,7 @@ bot.action('RETRY', async (ctx) => {
   }
 });
 
-bot.action('REPEAT', async (ctx) => {
+bot.action('REPEAT', limiter, async (ctx) => {
   try {
     const messageId = ctx.callbackQuery.message.message_id;
     const message = await findSucceededMessageById(messageId);
@@ -105,7 +106,7 @@ bot.action('REPEAT', async (ctx) => {
   }
 });
 
-bot.action(/REPEAT:\d?\d/, async (ctx) => {
+bot.action(/REPEAT:\d?\d/, limiter, async (ctx) => {
   try {
     ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Telegraf.Extra.HTML());
     const messageId = ctx.callbackQuery.message.message_id;

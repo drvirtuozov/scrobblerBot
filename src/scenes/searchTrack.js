@@ -6,6 +6,7 @@ const { error } = require('../helpers/utils');
 const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 const { searchFromLastfmAndAnswerInlineQuery } = require('../helpers/actions');
 const { proxyGet } = require('../helpers/requests');
+const limiter = require('../middlewares/limiter');
 
 
 const searchTrackScene = new Scene('search_track');
@@ -81,7 +82,7 @@ searchTrackScene.on('text', async (ctx) => {
   }
 });
 
-searchTrackScene.action('SCR', async (ctx) => {
+searchTrackScene.action('SCR', limiter, async (ctx) => {
   try {
     await scrobbleTrackFromDB(ctx);
   } catch (e) {
@@ -93,7 +94,7 @@ searchTrackScene.action('EDIT_TRACK_ALBUM', (ctx) => {
   ctx.flow.enter('edit_track_album', ctx.flow.state);
 });
 
-searchTrackScene.action('SCR_WITHOUT_ALBUM', async (ctx) => {
+searchTrackScene.action('SCR_WITHOUT_ALBUM', limiter, async (ctx) => {
   try {
     await scrobbleTrackFromDB(ctx, false);
   } catch (e) {

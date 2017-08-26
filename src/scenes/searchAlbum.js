@@ -7,6 +7,7 @@ const { scrobbleAlbum } = require('../helpers/scrobbler');
 const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 const toTitleCase = require('to-title-case');
 const { proxyGet } = require('../helpers/requests');
+const limiter = require('../middlewares/limiter');
 
 
 const searchAlbumScene = new Scene('search_album');
@@ -79,7 +80,7 @@ searchAlbumScene.on('text', async (ctx) => {
   }
 });
 
-searchAlbumScene.action('OK', async (ctx) => {
+searchAlbumScene.action('OK', limiter, async (ctx) => {
   try {
     await scrobbleAlbum(ctx);
   } catch (e) {

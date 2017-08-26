@@ -67,8 +67,8 @@ async function successfulScrobble(ctx, text = '✅ Success!', tracks = []) {
   ctx.flow.leave();
 }
 
-function canScrobble(user) {
-  if (Date.now() - +user.last_scrobble <= 30000) {
+function canScrobble(ctx) {
+  if (!ctx.user || Date.now() - +ctx.user.last_scrobble <= 30000) {
     return false;
   }
 
@@ -118,6 +118,7 @@ function fromTracksArrayToQuerystring(tracksArray = []) {
 }
 
 async function scrobbleError(ctx, e) {
+  e.message = '❌ Failed';
   const extra = Markup.inlineKeyboard([
     Markup.callbackButton('Retry', 'RETRY'),
   ]).extra();
@@ -135,7 +136,10 @@ async function scrobbleError(ctx, e) {
     messageId = res.message_id;
   }
 
-  await createFailedMessage(messageId, fromQuerystringToTracksArray(e.config.data));
+  if (e.config && e.config.data) {
+    await createFailedMessage(messageId, fromQuerystringToTracksArray(e.config.data));
+  }
+
   return ctx.flow.leave();
 }
 
@@ -156,7 +160,6 @@ async function requestError(ctx, e) {
     }
   }
 
-  e.message = '❌ Failed';
   return scrobbleError(ctx, e);
 }
 

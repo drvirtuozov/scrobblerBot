@@ -11,19 +11,20 @@ const editTrackAlbumScene = require('../scenes/editTrackAlbum');
 const { start, whoami, help, recentTracks } = require('../helpers/actions');
 const auth = require('./auth');
 const { error, GLOBAL_KEYBOARD } = require('../helpers/utils');
+const limiter = require('./limiter');
 
 
 const flow = new TelegrafFlow();
 
-flow.hears('🎵 Track', auth, (ctx) => {
+flow.hears('🎵 Track', auth, limiter, (ctx) => {
   ctx.flow.enter('search_track');
 });
 
-flow.hears('💽 Album', auth, (ctx) => {
+flow.hears('💽 Album', auth, limiter, (ctx) => {
   ctx.flow.enter('search_album');
 });
 
-flow.hears('📃 Tracklist', auth, (ctx) => {
+flow.hears('📃 Tracklist', auth, limiter, (ctx) => {
   ctx.flow.enter('tracklist');
 });
 
