@@ -1,5 +1,4 @@
 const Telegraf = require('telegraf');
-const TelegrafLogger = require('telegraf-logger');
 const { scrobbleTracks, scrobbleTrackFromText } = require('./helpers/scrobbler');
 const { searchFromLastfmAndAnswerInlineQuery } = require('./helpers/actions');
 const user = require('./middlewares/user');
@@ -7,13 +6,13 @@ const scenes = require('./middlewares/scenes');
 const auth = require('./middlewares/auth');
 const session = require('./middlewares/session');
 const limiter = require('./middlewares/limiter');
+const logger = require('./middlewares/logger');
 const { SCROBBLERBOT_TOKEN } = require('../config');
 const { error, successfulScrobble, requestError, multipleArray } = require('./helpers/utils');
 const { findSucceededMessageById, findFailedMessageById } = require('./helpers/dbmanager');
 
 
 const bot = new Telegraf(SCROBBLERBOT_TOKEN);
-const logger = new TelegrafLogger();
 
 bot.context.user = null;
 bot.context.messageToEdit = null;
@@ -28,7 +27,7 @@ bot.telegram.getMe()
 
 bot.use(user);
 bot.use(session);
-bot.use(logger.middleware());
+bot.use(logger);
 bot.use(scenes);
 
 bot.hears(/\/\w+/, (ctx) => {
