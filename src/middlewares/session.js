@@ -11,7 +11,4 @@ const session = new RedisSession({
   },
 });
 
-module.exports = {
-  session,
-  sessionMiddleware: session.middleware(),
-};
+module.exports = session.middleware();

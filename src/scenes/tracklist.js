@@ -7,7 +7,7 @@ const { error } = require('../helpers/utils');
 const tracklistScene = new Scene('tracklist');
 
 tracklistScene.enter((ctx) => {
-  const text = `OK. Send me a tracklist with the following syntax:\n\n${new Array(3).fill('Artist | Track Name | Album Title').join('\n')}`;
+  const text = `OK. Send me a track list with the following syntax:\n\n${new Array(3).fill('Artist | Track Name | Album Title').join('\n')}`;
   const extra = Markup.inlineKeyboard([
     Markup.callbackButton('Cancel', 'CANCEL'),
   ]).extra();
@@ -21,6 +21,7 @@ tracklistScene.enter((ctx) => {
 
 tracklistScene.on('text', async (ctx) => {
   try {
+    ctx.flow.state.messageId = ctx.message.message_id;
     await scrobbleTracklist(ctx);
   } catch (e) {
     error(ctx, e);

@@ -31,7 +31,7 @@ async function error(ctx, e) {
     await ctx.reply(errText);
   }
 
-  ctx.leaveScene();
+  ctx.flow.leave();
   return sendToAdmin(ctx, '❗️ An error occured. Check the logs...');
 }
 
@@ -64,7 +64,7 @@ async function successfulScrobble(ctx, text = '✅ Success!', tracks = []) {
   }
 
   await createSucceededMessage(message.message_id, tracks);
-  ctx.leaveScene();
+  ctx.flow.leave();
 }
 
 function canScrobble(user) {
@@ -136,7 +136,7 @@ async function scrobbleError(ctx, e) {
   }
 
   await createFailedMessage(messageId, fromQuerystringToTracksArray(e.config.data));
-  return ctx.leaveScene();
+  return ctx.flow.leave();
 }
 
 async function requestError(ctx, e) {
@@ -152,7 +152,7 @@ async function requestError(ctx, e) {
         await ctx.reply(text);
       }
 
-      return ctx.enterScene('auth');
+      return ctx.flow.enter('auth');
     }
   }
 

@@ -1,4 +1,4 @@
-const { Markup } = require('telegraf');
+const { Markup, Extra } = require('telegraf');
 const { Scene } = require('telegraf-flow');
 const { findSucceededMessageById } = require('../helpers/dbmanager');
 const { scrobbleTracks } = require('../helpers/scrobbler');
@@ -7,12 +7,19 @@ const { error, requestError, multipleArray, successfulScrobble } = require('../h
 
 const repeatScrobbleScene = new Scene('repeat_scrobble');
 
+repeatScrobbleScene.enter((ctx) => {
+  ctx.editMessageText('Enter a number:', Markup.inlineKeyboard([
+    Markup.callbackButton('Cancel', 'CANCEL'),
+  ]).extra());
+});
+
 repeatScrobbleScene.on('text', async (ctx) => {
   try {
     const count = Number(ctx.message.text);
 
     if (count) {
-      const message = await findSucceededMessageById(ctx.session.messageId);
+      ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>', Extra.HTML());
+      const message = await findSucceededMessageById(ctx.flow.state.messageId);
 
       try {
         await scrobbleTracks(multipleArray(message.tracks, count), undefined, ctx.user.key);

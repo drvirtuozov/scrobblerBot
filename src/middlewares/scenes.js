@@ -17,15 +17,15 @@ const { error, GLOBAL_KEYBOARD } = require('../helpers/utils');
 const flow = new TelegrafFlow();
 
 flow.hears('🎵 Track', auth, (ctx) => {
-  ctx.enterScene('search_track');
+  ctx.flow.enter('search_track');
 });
 
 flow.hears('💽 Album', auth, (ctx) => {
-  ctx.enterScene('search_album');
+  ctx.flow.enter('search_album');
 });
 
 flow.hears('📃 Tracklist', auth, (ctx) => {
-  ctx.enterScene('tracklist');
+  ctx.flow.enter('tracklist');
 });
 
 flow.command('start', async (ctx, next) => {
@@ -41,7 +41,7 @@ flow.command('whoami', auth, whoami);
 flow.command('recent', auth, recentTracks);
 
 flow.command('auth', (ctx) => {
-  ctx.enterScene('auth');
+  ctx.flow.enter('auth');
 });
 
 flow.command('scrobble', auth, (ctx) => {
@@ -49,7 +49,7 @@ flow.command('scrobble', auth, (ctx) => {
 });
 
 flow.command('wish', (ctx) => {
-  ctx.enterScene('wish');
+  ctx.flow.enter('wish');
 });
 
 flow.register(wishScene);

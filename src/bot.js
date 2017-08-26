@@ -5,7 +5,7 @@ const { searchFromLastfmAndAnswerInlineQuery } = require('./helpers/actions');
 const user = require('./middlewares/user');
 const scenes = require('./middlewares/scenes');
 const auth = require('./middlewares/auth');
-const { session, sessionMiddleware } = require('./middlewares/session');
+const session = require('./middlewares/session');
 const { SCROBBLERBOT_TOKEN } = require('../config');
 const { error, successfulScrobble, requestError, multipleArray } = require('./helpers/utils');
 const { findSucceededMessageById, findFailedMessageById } = require('./helpers/dbmanager');
@@ -17,18 +17,6 @@ const logger = new TelegrafLogger();
 bot.context.user = null;
 bot.context.messageToEdit = null;
 
-bot.context.enterScene = function (name) {
-  const ctx = this;
-  ctx.flow.enter(name);
-  session.saveSession(session.options.getSessionKey(ctx), ctx.session);
-};
-
-bot.context.leaveScene = function () {
-  const ctx = this;
-  ctx.flow.leave();
-  session.saveSession(session.options.getSessionKey(ctx), ctx.session);
-};
-
 bot.telegram.getMe()
   .then((data) => {
     bot.options.username = data.username;
@@ -37,9 +25,9 @@ bot.telegram.getMe()
     console.log('Bot\'s getMe error:', err.message);
   });
 
-bot.use(sessionMiddleware);
 bot.use(logger.middleware());
 bot.use(user);
+bot.use(session);
 bot.use(scenes);
 
 bot.hears(/\/\w+/, (ctx) => {
@@ -64,7 +52,7 @@ bot.on('inline_query', async (ctx) => {
 
 bot.action('CANCEL', async (ctx) => {
   await ctx.editMessageText('Canceled');
-  ctx.leaveScene();
+  ctx.flow.leave();
 });
 
 bot.action('RETRY', async (ctx) => {
@@ -75,7 +63,7 @@ bot.action('RETRY', async (ctx) => {
 
     if (message) {
       try {
-        await scrobbleTracks(message.tracks, null, ctx.user.key);
+        await scrobbleTracks(message.tracks, undefined, ctx.user.key);
       } catch (e) {
         requestError(ctx, e);
         return;
@@ -131,7 +119,7 @@ bot.action(/REPEAT:\d?\d/, async (ctx) => {
     const count = ctx.callbackQuery.data.split(':')[1];
 
     try {
-      await scrobbleTracks(multipleArray(message.tracks, count), null, ctx.user.key);
+      await scrobbleTracks(multipleArray(message.tracks, count), undefined, ctx.user.key);
     } catch (e) {
       requestError(ctx, e);
       return;
@@ -144,11 +132,8 @@ bot.action(/REPEAT:\d?\d/, async (ctx) => {
 });
 
 bot.action('REPEAT:CUSTOM', async (ctx) => {
-  await ctx.editMessageText('Enter a number:', Telegraf.Markup.inlineKeyboard([
-    Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
-  ]).extra());
-  ctx.session.messageId = ctx.callbackQuery.message.message_id;
-  ctx.enterScene('repeat_scrobble');
+  ctx.flow.state.messageId = ctx.callbackQuery.message.message_id;
+  ctx.flow.enter('repeat_scrobble', ctx.flow.state);
 });
 
 bot.catch((err) => {
