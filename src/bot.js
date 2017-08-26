@@ -26,9 +26,9 @@ bot.telegram.getMe()
     console.log('Bot\'s getMe error:', err.message);
   });
 
-bot.use(logger.middleware());
 bot.use(user);
 bot.use(session);
+bot.use(logger.middleware());
 bot.use(scenes);
 
 bot.hears(/\/\w+/, (ctx) => {
