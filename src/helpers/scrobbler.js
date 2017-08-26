@@ -1,12 +1,10 @@
 const { Markup, Extra } = require('telegraf');
 const {
   getRandomFavSong, md5, utf8, successfulScrobble,
-  canScrobble, scrobbleError, requestError, validateTracksDurations } = require('./utils');
+  scrobbleError, requestError, validateTracksDurations } = require('./utils');
 const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
 const { proxyPost } = require('./requests');
 
-
-const cantScrobbleText = 'You can\'t scrobble tracks more than once in 30 seconds. If you need to scrobble a couple of tracks you can do that by using tracklist scrobbling';
 
 function scrobbleTracks(tracks = [], timestamp = Math.floor(Date.now() / 1000), key = '') { // low-level function
   const vtracks = validateTracksDurations(tracks);
@@ -37,32 +35,24 @@ async function scrobbleTrackFromDB(ctx, isAlbum = true) {
     album: isAlbum ? ctx.user.track.album : '',
   };
 
-  if (canScrobble(ctx.user)) {
-    if (ctx.callbackQuery) {
-      ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Extra.HTML());
-    } else {
-      ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>',
-        Extra.HTML().inReplyTo(ctx.flow.state.messageId));
-    }
-
-    try {
-      const res = await scrobbleTracks([trackToScrobble], undefined, ctx.user.key);
-
-      if (res.data.scrobbles['@attr'].ingored) {
-        return scrobbleError(ctx, new Error('❌ Error: The track was ignored by Last.fm'));
-      }
-
-      return successfulScrobble(ctx, undefined, [trackToScrobble]);
-    } catch (e) {
-      return requestError(ctx, e);
-    }
-  }
-
   if (ctx.callbackQuery) {
-    return ctx.answerCallbackQuery(cantScrobbleText, undefined, true);
+    ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Extra.HTML());
+  } else {
+    ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>',
+      Extra.HTML().inReplyTo(ctx.flow.state.messageId));
   }
 
-  return ctx.reply(cantScrobbleText);
+  try {
+    const res = await scrobbleTracks([trackToScrobble], undefined, ctx.user.key);
+
+    if (res.data.scrobbles['@attr'].ingored) {
+      return scrobbleError(ctx, new Error('❌ Error: The track was ignored by Last.fm'));
+    }
+  } catch (e) {
+    return requestError(ctx, e);
+  }
+
+  return successfulScrobble(ctx, undefined, [trackToScrobble]);
 }
 
 async function scrobbleTrackFromText(ctx) {
@@ -76,29 +66,25 @@ ${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for 
       Extra.HTML().webPreview(false));
   }
 
-  if (canScrobble(ctx.user)) {
-    ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>',
-      Extra.HTML().inReplyTo(ctx.message.message_id));
-    const trackToScrobble = {
-      artist: track[0],
-      name: track[1],
-      album: track[2],
-    };
+  ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>',
+    Extra.HTML().inReplyTo(ctx.message.message_id));
+  const trackToScrobble = {
+    artist: track[0],
+    name: track[1],
+    album: track[2],
+  };
 
-    try {
-      const res = await scrobbleTracks([trackToScrobble], ctx.message.date, ctx.user.key);
+  try {
+    const res = await scrobbleTracks([trackToScrobble], ctx.message.date, ctx.user.key);
 
-      if (res.data.scrobbles['@attr'].ingored) {
-        return scrobbleError(ctx, new Error('❌ Error: The track was ignored by Last.fm'));
-      }
-
-      return successfulScrobble(ctx, undefined, [trackToScrobble]);
-    } catch (e) {
-      return requestError(ctx, e);
+    if (res.data.scrobbles['@attr'].ingored) {
+      return scrobbleError(ctx, new Error('❌ Error: The track was ignored by Last.fm'));
     }
+  } catch (e) {
+    return requestError(ctx, e);
   }
 
-  return ctx.reply(cantScrobbleText);
+  return successfulScrobble(ctx, undefined, [trackToScrobble]);
 }
 
 async function scrobbleAlbum(ctx) {
