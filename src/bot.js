@@ -61,18 +61,16 @@ bot.action('RETRY', async (ctx) => {
     const messageId = ctx.callbackQuery.message.message_id;
     const message = await findFailedMessageById(messageId);
 
-    if (message) {
-      try {
-        await scrobbleTracks(message.tracks, undefined, ctx.user.key);
-      } catch (e) {
-        requestError(ctx, e);
-        return;
-      }
+    if (!message) ctx.editMessageText('Expired');
 
-      await successfulScrobble(ctx);
-    } else {
-      ctx.editMessageText('Expired');
+    try {
+      await scrobbleTracks(message.tracks, undefined, ctx.user.key);
+    } catch (e) {
+      requestError(ctx, e);
+      return;
     }
+
+    await successfulScrobble(ctx);
   } catch (e) {
     error(ctx, e);
   }
@@ -83,8 +81,10 @@ bot.action('REPEAT', async (ctx) => {
     const messageId = ctx.callbackQuery.message.message_id;
     const message = await findSucceededMessageById(messageId);
 
-    if (message) {
-      ctx.editMessageText('How many times do you want to scrobble this again?', Telegraf.Markup.inlineKeyboard([
+    if (!message) ctx.editMessageText('Expired');
+
+    ctx.editMessageText('How many times do you want to scrobble this again?',
+      Telegraf.Markup.inlineKeyboard([
         [
           Telegraf.Markup.callbackButton('1', 'REPEAT:1'),
           Telegraf.Markup.callbackButton('2', 'REPEAT:2'),
@@ -99,13 +99,7 @@ bot.action('REPEAT', async (ctx) => {
           Telegraf.Markup.callbackButton('9', 'REPEAT:9'),
           Telegraf.Markup.callbackButton('10', 'REPEAT:10'),
         ],
-        [
-          Telegraf.Markup.callbackButton('Custom', 'REPEAT:CUSTOM'),
-        ],
       ]).extra());
-    } else {
-      ctx.editMessageText('Expired');
-    }
   } catch (e) {
     error(ctx, e);
   }
@@ -118,6 +112,8 @@ bot.action(/REPEAT:\d?\d/, async (ctx) => {
     const message = await findSucceededMessageById(messageId);
     const count = ctx.callbackQuery.data.split(':')[1];
 
+    if (!message) ctx.editMessageText('Expired');
+
     try {
       await scrobbleTracks(multipleArray(message.tracks, count), undefined, ctx.user.key);
     } catch (e) {
@@ -129,11 +125,6 @@ bot.action(/REPEAT:\d?\d/, async (ctx) => {
   } catch (e) {
     error(ctx, e);
   }
-});
-
-bot.action('REPEAT:CUSTOM', async (ctx) => {
-  ctx.flow.state.messageId = ctx.callbackQuery.message.message_id;
-  ctx.flow.enter('repeat_scrobble', ctx.flow.state);
 });
 
 bot.catch((err) => {
