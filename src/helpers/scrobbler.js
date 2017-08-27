@@ -113,13 +113,13 @@ async function scrobbleAlbum(ctx) {
 
 async function scrobbleTracklist(ctx) {
   let isValid = true;
-  let tracks = ctx.message.text.split('\n')
+  const tracks = ctx.message.text.split('\n')
     .map((string) => {
-      if (string.split('|').length < 2) {
+      const track = string.split('|');
+
+      if (track.length < 2 || track.length > 3) {
         isValid = false;
       }
-
-      const track = string.split('|');
 
       return {
         name: track[1],
@@ -128,10 +128,8 @@ async function scrobbleTracklist(ctx) {
       };
     });
 
-  const parts = [];
-
   if (!isValid) {
-    return ctx.reply('Please, send me valid data with this syntax:\n\nArtist | Track Name | Album Title',
+    return ctx.reply('Please, send me valid data with the valid syntax:\n\nArtist | Track Name | Album Title',
       Markup.inlineKeyboard([
         Markup.callbackButton('Cancel', 'CANCEL'),
       ]).extra());
@@ -140,44 +138,34 @@ async function scrobbleTracklist(ctx) {
   ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>',
     Extra.HTML().inReplyTo(ctx.flow.state.messageId));
 
-  while (tracks[0]) {
-    parts.push(tracks.slice(0, 50));
-    tracks = tracks.slice(50);
-  }
-
-  let results;
+  let res;
 
   try {
-    results = await Promise.all(parts.map(part => scrobbleTracks(part, undefined, ctx.user.key)));
+    res = await scrobbleTracks(tracks, undefined, ctx.user.key);
   } catch (e) {
     return requestError(ctx, e);
   }
 
   const ignored = [];
-  const tracksArray = [];
-  parts.forEach(part => tracksArray.push(...part));
+  const scrobbles = res.data.scrobbles.scrobble;
 
-  results.forEach((result) => {
-    const scrobbles = result.data.scrobbles.scrobble;
-
-    if (Array.isArray(scrobbles)) {
-      scrobbles
-        .filter(scrobble => scrobble.ignoredMessage.code === '1')
-        .forEach(scr => ignored.push(scr));
-    } else if (scrobbles.ignoredMessage.code === '1') {
-      ignored.push(scrobbles);
-    }
-  });
+  if (Array.isArray(scrobbles)) {
+    scrobbles
+      .filter(scr => scr.ignoredMessage.code === '1')
+      .forEach(scr => ignored.push(scr));
+  } else if (scrobbles.ignoredMessage.code === '1') {
+    ignored.push(scrobbles);
+  }
 
   if (ignored.length) {
     return successfulScrobble(ctx,
       `✅ Success, but...\nThe following tracks were ignored:
       
 ${ignored.map(track => `${track.artist['#text']} | ${track.track['#text']} | ${track.album['#text']}`).join('\n')}`,
-      tracksArray);
+      tracks);
   }
 
-  return successfulScrobble(ctx, undefined, tracksArray);
+  return successfulScrobble(ctx, undefined, tracks);
 }
 
 module.exports = {
