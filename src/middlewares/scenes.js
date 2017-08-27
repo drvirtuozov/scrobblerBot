@@ -11,20 +11,21 @@ const editTrackAlbumScene = require('../scenes/editTrackAlbum');
 const { start, whoami, help, recentTracks } = require('../helpers/actions');
 const auth = require('./auth');
 const { error, GLOBAL_KEYBOARD } = require('../helpers/utils');
+const limiter = require('./limiter');
 
 
 const flow = new TelegrafFlow();
 
-flow.hears('🎵 Track', auth, (ctx) => {
-  ctx.enterScene('search_track');
+flow.hears('🎵 Track', auth, limiter, (ctx) => {
+  ctx.flow.enter('search_track');
 });
 
-flow.hears('💽 Album', auth, (ctx) => {
-  ctx.enterScene('search_album');
+flow.hears('💽 Album', auth, limiter, (ctx) => {
+  ctx.flow.enter('search_album');
 });
 
-flow.hears('📃 Tracklist', auth, (ctx) => {
-  ctx.enterScene('tracklist');
+flow.hears('📃 Tracklist', auth, limiter, (ctx) => {
+  ctx.flow.enter('tracklist');
 });
 
 flow.command('start', async (ctx, next) => {
@@ -40,7 +41,7 @@ flow.command('whoami', auth, whoami);
 flow.command('recent', auth, recentTracks);
 
 flow.command('auth', (ctx) => {
-  ctx.enterScene('auth');
+  ctx.flow.enter('auth');
 });
 
 flow.command('scrobble', auth, (ctx) => {
@@ -48,7 +49,7 @@ flow.command('scrobble', auth, (ctx) => {
 });
 
 flow.command('wish', (ctx) => {
-  ctx.enterScene('wish');
+  ctx.flow.enter('wish');
 });
 
 flow.register(wishScene);

@@ -7,6 +7,7 @@ async function proxyPost(url, data) {
   const proxy = getRandomChekedProxy();
 
   try {
+    // throw { message: 'mock error', config: { data } };
     const res = await axios.post(url, data, {
       proxy: proxy.host ? proxy : null,
       timeout: 8000,
@@ -19,6 +20,7 @@ async function proxyPost(url, data) {
     return Promise.resolve(res);
   } catch (e) {
     try { // try again without proxy
+      // throw { message: 'mock error', config: { data } };
       const res = await axios.post(url, data);
       return Promise.resolve(res);
     } catch (err) {

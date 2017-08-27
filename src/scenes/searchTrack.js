@@ -6,6 +6,7 @@ const { error } = require('../helpers/utils');
 const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 const { searchFromLastfmAndAnswerInlineQuery } = require('../helpers/actions');
 const { proxyGet } = require('../helpers/requests');
+const limiter = require('../middlewares/limiter');
 
 
 const searchTrackScene = new Scene('search_track');
@@ -34,14 +35,15 @@ searchTrackScene.on('inline_query', async (ctx) => {
 
 searchTrackScene.on('text', async (ctx) => {
   try {
+    ctx.flow.state.messageId = ctx.message.message_id;
     const parsedTrack = ctx.message.text.split('\n');
 
     if (parsedTrack.length > 2) {
-      return scrobbleTrackFromText(ctx, true);
+      return scrobbleTrackFromText(ctx);
     } else if (parsedTrack.length === 2) {
       const res = await proxyGet(encodeURI(`${LASTFM_URL}?method=track.getInfo&api_key=${LASTFM_KEY}&artist=${parsedTrack[0]}&track=${parsedTrack[1]}&format=json`));
 
-      if (res.data.error) return scrobbleTrackFromText(ctx, true);
+      if (res.data.error) return scrobbleTrackFromText(ctx);
 
       const track = res.data.track || {};
       track.album = track.album || {};
@@ -52,8 +54,8 @@ searchTrackScene.on('text', async (ctx) => {
       await findUserByIdAndUpdate(ctx.from.id, { track: { name, artist, album } });
 
       if (Object.keys(track.album).length) {
-        return ctx.reply(`Last.fm has additional data about this track:\n\n${artist}\n${name}\n${album}\n\nWould you like to scrobble this track with the new data or leave it as is?`,
-          Extra.webPreview(false).markup(Markup.inlineKeyboard([
+        return ctx.reply(`Last.fm has album info of this track:\n\n${artist}\n${name}\n${album}\n\nWould you like to scrobble it with the new info or leave it as is?`,
+          Extra.webPreview(false).inReplyTo(ctx.message.message_id).markup(Markup.inlineKeyboard([
             [
               Markup.callbackButton('Scrobble', 'SCR'),
               Markup.callbackButton('Leave', 'SCR_WITHOUT_ALBUM'),
@@ -64,7 +66,7 @@ searchTrackScene.on('text', async (ctx) => {
           ])));
       }
 
-      return ctx.reply('Last.fm has no album data about this track. Would you like to enter album title manually?',
+      return ctx.reply('Last.fm has no album info of this track. Would you like to enter album title manually?',
         Extra.webPreview(false).markup(Markup.inlineKeyboard([
           Markup.callbackButton('Yes', 'EDIT_TRACK_ALBUM'),
           Markup.callbackButton('No, scrobble', 'SCR_WITHOUT_ALBUM'),
@@ -80,7 +82,7 @@ searchTrackScene.on('text', async (ctx) => {
   }
 });
 
-searchTrackScene.action('SCR', async (ctx) => {
+searchTrackScene.action('SCR', limiter, async (ctx) => {
   try {
     await scrobbleTrackFromDB(ctx);
   } catch (e) {
@@ -89,10 +91,10 @@ searchTrackScene.action('SCR', async (ctx) => {
 });
 
 searchTrackScene.action('EDIT_TRACK_ALBUM', (ctx) => {
-  ctx.enterScene('edit_track_album');
+  ctx.flow.enter('edit_track_album', ctx.flow.state);
 });
 
-searchTrackScene.action('SCR_WITHOUT_ALBUM', async (ctx) => {
+searchTrackScene.action('SCR_WITHOUT_ALBUM', limiter, async (ctx) => {
   try {
     await scrobbleTrackFromDB(ctx, false);
   } catch (e) {

@@ -8,7 +8,7 @@ const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 const editTrackAlbumScene = new Scene('edit_track_album');
 
 editTrackAlbumScene.enter((ctx) => {
-  ctx.editMessageText('Send me album title please',
+  ctx.editMessageText('Enter album title',
     Markup.inlineKeyboard([
       Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());

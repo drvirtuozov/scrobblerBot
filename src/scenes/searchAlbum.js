@@ -7,6 +7,7 @@ const { scrobbleAlbum } = require('../helpers/scrobbler');
 const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 const toTitleCase = require('to-title-case');
 const { proxyGet } = require('../helpers/requests');
+const limiter = require('../middlewares/limiter');
 
 
 const searchAlbumScene = new Scene('search_album');
@@ -35,6 +36,7 @@ searchAlbumScene.on('inline_query', async (ctx) => {
 
 searchAlbumScene.on('text', async (ctx) => {
   try {
+    ctx.flow.state.messageId = ctx.message.message_id;
     const parsedAlbum = ctx.message.text.split('\n');
 
     if (parsedAlbum.length < 2) {
@@ -60,24 +62,25 @@ searchAlbumScene.on('text', async (ctx) => {
         { name: track.name, duration: track.duration }
       ));
     } else {
-      return ctx.enterScene('no_album_info');
+      return ctx.flow.enter('no_album_info');
     }
 
     const user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true });
     const { artist, title } = user.album;
-    return ctx.reply(`You are about to scrobble <a href="${encodeURI(`http://www.last.fm/music/${artist}/${title}`)}">${title}</a> by <a href="${encodeURI(`http://www.last.fm/music/${artist}`)}">${artist}</a>. The following tracks have been found on Last.fm and will be scrobbled:\n\n${user.album.tracks
+    return ctx.reply(`You are about to scrobble <a href="${encodeURI(`http://www.last.fm/music/${artist}/${title}`)}">${title}</a> by <a href="${encodeURI(`http://www.last.fm/music/${artist}`)}">${artist}</a>. The following tracks were found on Last.fm and will be scrobbled:\n\n${user.album.tracks
       .map(track => track.name).join('\n')}`,
-        Extra.HTML().webPreview(false).markup(Markup.inlineKeyboard([
-          Markup.callbackButton('Edit', 'EDIT'),
-          Markup.callbackButton('OK', 'OK'),
-          Markup.callbackButton('Cancel', 'CANCEL'),
-        ])));
+        Extra.HTML().webPreview(false).inReplyTo(ctx.message.message_id)
+          .markup(Markup.inlineKeyboard([
+            Markup.callbackButton('Edit', 'EDIT'),
+            Markup.callbackButton('OK', 'OK'),
+            Markup.callbackButton('Cancel', 'CANCEL'),
+          ])));
   } catch (e) {
     return error(ctx, e);
   }
 });
 
-searchAlbumScene.action('OK', async (ctx) => {
+searchAlbumScene.action('OK', limiter, async (ctx) => {
   try {
     await scrobbleAlbum(ctx);
   } catch (e) {
@@ -86,7 +89,7 @@ searchAlbumScene.action('OK', async (ctx) => {
 });
 
 searchAlbumScene.action('EDIT', (ctx) => {
-  ctx.enterScene('edit_album');
+  ctx.flow.enter('edit_album', ctx.flow.state);
 });
 
 module.exports = searchAlbumScene;

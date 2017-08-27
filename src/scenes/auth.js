@@ -46,7 +46,7 @@ Now you can scrobble your first song. To do it just type artist name, song name 
 Example:\n\n${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for more info`,
       Extra.HTML().webPreview(false));
 
-    return ctx.leaveScene();
+    return ctx.flow.leave();
   } catch (e) {
     return error(ctx, e);
   }

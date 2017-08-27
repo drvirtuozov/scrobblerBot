@@ -15,7 +15,7 @@ wishScene.enter((ctx) => {
 wishScene.on('text', async (ctx) => {
   await sendToAdmin(ctx, `A wish from @${ctx.from.username}: ${ctx.message.text}`);
   await ctx.reply('Thanks! We have successfully received your wish');
-  ctx.leaveScene();
+  ctx.flow.leave();
 });
 
 module.exports = wishScene;

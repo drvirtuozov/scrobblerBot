@@ -1,8 +1,10 @@
 const { Markup } = require('telegraf');
 const crypto = require('crypto');
 const songs = require('../songs');
-const { findUserByIdAndUpdate } = require('./dbmanager');
+const { findUserByIdAndUpdate, createSucceededMessage, createFailedMessage } = require('./dbmanager');
 const { ADMIN_ID } = require('../../config');
+const querystring = require('querystring');
+
 
 const GLOBAL_KEYBOARD = Markup.keyboard([['🎵 Track', '💽 Album', '📃 Tracklist']]).resize().extra();
 
@@ -29,7 +31,7 @@ async function error(ctx, e) {
     await ctx.reply(errText);
   }
 
-  ctx.leaveScene();
+  ctx.flow.leave();
   return sendToAdmin(ctx, '❗️ An error occured. Check the logs...');
 }
 
@@ -37,64 +39,108 @@ function utf8(text) {
   return decodeURI(decodeURIComponent(text));
 }
 
-async function successfulScrobble(ctx, text = '✅ Success!') {
+async function successfulScrobble(ctx, text = '✅ Success!', tracks = []) {
   await findUserByIdAndUpdate(ctx.from.id, {
     $inc: { scrobbles: 1 },
     username: ctx.from.username,
     last_scrobble: new Date(),
     album: {},
     track: {},
-    discogs_results: [],
   });
 
+  const extra = Markup.inlineKeyboard([
+    Markup.callbackButton('Repeat', 'REPEAT'),
+  ]).extra();
+
+  let message;
+
   if (ctx.callbackQuery) {
-    await ctx.editMessageText(text);
+    message = await ctx.editMessageText(text, extra);
   } else if (ctx.messageToEdit) {
-    await ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null, text);
+    message = await ctx.telegram
+      .editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null, text, extra);
   } else {
-    await ctx.reply(text);
+    message = await ctx.reply(text, extra);
   }
 
-  ctx.leaveScene();
+  await createSucceededMessage(message.message_id, tracks);
+  ctx.flow.leave();
 }
 
-function canScrobble(user) {
-  if (Date.now() - +user.last_scrobble <= 30000) {
+function canScrobble(ctx) {
+  if (!ctx.user || Date.now() - +ctx.user.last_scrobble <= 30000) {
     return false;
   }
 
   return true;
 }
 
-async function customError(ctx, e) {
+function multipleArray(array = [], multipleTimes = 1) {
+  let multipliedArray = [];
+
+  if (multipleTimes > 1) {
+    for (let i = 0; i < multipleTimes; i += 1) {
+      multipliedArray = multipliedArray.concat(array);
+    }
+
+    return multipliedArray;
+  }
+
+  return array;
+}
+
+function fromQuerystringToTracksArray(querystr = '') {
+  const tracks = [];
+  const obj = querystring.parse(querystr);
+  const tracksCount = Object.keys(obj).filter(key => key.includes('track')).length;
+
+  for (let i = 0; i < tracksCount; i += 1) {
+    tracks.push({
+      name: obj[`track[${i}]`],
+      artist: obj[`artist[${i}]`],
+      album: obj[`album[${i}]`],
+    });
+  }
+
+  return tracks;
+}
+
+function fromTracksArrayToQuerystring(tracksArray = []) {
+  const objectToQuerystring = {};
+
+  tracksArray.forEach((track, i) => {
+    objectToQuerystring[`track[${i}]`] = track.name;
+    objectToQuerystring[`artist[${i}]`] = track.artist;
+    objectToQuerystring[`album[${i}]`] = track.album;
+  });
+
+  return utf8(querystring.stringify(objectToQuerystring));
+}
+
+async function scrobbleError(ctx, e) {
+  e.message = '❌ Failed';
   const extra = Markup.inlineKeyboard([
     Markup.callbackButton('Retry', 'RETRY'),
   ]).extra();
 
-  if (ctx.messageToEdit &&
-    !ctx.user.failed.filter(fail => fail.message_id === ctx.messageToEdit.message_id).length) {
-    await findUserByIdAndUpdate(ctx.from.id, {
-      $addToSet: {
-        failed: {
-          message_id: ctx.messageToEdit.message_id,
-          data: e.config.data,
-        },
-      },
-    });
-  }
+  let messageId;
 
-  if (ctx.callbackQuery) {
-    if (ctx.messageToEdit.text !== e.message) {
-      await ctx.editMessageText(e.message, extra);
-    }
-  } else if (ctx.messageToEdit) {
-    await ctx.telegram.editMessageText(ctx.chat.id,
-      ctx.messageToEdit.message_id, null, e.message, extra);
+  if (ctx.messageToEdit) {
+    messageId = ctx.messageToEdit.message_id;
+    await ctx.telegram.editMessageText(ctx.chat.id, messageId, null, e.message, extra);
+  } else if (ctx.callbackQuery) {
+    messageId = ctx.callbackQuery.message.message_id;
+    await ctx.editMessageText(e.message, extra);
   } else {
-    await ctx.reply(e.message, extra);
+    const res = await ctx.reply(e.message, extra);
+    messageId = res.message_id;
   }
 
-  return ctx.leaveScene();
+  if (e.config && e.config.data) {
+    await createFailedMessage(messageId, fromQuerystringToTracksArray(e.config.data));
+  }
+
+  return ctx.flow.leave();
 }
 
 async function requestError(ctx, e) {
@@ -110,16 +156,30 @@ async function requestError(ctx, e) {
         await ctx.reply(text);
       }
 
-      return ctx.enterScene('auth');
+      return ctx.flow.enter('auth');
     }
   }
 
-  e.message = '❌ Failed';
-  return customError(ctx, e);
+  return scrobbleError(ctx, e);
 }
 
 async function isUserAuthorized(ctx) {
   return ctx.user && ctx.user.key;
+}
+
+function validateTracksDurations(tracks = []) {
+  const defDur = 300;
+  return tracks.map((track) => {
+    let duration = 0;
+    const td = track.duration;
+
+    if (tracks.length === 1) {
+      return Object.assign(track, { duration });
+    }
+
+    duration = typeof td === 'undefined' ? defDur : +td || defDur;
+    return Object.assign(track, { duration });
+  });
 }
 
 module.exports = {
@@ -130,8 +190,12 @@ module.exports = {
   successfulScrobble,
   canScrobble,
   error,
-  customError,
+  scrobbleError,
   requestError,
   isUserAuthorized,
   GLOBAL_KEYBOARD,
+  multipleArray,
+  fromQuerystringToTracksArray,
+  fromTracksArrayToQuerystring,
+  validateTracksDurations,
 };
