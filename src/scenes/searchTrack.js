@@ -38,12 +38,19 @@ searchTrackScene.on('text', async (ctx) => {
     ctx.flow.state.messageId = ctx.message.message_id;
     const parsedTrack = ctx.message.text.split('\n');
 
-    if (parsedTrack.length > 2) {
-      return scrobbleTrackFromText(ctx);
+    if (parsedTrack.length < 2 || parsedTrack.length > 3) {
+      ctx.reply('Format:\n\nArtist\nSong Name\nAlbum Title', Markup.inlineKeyboard([
+        Markup.callbackButton('Cancel', 'CANCEL'),
+      ]).extra());
     } else if (parsedTrack.length === 2) {
+      ctx.messageToEdit = await ctx.reply('<i>Fetching data...</i>',
+        Extra.HTML().inReplyTo(ctx.message.message_id));
       const res = await proxyGet(encodeURI(`${LASTFM_URL}?method=track.getInfo&api_key=${LASTFM_KEY}&artist=${parsedTrack[0]}&track=${parsedTrack[1]}&format=json`));
 
-      if (res.data.error) return scrobbleTrackFromText(ctx);
+      if (res.data.error) {
+        scrobbleTrackFromText(ctx);
+        return;
+      }
 
       const track = res.data.track || {};
       track.album = track.album || {};
@@ -54,31 +61,33 @@ searchTrackScene.on('text', async (ctx) => {
       await findUserByIdAndUpdate(ctx.from.id, { track: { name, artist, album } });
 
       if (Object.keys(track.album).length) {
-        return ctx.reply(`Last.fm has album info of this track:\n\n${artist}\n${name}\n${album}\n\nWould you like to scrobble it with the new info or leave it as is?`,
-          Extra.webPreview(false).inReplyTo(ctx.message.message_id).markup(Markup.inlineKeyboard([
-            [
-              Markup.callbackButton('Scrobble', 'SCR'),
-              Markup.callbackButton('Leave', 'SCR_WITHOUT_ALBUM'),
-              Markup.callbackButton('Edit album', 'EDIT_TRACK_ALBUM'),
-            ], [
-              Markup.callbackButton('Cancel', 'CANCEL'),
-            ],
-          ])));
+        ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null,
+          `Last.fm has album info of this track:\n\n${artist}\n${name}\n${album}\n\nWould you like to scrobble it with the new info or leave it as is?`,
+            Extra.webPreview(false).markup(Markup.inlineKeyboard([
+              [
+                Markup.callbackButton('Scrobble', 'SCR'),
+                Markup.callbackButton('Leave', 'SCR_WITHOUT_ALBUM'),
+                Markup.callbackButton('Edit album', 'EDIT_TRACK_ALBUM'),
+              ], [
+                Markup.callbackButton('Cancel', 'CANCEL'),
+              ],
+            ])));
+
+        return;
       }
 
-      return ctx.reply('Last.fm has no album info of this track. Would you like to enter album title manually?',
-        Extra.webPreview(false).markup(Markup.inlineKeyboard([
-          Markup.callbackButton('Yes', 'EDIT_TRACK_ALBUM'),
-          Markup.callbackButton('No, scrobble', 'SCR_WITHOUT_ALBUM'),
-          Markup.callbackButton('Cancel', 'CANCEL'),
-        ])));
+      ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null,
+        'Last.fm has no album info of this track. Would you like to enter album title manually?',
+          Extra.webPreview(false).markup(Markup.inlineKeyboard([
+            Markup.callbackButton('Yes', 'EDIT_TRACK_ALBUM'),
+            Markup.callbackButton('No, scrobble', 'SCR_WITHOUT_ALBUM'),
+            Markup.callbackButton('Cancel', 'CANCEL'),
+          ])));
+    } else {
+      scrobbleTrackFromText(ctx);
     }
-
-    return ctx.reply('Format:\n\nArtist\nSong Name\nAlbum Title', Markup.inlineKeyboard([
-      Markup.callbackButton('Cancel', 'CANCEL'),
-    ]).extra());
   } catch (e) {
-    return error(ctx, e);
+    error(ctx, e);
   }
 });
 
