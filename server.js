@@ -1,8 +1,8 @@
 const fs = require('fs');
 const { NODE_ENV, PORT, SCROBBLERBOT_TOKEN, NOW_LOGS_SECRET } = require('./config');
 const bot = require('./src/bot');
-const db = require('./src/db');
 const nowLogs = require('now-logs');
+require('./src/db');
 
 
 if (NODE_ENV === 'production') {

@@ -62,7 +62,7 @@ searchAlbumScene.on('text', async (ctx) => {
         { name: track.name, duration: track.duration }
       ));
     } else {
-      return ctx.flow.enter('no_album_info');
+      return ctx.flow.enter('no_album_info', ctx.flow.state);
     }
 
     const user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true });

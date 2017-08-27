@@ -13,7 +13,7 @@ noAlbumInfoScene.enter((ctx) => {
 });
 
 noAlbumInfoScene.action('YES', (ctx) => {
-  ctx.flow.enter('set_album_tracks');
+  ctx.flow.enter('set_album_tracks', ctx.flow.state);
 });
 
 module.exports = noAlbumInfoScene;
