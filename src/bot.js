@@ -61,7 +61,10 @@ bot.action('RETRY', limiter, async (ctx) => {
     const messageId = ctx.callbackQuery.message.message_id;
     const message = await findFailedMessageById(messageId);
 
-    if (!message) ctx.editMessageText('Expired');
+    if (!message) {
+      ctx.editMessageText('Expired');
+      return;
+    }
 
     try {
       await scrobbleTracks(message.tracks, undefined, ctx.user.key);
@@ -81,7 +84,10 @@ bot.action('REPEAT', limiter, async (ctx) => {
     const messageId = ctx.callbackQuery.message.message_id;
     const message = await findSucceededMessageById(messageId);
 
-    if (!message) ctx.editMessageText('Expired');
+    if (!message) {
+      ctx.editMessageText('Expired');
+      return;
+    }
 
     ctx.editMessageText('How many times do you want to scrobble this again?',
       Telegraf.Markup.inlineKeyboard([
@@ -112,7 +118,10 @@ bot.action(/REPEAT:\d?\d/, limiter, async (ctx) => {
     const message = await findSucceededMessageById(messageId);
     const count = ctx.callbackQuery.data.split(':')[1];
 
-    if (!message) ctx.editMessageText('Expired');
+    if (!message) {
+      ctx.editMessageText('Expired');
+      return;
+    }
 
     try {
       await scrobbleTracks(multipleArray(message.tracks, count), undefined, ctx.user.key);
