@@ -40,10 +40,15 @@ searchAlbumScene.on('text', async (ctx) => {
     const parsedAlbum = ctx.message.text.split('\n');
 
     if (parsedAlbum.length < 2) {
-      return ctx.reply('Format:\n\nArtist\nAlbum Title', Markup.inlineKeyboard([
+      ctx.reply('Format:\n\nArtist\nAlbum Title', Markup.inlineKeyboard([
         Markup.callbackButton('Cancel', 'CANCEL'),
       ]).extra());
+
+      return;
     }
+
+    ctx.messageToEdit = await ctx.reply('<i>Fetching data...</i>',
+      Extra.HTML().inReplyTo(ctx.message.message_id));
 
     const parsedTitle = toTitleCase(parsedAlbum[1]);
     const parsedArtist = toTitleCase(parsedAlbum[0]);
@@ -62,21 +67,22 @@ searchAlbumScene.on('text', async (ctx) => {
         { name: track.name, duration: track.duration }
       ));
     } else {
-      return ctx.flow.enter('no_album_info', ctx.flow.state);
+      ctx.flow.enter('no_album_info', ctx.flow.state);
+      return;
     }
 
     const user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true });
     const { artist, title } = user.album;
-    return ctx.reply(`You are about to scrobble <a href="${encodeURI(`http://www.last.fm/music/${artist}/${title}`)}">${title}</a> by <a href="${encodeURI(`http://www.last.fm/music/${artist}`)}">${artist}</a>. The following tracks were found on Last.fm and will be scrobbled:\n\n${user.album.tracks
-      .map(track => track.name).join('\n')}`,
-        Extra.HTML().webPreview(false).inReplyTo(ctx.message.message_id)
-          .markup(Markup.inlineKeyboard([
-            Markup.callbackButton('Edit', 'EDIT'),
-            Markup.callbackButton('OK', 'OK'),
-            Markup.callbackButton('Cancel', 'CANCEL'),
-          ])));
+    ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null,
+      `You are about to scrobble <a href="${encodeURI(`http://www.last.fm/music/${artist}/${title}`)}">${title}</a> by <a href="${encodeURI(`http://www.last.fm/music/${artist}`)}">${artist}</a>. The following tracks were found on Last.fm and will be scrobbled:\n\n${user.album.tracks
+.map(track => track.name).join('\n')}`,
+      Extra.HTML().webPreview(false).markup(Markup.inlineKeyboard([
+        Markup.callbackButton('Edit', 'EDIT'),
+        Markup.callbackButton('OK', 'OK'),
+        Markup.callbackButton('Cancel', 'CANCEL'),
+      ])));
   } catch (e) {
-    return error(ctx, e);
+    error(ctx, e);
   }
 });
 

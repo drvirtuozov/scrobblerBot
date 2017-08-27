@@ -79,7 +79,7 @@ bot.action('RETRY', limiter, async (ctx) => {
   }
 });
 
-bot.action('REPEAT', limiter, async (ctx) => {
+bot.action('REPEAT', async (ctx) => {
   try {
     const messageId = ctx.callbackQuery.message.message_id;
     const message = await findSucceededMessageById(messageId);
