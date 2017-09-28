@@ -10,6 +10,7 @@ const logger = require('./middlewares/logger');
 const { SCROBBLERBOT_TOKEN } = require('../config');
 const { error, successfulScrobble, requestError, multipleArray } = require('./helpers/utils');
 const { findSucceededMessageById, findFailedMessageById } = require('./helpers/dbmanager');
+require('./helpers/scheduler');
 
 
 const bot = new Telegraf(SCROBBLERBOT_TOKEN);
