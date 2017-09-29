@@ -48,7 +48,7 @@ searchTrackScene.on('text', async (ctx) => {
       const res = await proxyGet(encodeURI(`${LASTFM_URL}?method=track.getInfo&api_key=${LASTFM_KEY}&artist=${parsedTrack[0]}&track=${parsedTrack[1]}&format=json`));
 
       if (res.data.error) {
-        scrobbleTrackFromText(ctx);
+        await scrobbleTrackFromText(ctx);
         return;
       }
 
@@ -84,7 +84,7 @@ searchTrackScene.on('text', async (ctx) => {
             Markup.callbackButton('Cancel', 'CANCEL'),
           ])));
     } else {
-      scrobbleTrackFromText(ctx);
+      await scrobbleTrackFromText(ctx);
     }
   } catch (e) {
     error(ctx, e);
