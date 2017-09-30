@@ -34,8 +34,9 @@ If you have any ideas or improvements for the bot please tell us about them via 
 }
 
 async function whoami(ctx) {
-  ctx.messageToEdit = await ctx.reply('<i>Fetching data...</i>', Extra.HTML());
-  ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null,
+  ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
+    Extra.HTML())).message_id;
+  ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
     `You are logged in as <a href="http://www.last.fm/user/${ctx.user.account}">${ctx.user.account}</a>`,
       Extra.HTML().webPreview(false));
 }
@@ -79,7 +80,8 @@ async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
 }
 
 async function recentTracks(ctx) {
-  ctx.messageToEdit = await ctx.reply('<i>Fetching data...</i>', Extra.HTML());
+  ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
+    Extra.HTML())).message_id;
   const res = await proxyGet(`${LASTFM_URL}?method=user.getrecenttracks&user=${ctx.user.account}&limit=15&api_key=${LASTFM_KEY}&format=json`);
   const tracks = res.data.recenttracks.track
     .filter((track) => {
@@ -96,7 +98,7 @@ async function recentTracks(ctx) {
       url: track.url,
     }));
 
-  ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null,
+  ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
     `Here are the very last 15 scrobbled tracks from your account:
   
 ${(tracks.map(track => `<a href="${encodeURI(`http://www.last.fm/music/${track.artist}`)}">${track.artist}</a> — \

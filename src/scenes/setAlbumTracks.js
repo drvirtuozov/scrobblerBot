@@ -20,7 +20,7 @@ setAlbumTracksScene.on('text', async (ctx) => {
       .map(track => ({ name: track }));
 
     if (tracks.length <= 1) {
-      ctx.reply('Send me song names separated by new lines',
+      await ctx.reply('Send me song names separated by new lines',
         Markup.inlineKeyboard([
           Markup.callbackButton('Cancel', 'CANCEL'),
         ]).extra());

@@ -34,7 +34,8 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
     try {
       res = await axios(`${LASTFM_URL}?method=auth.getsession&format=json&token=${token}&api_key=${LASTFM_KEY}&api_sig=${sig}`);
     } catch (e) {
-      return requestError(ctx, e);
+      await requestError(ctx, e);
+      return;
     }
 
     const { name: account, key } = res.data.session;
@@ -46,9 +47,9 @@ Now you can scrobble your first song. To do it just type artist name, song name 
 Example:\n\n${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for more info`,
       Extra.HTML().webPreview(false));
 
-    return ctx.flow.leave();
+    ctx.flow.leave();
   } catch (e) {
-    return error(ctx, e);
+    error(ctx, e);
   }
 });
 

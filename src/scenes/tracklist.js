@@ -21,7 +21,7 @@ tracklistScene.enter((ctx) => {
 
 tracklistScene.on('text', async (ctx) => {
   try {
-    ctx.flow.state.messageId = ctx.message.message_id;
+    ctx.flow.state.messageIdToReply = ctx.message.message_id;
     await scrobbleTracklist(ctx);
   } catch (e) {
     error(ctx, e);
