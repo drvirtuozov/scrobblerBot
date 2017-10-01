@@ -21,16 +21,17 @@ To take advantage of these opportunities you have to grant access to your Last.f
 }
 
 function help(ctx) {
-  ctx.reply(`To scrobble a track you can simply type its info in this format:
+  ctx.reply(`To scrobble a track simply type its info in this format:
   
 Artist\nTrack Name\nAlbum Title
 
-Use the keyboard below for album and tracklist scrobbling.
+<b>Note: Track scrobbling is enabled all the time by default.</b> So use the keyboard below for album and track list scrobbling.
 
 /auth — grant access or change account
 /recent — see recent scrobbled tracks from your account
 
-If you have any ideas or improvements for the bot please tell us about them via /wish command`, GLOBAL_KEYBOARD);
+If you have any ideas or improvements for the bot please tell us about them via /wish command`,
+  Extra.HTML().load(GLOBAL_KEYBOARD));
 }
 
 async function whoami(ctx) {
