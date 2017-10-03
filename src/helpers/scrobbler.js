@@ -67,6 +67,7 @@ ${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for 
       Extra.HTML().webPreview(false));
   }
 
+  ctx.flow.state.messageIdToReply = ctx.message.message_id;
   ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
     Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
   const trackToScrobble = {
@@ -137,6 +138,7 @@ async function scrobbleTracklist(ctx) {
       ]).extra());
   }
 
+  ctx.flow.state.messageIdToReply = ctx.message.message_id;
   ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
     Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
 

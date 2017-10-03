@@ -11,7 +11,7 @@ async function start(ctx, next) {
   if (res.created) {
     await ctx.reply(`Hello, ${ctx.from.first_name}!
     
-This bot allows you to scrobble songs, albums and tracklists in text mode. \
+This bot allows you to scrobble songs, albums and track lists in text mode. \
 To take advantage of these opportunities you have to grant access to your Last.fm account...`, GLOBAL_KEYBOARD);
     ctx.flow.enter('auth');
     return sendToAdmin(ctx, `We've got a new user! @${ctx.from.username}`);
@@ -20,8 +20,8 @@ To take advantage of these opportunities you have to grant access to your Last.f
   return next();
 }
 
-function help(ctx) {
-  ctx.reply(`To scrobble a track simply type its info in this format:
+async function help(ctx) {
+  await ctx.reply(`To scrobble a track simply type its info in this format:
   
 Artist\nTrack Name\nAlbum Title
 
@@ -37,7 +37,7 @@ If you have any ideas or improvements for the bot please tell us about them via 
 async function whoami(ctx) {
   ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
     Extra.HTML())).message_id;
-  ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
+  await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
     `You are logged in as <a href="http://www.last.fm/user/${ctx.user.account}">${ctx.user.account}</a>`,
       Extra.HTML().webPreview(false));
 }
@@ -99,7 +99,7 @@ async function recentTracks(ctx) {
       url: track.url,
     }));
 
-  ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
+  await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
     `Here are the very last 15 scrobbled tracks from your account:
   
 ${(tracks.map(track => `<a href="${encodeURI(`http://www.last.fm/music/${track.artist}`)}">${track.artist}</a> — \
