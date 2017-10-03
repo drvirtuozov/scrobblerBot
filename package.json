@@ -2,11 +2,11 @@
   "name": "scrobblerbot",
   "version": "1.0.0",
   "description": "An unofficial Last.fm Scrobbler for Telegram",
-  "main": "server.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_ENV=production node server.js",
-    "watch": "nodemon server.js --watch src"
+    "start": "NODE_ENV=production node app.js",
+    "watch": "nodemon app.js --watch src"
   },
   "repository": {
     "type": "git",
@@ -23,7 +23,6 @@
     "bluebird": "^3.5.0",
     "dotenv": "^4.0.0",
     "mongoose": "^4.11.14",
-    "now-logs": "0.0.7",
     "proxy-lists": "^1.14.1",
     "telegraf": "^3.12.1",
     "telegraf-flow": "^8.3.0",
