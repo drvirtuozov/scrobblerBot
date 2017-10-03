@@ -3,23 +3,16 @@ const SucceededMessage = require('../models/succeededMessage');
 const FailedMessage = require('../models/failedMessage');
 
 
-async function findOrCreateUserById(id) {
-  let user = await User.findById(id);
-
-  if (user) {
-    return { user, created: false };
-  }
-
-  user = await User.create({ _id: id });
-  return { user, created: true };
+function createUserById(id) {
+  return User.create({ _id: id });
 }
 
 function findUserById(id) {
   return User.findById(id);
 }
 
-function findUserByIdAndUpdate(id, updates, opts) {
-  return User.findByIdAndUpdate(id, updates, opts);
+function findUserByIdAndUpdate(id, updates) {
+  return User.findByIdAndUpdate(id, updates, { upsert: true });
 }
 
 function createSucceededMessage(id, tracks) {
@@ -53,7 +46,7 @@ async function deleteOldMessages() {
 }
 
 module.exports = {
-  findOrCreateUserById,
+  createUserById,
   findUserById,
   findUserByIdAndUpdate,
   createSucceededMessage,

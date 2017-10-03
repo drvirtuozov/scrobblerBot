@@ -94,7 +94,7 @@ bot.action('REPEAT', async (ctx) => {
       return;
     }
 
-    ctx.editMessageText('How many times do you want to scrobble this again?',
+    await ctx.editMessageText('How many times do you want to scrobble this again?',
       Telegraf.Markup.inlineKeyboard([
         [
           Telegraf.Markup.callbackButton('1', 'REPEAT:1'),

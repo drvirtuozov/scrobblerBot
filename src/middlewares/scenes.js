@@ -30,9 +30,13 @@ flow.hears('📃 Tracklist', auth, limiter, (ctx) => {
 
 flow.command('start', async (ctx, next) => {
   try {
-    await start(ctx, next);
+    if (ctx.user) {
+      return next();
+    }
+
+    return await start(ctx, next);
   } catch (e) {
-    error(ctx, e);
+    return error(ctx, e);
   }
 });
 

@@ -13,12 +13,12 @@ authScene.enter(async (ctx) => {
     const res = await axios(`${LASTFM_URL}?method=auth.gettoken&api_key=${LASTFM_KEY}&format=json`);
     const token = res.data.token;
 
-    await ctx.reply('Please, click the link below to grant access to your Last.fm account and then click OK button',
+    await ctx.reply('Please, click the link below to grant access to your Last.fm account and then push the OK button',
       Markup.inlineKeyboard([
-        Markup.urlButton('Grant access...', `http://www.last.fm/api/auth?api_key=${LASTFM_KEY}&token=${token}`),
+        Markup.urlButton('Grant access...', `https://www.last.fm/api/auth?api_key=${LASTFM_KEY}&token=${token}`),
         Markup.callbackButton('OK', 'ACCESS_GRANTED'),
       ]).extra());
-    await findUserByIdAndUpdate(ctx.from.id, { token }, { upsert: true });
+    await findUserByIdAndUpdate(ctx.from.id, { token });
   } catch (e) {
     error(ctx, e);
   }

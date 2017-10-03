@@ -1,23 +1,18 @@
 const { Extra } = require('telegraf');
 const { sendToAdmin, GLOBAL_KEYBOARD } = require('./utils');
-const { findOrCreateUserById } = require('./dbmanager');
+const { createUserById } = require('./dbmanager');
 const { LASTFM_URL, LASTFM_KEY } = require('../../config');
 const { proxyGet } = require('./requests');
 
 
-async function start(ctx, next) {
-  const res = await findOrCreateUserById(ctx.from.id);
-
-  if (res.created) {
-    await ctx.reply(`Hello, ${ctx.from.first_name}!
-    
+async function start(ctx) {
+  await createUserById(ctx.from.id);
+  await ctx.reply(`Hello, ${ctx.from.first_name}!
+  
 This bot allows you to scrobble songs, albums and track lists in text mode. \
 To take advantage of these opportunities you have to grant access to your Last.fm account...`, GLOBAL_KEYBOARD);
-    ctx.flow.enter('auth');
-    return sendToAdmin(ctx, `We've got a new user! @${ctx.from.username}`);
-  }
-
-  return next();
+  ctx.flow.enter('auth');
+  return sendToAdmin(ctx, `We've got a new user! @${ctx.from.username}`);
 }
 
 async function help(ctx) {
