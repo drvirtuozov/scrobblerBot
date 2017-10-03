@@ -20,22 +20,22 @@
   "homepage": "https://github.com/drvirtuozov/scrobblerBot#readme",
   "dependencies": {
     "axios": "^0.15.3",
-    "bluebird": "^3.4.7",
+    "bluebird": "^3.5.0",
     "dotenv": "^4.0.0",
-    "mongoose": "^4.7.7",
+    "mongoose": "^4.11.14",
     "now-logs": "0.0.7",
-    "proxy-lists": "^1.11.1",
-    "telegraf": "^3.6.4",
-    "telegraf-flow": "^8.1.1",
-    "telegraf-logger": "^1.0.1",
+    "proxy-lists": "^1.14.1",
+    "telegraf": "^3.12.1",
+    "telegraf-flow": "^8.3.0",
+    "telegraf-logger": "^1.0.3",
     "telegraf-session-redis": "^4.2.0",
     "to-title-case": "^1.0.0"
   },
   "devDependencies": {
-    "eslint": "^3.18.0",
-    "eslint-config-airbnb-base": "^11.1.2",
-    "eslint-plugin-import": "^2.2.0",
-    "nodemon": "^1.11.0"
+    "eslint": "^3.19.0",
+    "eslint-config-airbnb-base": "^11.3.2",
+    "eslint-plugin-import": "^2.7.0",
+    "nodemon": "^1.12.1"
   },
   "engines": {
     "node": ">=7.6.0"

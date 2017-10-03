@@ -36,10 +36,11 @@ async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   };
 
   if (ctx.callbackQuery) {
-    ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Extra.HTML());
+    ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+      Extra.HTML())).message_id;
   } else {
-    ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>',
-      Extra.HTML().inReplyTo(ctx.flow.state.messageId));
+    ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+      Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
   }
 
   try {
@@ -66,8 +67,8 @@ ${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for 
       Extra.HTML().webPreview(false));
   }
 
-  ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>',
-    Extra.HTML().inReplyTo(ctx.message.message_id));
+  ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+    Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
   const trackToScrobble = {
     artist: track[0],
     name: track[1],
@@ -89,10 +90,11 @@ ${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for 
 
 async function scrobbleAlbum(ctx) {
   if (ctx.callbackQuery) {
-    ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Extra.HTML());
+    ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+      Extra.HTML())).message_id;
   } else {
-    ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>',
-      Extra.HTML().inReplyTo(ctx.flow.state.messageId));
+    ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+      Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
   }
 
   const tracks = ctx.user.album.tracks.map(track => ({
@@ -135,8 +137,8 @@ async function scrobbleTracklist(ctx) {
       ]).extra());
   }
 
-  ctx.messageToEdit = await ctx.reply('<i>Scrobbling...</i>',
-    Extra.HTML().inReplyTo(ctx.flow.state.messageId));
+  ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+    Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
 
   let res;
 

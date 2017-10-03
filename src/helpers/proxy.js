@@ -61,6 +61,10 @@ function getCheckedProxies() {
   });
 }
 
+function setCheckedProxies(proxies = []) {
+  checkedProxies = proxies;
+}
+
 function getRandomChekedProxy() {
   if (checkedProxies.length) {
     const proxy = checkedProxies[Math.floor(Math.random() * checkedProxies.length)];
@@ -83,10 +87,8 @@ if (config.NODE_ENV === 'production') {
   });
 }
 
-setInterval(async () => {
-  checkedProxies = await getCheckedProxies();
-}, 3600000); // every hour
-
 module.exports = {
   getRandomChekedProxy,
+  getCheckedProxies,
+  setCheckedProxies,
 };

@@ -21,21 +21,23 @@ To take advantage of these opportunities you have to grant access to your Last.f
 }
 
 function help(ctx) {
-  ctx.reply(`To scrobble a track you can simply type its info in this format:
+  ctx.reply(`To scrobble a track simply type its info in this format:
   
 Artist\nTrack Name\nAlbum Title
 
-Use the keyboard below for album and tracklist scrobbling.
+<b>Note: Track scrobbling is enabled all the time by default.</b> So use the keyboard below for album and track list scrobbling.
 
 /auth — grant access or change account
 /recent — see recent scrobbled tracks from your account
 
-If you have any ideas or improvements for the bot please tell us about them via /wish command`, GLOBAL_KEYBOARD);
+If you have any ideas or improvements for the bot please tell us about them via /wish command`,
+  Extra.HTML().load(GLOBAL_KEYBOARD));
 }
 
 async function whoami(ctx) {
-  ctx.messageToEdit = await ctx.reply('<i>Fetching data...</i>', Extra.HTML());
-  ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null,
+  ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
+    Extra.HTML())).message_id;
+  ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
     `You are logged in as <a href="http://www.last.fm/user/${ctx.user.account}">${ctx.user.account}</a>`,
       Extra.HTML().webPreview(false));
 }
@@ -79,7 +81,8 @@ async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
 }
 
 async function recentTracks(ctx) {
-  ctx.messageToEdit = await ctx.reply('<i>Fetching data...</i>', Extra.HTML());
+  ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
+    Extra.HTML())).message_id;
   const res = await proxyGet(`${LASTFM_URL}?method=user.getrecenttracks&user=${ctx.user.account}&limit=15&api_key=${LASTFM_KEY}&format=json`);
   const tracks = res.data.recenttracks.track
     .filter((track) => {
@@ -96,7 +99,7 @@ async function recentTracks(ctx) {
       url: track.url,
     }));
 
-  ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null,
+  ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
     `Here are the very last 15 scrobbled tracks from your account:
   
 ${(tracks.map(track => `<a href="${encodeURI(`http://www.last.fm/music/${track.artist}`)}">${track.artist}</a> — \

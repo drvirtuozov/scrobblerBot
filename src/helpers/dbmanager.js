@@ -44,6 +44,14 @@ function findFailedMessageById(id) {
   return FailedMessage.findById(id);
 }
 
+async function deleteOldMessages() {
+  const date = new Date();
+  date.setMonth(date.getMonth() - 1);
+  const opts = { timestamp: { $lte: date } };
+  await SucceededMessage.deleteMany(opts);
+  return FailedMessage.deleteMany(opts);
+}
+
 module.exports = {
   findOrCreateUserById,
   findUserById,
@@ -52,4 +60,5 @@ module.exports = {
   findSucceededMessageById,
   createFailedMessage,
   findFailedMessageById,
+  deleteOldMessages,
 };

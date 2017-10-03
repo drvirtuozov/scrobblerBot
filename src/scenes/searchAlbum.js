@@ -36,20 +36,19 @@ searchAlbumScene.on('inline_query', async (ctx) => {
 
 searchAlbumScene.on('text', async (ctx) => {
   try {
-    ctx.flow.state.messageId = ctx.message.message_id;
+    ctx.flow.state.messageIdToReply = ctx.message.message_id;
     const parsedAlbum = ctx.message.text.split('\n');
 
     if (parsedAlbum.length < 2) {
-      ctx.reply('Format:\n\nArtist\nAlbum Title', Markup.inlineKeyboard([
+      await ctx.reply('Format:\n\nArtist\nAlbum Title', Markup.inlineKeyboard([
         Markup.callbackButton('Cancel', 'CANCEL'),
       ]).extra());
 
       return;
     }
 
-    ctx.messageToEdit = await ctx.reply('<i>Fetching data...</i>',
-      Extra.HTML().inReplyTo(ctx.message.message_id));
-
+    ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
+      Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
     const parsedTitle = toTitleCase(parsedAlbum[1]);
     const parsedArtist = toTitleCase(parsedAlbum[0]);
     let tracks = [];
@@ -73,7 +72,7 @@ searchAlbumScene.on('text', async (ctx) => {
 
     const user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true });
     const { artist, title } = user.album;
-    ctx.telegram.editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null,
+    await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
       `You are about to scrobble <a href="${encodeURI(`http://www.last.fm/music/${artist}/${title}`)}">${title}</a> by <a href="${encodeURI(`http://www.last.fm/music/${artist}`)}">${artist}</a>. The following tracks were found on Last.fm and will be scrobbled:\n\n${user.album.tracks
 .map(track => track.name).join('\n')}`,
       Extra.HTML().webPreview(false).markup(Markup.inlineKeyboard([

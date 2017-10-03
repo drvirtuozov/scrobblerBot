@@ -56,9 +56,9 @@ async function successfulScrobble(ctx, text = '✅ Success!', tracks = []) {
 
   if (ctx.callbackQuery) {
     message = await ctx.editMessageText(text, extra);
-  } else if (ctx.messageToEdit) {
+  } else if (ctx.flow.state.messageIdToEdit) {
     message = await ctx.telegram
-      .editMessageText(ctx.chat.id, ctx.messageToEdit.message_id, null, text, extra);
+      .editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null, text, extra);
   } else {
     message = await ctx.reply(text, extra);
   }
@@ -125,8 +125,8 @@ async function scrobbleError(ctx, e) {
 
   let messageId;
 
-  if (ctx.messageToEdit) {
-    messageId = ctx.messageToEdit.message_id;
+  if (ctx.flow.state.messageIdToEdit) {
+    messageId = ctx.flow.state.messageIdToEdit;
     await ctx.telegram.editMessageText(ctx.chat.id, messageId, null, e.message, extra);
   } else if (ctx.callbackQuery) {
     messageId = ctx.callbackQuery.message.message_id;

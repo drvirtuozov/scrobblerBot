@@ -10,12 +10,16 @@ const logger = require('./middlewares/logger');
 const { SCROBBLERBOT_TOKEN } = require('../config');
 const { error, successfulScrobble, requestError, multipleArray } = require('./helpers/utils');
 const { findSucceededMessageById, findFailedMessageById } = require('./helpers/dbmanager');
+require('./helpers/scheduler');
 
 
-const bot = new Telegraf(SCROBBLERBOT_TOKEN);
+const bot = new Telegraf(SCROBBLERBOT_TOKEN, {
+  telegram: {
+    webhookReply: false,
+  },
+});
 
 bot.context.user = null;
-bot.context.messageToEdit = null;
 
 bot.telegram.getMe()
   .then((data) => {
@@ -57,12 +61,13 @@ bot.action('CANCEL', async (ctx) => {
 
 bot.action('RETRY', limiter, async (ctx) => {
   try {
-    ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Telegraf.Extra.HTML());
+    ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+      Telegraf.Extra.HTML())).message_id;
     const messageId = ctx.callbackQuery.message.message_id;
     const message = await findFailedMessageById(messageId);
 
     if (!message) {
-      ctx.editMessageText('Expired');
+      await ctx.editMessageText('Expired');
       return;
     }
 
@@ -85,7 +90,7 @@ bot.action('REPEAT', async (ctx) => {
     const message = await findSucceededMessageById(messageId);
 
     if (!message) {
-      ctx.editMessageText('Expired');
+      await ctx.editMessageText('Expired');
       return;
     }
 
@@ -113,13 +118,14 @@ bot.action('REPEAT', async (ctx) => {
 
 bot.action(/REPEAT:\d?\d/, limiter, async (ctx) => {
   try {
-    ctx.messageToEdit = await ctx.editMessageText('<i>Scrobbling...</i>', Telegraf.Extra.HTML());
+    ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+      Telegraf.Extra.HTML())).message_id;
     const messageId = ctx.callbackQuery.message.message_id;
     const message = await findSucceededMessageById(messageId);
     const count = ctx.callbackQuery.data.split(':')[1];
 
     if (!message) {
-      ctx.editMessageText('Expired');
+      await ctx.editMessageText('Expired');
       return;
     }
 
