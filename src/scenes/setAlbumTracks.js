@@ -7,8 +7,8 @@ const { error } = require('../helpers/utils');
 
 const setAlbumTracksScene = new Scene('set_album_tracks');
 
-setAlbumTracksScene.enter((ctx) => {
-  ctx.editMessageText('Just send me song names of the album separated by new lines',
+setAlbumTracksScene.enter(async (ctx) => {
+  await ctx.editMessageText('Just send me song names of the album separated by new lines',
     Markup.inlineKeyboard([
       Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
@@ -30,7 +30,7 @@ setAlbumTracksScene.on('text', async (ctx) => {
     ctx.user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true });
     await scrobbleAlbum(ctx);
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 

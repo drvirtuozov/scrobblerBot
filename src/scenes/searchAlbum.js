@@ -12,7 +12,7 @@ const limiter = require('../middlewares/limiter');
 
 const searchAlbumScene = new Scene('search_album');
 
-searchAlbumScene.enter((ctx) => {
+searchAlbumScene.enter(async (ctx) => {
   const text = 'OK. In order to start searching an album click the button below. Or you can type album info in this format manually:\n\nArtist\nAlbum Title';
   const extra = Markup.inlineKeyboard([
     Markup.switchToCurrentChatButton('Search...', ''),
@@ -20,17 +20,18 @@ searchAlbumScene.enter((ctx) => {
   ]).extra();
 
   if (ctx.callbackQuery) {
-    return ctx.editMessageText(text, extra);
+    await ctx.editMessageText(text, extra);
+    return;
   }
 
-  return ctx.reply(text, extra);
+  await ctx.reply(text, extra);
 });
 
 searchAlbumScene.on('inline_query', async (ctx) => {
   try {
     await searchFromLastfmAndAnswerInlineQuery(ctx, 'album');
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 
@@ -66,7 +67,7 @@ searchAlbumScene.on('text', async (ctx) => {
         { name: track.name, duration: track.duration }
       ));
     } else {
-      ctx.flow.enter('no_album_info', ctx.flow.state);
+      await ctx.flow.enter('no_album_info', ctx.flow.state);
       return;
     }
 
@@ -81,7 +82,7 @@ searchAlbumScene.on('text', async (ctx) => {
         Markup.callbackButton('Cancel', 'CANCEL'),
       ])));
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 
@@ -89,12 +90,12 @@ searchAlbumScene.action('OK', limiter, async (ctx) => {
   try {
     await scrobbleAlbum(ctx);
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 
-searchAlbumScene.action('EDIT', (ctx) => {
-  ctx.flow.enter('edit_album', ctx.flow.state);
+searchAlbumScene.action('EDIT', async (ctx) => {
+  await ctx.flow.enter('edit_album', ctx.flow.state);
 });
 
 module.exports = searchAlbumScene;

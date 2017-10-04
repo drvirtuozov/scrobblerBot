@@ -47,13 +47,15 @@ async function scrobbleTrackFromDB(ctx, isAlbum = true) {
     const res = await scrobbleTracks([trackToScrobble], undefined, ctx.user.key);
 
     if (res.data.scrobbles['@attr'].ingored) {
-      return scrobbleError(ctx, new Error('❌ Error: The track was ignored by Last.fm'));
+      await scrobbleError(ctx, new Error('❌ Error: The track was ignored by Last.fm'));
+      return;
     }
   } catch (e) {
-    return requestError(ctx, e);
+    await requestError(ctx, e);
+    return;
   }
 
-  return successfulScrobble(ctx, undefined, [trackToScrobble]);
+  await successfulScrobble(ctx, undefined, [trackToScrobble]);
 }
 
 async function scrobbleTrackFromText(ctx) {
@@ -61,15 +63,18 @@ async function scrobbleTrackFromText(ctx) {
   const song = getRandomFavSong();
 
   if (track.length < 2 || track.length > 3) {
-    return ctx.reply(`Please, send me valid data separated by new lines. Example:
+    await ctx.reply(`Please, send me valid data separated by new lines. Example:
     
 ${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for more info`,
       Extra.HTML().webPreview(false));
+
+    return;
   }
 
   ctx.flow.state.messageIdToReply = ctx.message.message_id;
   ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
     Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+
   const trackToScrobble = {
     artist: track[0],
     name: track[1],
@@ -80,13 +85,15 @@ ${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for 
     const res = await scrobbleTracks([trackToScrobble], ctx.message.date, ctx.user.key);
 
     if (res.data.scrobbles['@attr'].ingored) {
-      return scrobbleError(ctx, new Error('❌ Error: The track was ignored by Last.fm'));
+      await scrobbleError(ctx, new Error('❌ Error: The track was ignored by Last.fm'));
+      return;
     }
   } catch (e) {
-    return requestError(ctx, e);
+    await requestError(ctx, e);
+    return;
   }
 
-  return successfulScrobble(ctx, undefined, [trackToScrobble]);
+  await successfulScrobble(ctx, undefined, [trackToScrobble]);
 }
 
 async function scrobbleAlbum(ctx) {
@@ -108,10 +115,11 @@ async function scrobbleAlbum(ctx) {
   try {
     await scrobbleTracks(tracks, undefined, ctx.user.key);
   } catch (e) {
-    return requestError(ctx, e);
+    await requestError(ctx, e);
+    return;
   }
 
-  return successfulScrobble(ctx, undefined, tracks);
+  await successfulScrobble(ctx, undefined, tracks);
 }
 
 async function scrobbleTracklist(ctx) {
@@ -132,10 +140,12 @@ async function scrobbleTracklist(ctx) {
     });
 
   if (!isValid) {
-    return ctx.reply('Please, send me valid data with the valid syntax:\n\nArtist | Track Name | Album Title',
+    await ctx.reply('Please, send me valid data with the valid syntax:\n\nArtist | Track Name | Album Title',
       Markup.inlineKeyboard([
         Markup.callbackButton('Cancel', 'CANCEL'),
       ]).extra());
+
+    return;
   }
 
   ctx.flow.state.messageIdToReply = ctx.message.message_id;
@@ -147,7 +157,8 @@ async function scrobbleTracklist(ctx) {
   try {
     res = await scrobbleTracks(tracks, undefined, ctx.user.key);
   } catch (e) {
-    return requestError(ctx, e);
+    await requestError(ctx, e);
+    return;
   }
 
   const ignored = [];
@@ -162,14 +173,16 @@ async function scrobbleTracklist(ctx) {
   }
 
   if (ignored.length) {
-    return successfulScrobble(ctx,
+    await successfulScrobble(ctx,
       `✅ Success, but...\nThe following tracks were ignored:
       
 ${ignored.map(track => `${track.artist['#text']} | ${track.track['#text']} | ${track.album['#text']}`).join('\n')}`,
       tracks);
+
+    return;
   }
 
-  return successfulScrobble(ctx, undefined, tracks);
+  await successfulScrobble(ctx, undefined, tracks);
 }
 
 module.exports = {

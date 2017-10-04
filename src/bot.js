@@ -34,15 +34,15 @@ bot.use(session);
 bot.use(logger);
 bot.use(scenes);
 
-bot.hears(/\/\w+/, (ctx) => {
-  ctx.reply('If you are confused type /help');
+bot.hears(/\/\w+/, async (ctx) => {
+  await ctx.reply('If you are confused type /help');
 });
 
 bot.on('text', auth, limiter, async (ctx) => {
   try {
     await scrobbleTrackFromText(ctx);
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 
@@ -50,13 +50,13 @@ bot.on('inline_query', async (ctx) => {
   try {
     await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
   } catch (e) {
-    error(e, ctx);
+    await error(e, ctx);
   }
 });
 
 bot.action('CANCEL', async (ctx) => {
   await ctx.editMessageText('Canceled');
-  ctx.flow.leave();
+  await ctx.flow.leave();
 });
 
 bot.action('RETRY', limiter, async (ctx) => {
@@ -74,13 +74,13 @@ bot.action('RETRY', limiter, async (ctx) => {
     try {
       await scrobbleTracks(message.tracks, undefined, ctx.user.key);
     } catch (e) {
-      requestError(ctx, e);
+      await requestError(ctx, e);
       return;
     }
 
     await successfulScrobble(ctx);
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 
@@ -112,7 +112,7 @@ bot.action('REPEAT', async (ctx) => {
         ],
       ]).extra());
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 
@@ -132,19 +132,19 @@ bot.action(/REPEAT:\d?\d/, limiter, async (ctx) => {
     try {
       await scrobbleTracks(multipleArray(message.tracks, count), undefined, ctx.user.key);
     } catch (e) {
-      requestError(ctx, e);
+      await requestError(ctx, e);
       return;
     }
 
     await successfulScrobble(ctx, undefined, message.tracks);
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 
-bot.catch((e) => {
+bot.catch(async (e) => {
   console.log(e);
-  sendToAdmin(e.message);
+  await sendToAdmin(e.message);
 });
 
 module.exports = bot;

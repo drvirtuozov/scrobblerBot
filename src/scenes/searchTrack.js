@@ -11,7 +11,7 @@ const limiter = require('../middlewares/limiter');
 
 const searchTrackScene = new Scene('search_track');
 
-searchTrackScene.enter((ctx) => {
+searchTrackScene.enter(async (ctx) => {
   const text = 'OK. In order to start searching a track click the button below. Or you can type track info in this format manually:\n\nArtist\nTrack Name\nAlbum Title';
   const extra = Markup.inlineKeyboard([
     Markup.switchToCurrentChatButton('Search...', ''),
@@ -19,17 +19,18 @@ searchTrackScene.enter((ctx) => {
   ]).extra();
 
   if (ctx.callbackQuery) {
-    return ctx.editMessageText(text, extra);
+    await ctx.editMessageText(text, extra);
+    return;
   }
 
-  return ctx.reply(text, extra);
+  await ctx.reply(text, extra);
 });
 
 searchTrackScene.on('inline_query', async (ctx) => {
   try {
     await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 
@@ -86,7 +87,7 @@ searchTrackScene.on('text', async (ctx) => {
       await scrobbleTrackFromText(ctx);
     }
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 
@@ -94,19 +95,19 @@ searchTrackScene.action('SCR', limiter, async (ctx) => {
   try {
     await scrobbleTrackFromDB(ctx);
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 
-searchTrackScene.action('EDIT_TRACK_ALBUM', (ctx) => {
-  ctx.flow.enter('edit_track_album', ctx.flow.state);
+searchTrackScene.action('EDIT_TRACK_ALBUM', async (ctx) => {
+  await ctx.flow.enter('edit_track_album', ctx.flow.state);
 });
 
 searchTrackScene.action('SCR_WITHOUT_ALBUM', limiter, async (ctx) => {
   try {
     await scrobbleTrackFromDB(ctx, false);
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 

@@ -20,7 +20,7 @@ authScene.enter(async (ctx) => {
       ]).extra());
     await findUserByIdAndUpdate(ctx.from.id, { token });
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 
@@ -47,9 +47,9 @@ Now you can scrobble your first song. To do it just type artist name, song name 
 Example:\n\n${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for more info`,
       Extra.HTML().webPreview(false));
 
-    ctx.flow.leave();
+    await ctx.flow.leave();
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 

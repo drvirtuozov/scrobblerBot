@@ -11,8 +11,8 @@ async function start(ctx) {
   
 This bot allows you to scrobble songs, albums and track lists in text mode. \
 To take advantage of these opportunities you have to grant access to your Last.fm account...`, GLOBAL_KEYBOARD);
-  ctx.flow.enter('auth');
-  return sendToAdmin(`We've got a new user! @${ctx.from.username}`);
+  await ctx.flow.enter('auth');
+  await sendToAdmin(`We've got a new user! @${ctx.from.username}`);
 }
 
 async function help(ctx) {
@@ -39,7 +39,7 @@ async function whoami(ctx) {
 
 async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
   if (!ctx.inlineQuery.query) {
-    return ctx.answerInlineQuery([{
+    await ctx.answerInlineQuery([{
       type: 'article',
       title: 'Type your query below...',
       id: ctx.inlineQuery.id,
@@ -47,6 +47,8 @@ async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
         message_text: 'Type your query below...',
       },
     }]);
+
+    return;
   }
 
   const query = ctx.inlineQuery.query;
@@ -72,7 +74,7 @@ async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
       };
     });
 
-  return ctx.answerInlineQuery(inlineResults);
+  await ctx.answerInlineQuery(inlineResults);
 }
 
 async function recentTracks(ctx) {

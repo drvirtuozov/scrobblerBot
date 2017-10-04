@@ -7,8 +7,8 @@ const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 
 const editTrackAlbumScene = new Scene('edit_track_album');
 
-editTrackAlbumScene.enter((ctx) => {
-  ctx.editMessageText('Enter album title',
+editTrackAlbumScene.enter(async (ctx) => {
+  await ctx.editMessageText('Enter album title',
     Markup.inlineKeyboard([
       Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
@@ -22,7 +22,7 @@ editTrackAlbumScene.on('text', async (ctx) => {
       { new: true });
     await scrobbleTrackFromDB(ctx);
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 

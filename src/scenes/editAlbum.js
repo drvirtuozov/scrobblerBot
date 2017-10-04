@@ -10,7 +10,7 @@ const editAlbumScene = new Scene('edit_album');
 editAlbumScene.enter(async (ctx) => {
   const tracks = ctx.user.album.tracks;
   await ctx.editMessageText('Edit the track list and send it back to me:');
-  ctx.reply(`${tracks.map(track => track.name).join('\n')}`,
+  await ctx.reply(`${tracks.map(track => track.name).join('\n')}`,
     Markup.inlineKeyboard([
       Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
@@ -22,7 +22,7 @@ editAlbumScene.on('text', async (ctx) => {
     ctx.user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks }, { new: true });
     await scrobbleAlbum(ctx);
   } catch (e) {
-    error(ctx, e);
+    await error(ctx, e);
   }
 });
 
