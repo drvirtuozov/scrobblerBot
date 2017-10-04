@@ -1,15 +1,16 @@
-const { Markup } = require('telegraf');
+const { Telegram, Markup } = require('telegraf');
 const crypto = require('crypto');
 const songs = require('../songs');
 const { findUserByIdAndUpdate, createSucceededMessage, createFailedMessage } = require('./dbmanager');
-const { ADMIN_ID } = require('../../config');
+const { ADMIN_ID, SCROBBLERBOT_TOKEN } = require('../../config');
 const querystring = require('querystring');
 
 
+const telegram = new Telegram(SCROBBLERBOT_TOKEN);
 const GLOBAL_KEYBOARD = Markup.keyboard([['🎵 Track', '💽 Album', '📃 Tracklist']]).resize().extra();
 
-function sendToAdmin(ctx, text) {
-  return ctx.telegram.sendMessage(ADMIN_ID, text);
+function sendToAdmin(text) {
+  return telegram.sendMessage(ADMIN_ID, text);
 }
 
 function md5(text) {
@@ -32,7 +33,7 @@ async function error(ctx, e) {
   }
 
   ctx.flow.leave();
-  return sendToAdmin(ctx, '❗️ An error occured. Check the logs...');
+  return sendToAdmin('❗️ An error occured. Check the logs...');
 }
 
 function utf8(text) {

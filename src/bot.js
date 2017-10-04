@@ -8,7 +8,7 @@ const session = require('./middlewares/session');
 const limiter = require('./middlewares/limiter');
 const logger = require('./middlewares/logger');
 const { SCROBBLERBOT_TOKEN } = require('../config');
-const { error, successfulScrobble, requestError, multipleArray } = require('./helpers/utils');
+const { error, successfulScrobble, requestError, multipleArray, sendToAdmin } = require('./helpers/utils');
 const { findSucceededMessageById, findFailedMessageById } = require('./helpers/dbmanager');
 require('./helpers/scheduler');
 
@@ -142,8 +142,9 @@ bot.action(/REPEAT:\d?\d/, limiter, async (ctx) => {
   }
 });
 
-bot.catch((err) => {
-  console.log('Bot error:', err.message);
+bot.catch((e) => {
+  console.log(e);
+  sendToAdmin(e.message);
 });
 
 module.exports = bot;
