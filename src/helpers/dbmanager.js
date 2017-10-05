@@ -12,7 +12,7 @@ function findUserById(id) {
 }
 
 function findUserByIdAndUpdate(id, updates) {
-  return User.findByIdAndUpdate(id, updates, { upsert: true });
+  return User.findByIdAndUpdate(id, updates, { upsert: true, new: true });
 }
 
 function createSucceededMessage(id, tracks) {

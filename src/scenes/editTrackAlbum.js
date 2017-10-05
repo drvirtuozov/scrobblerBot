@@ -1,7 +1,6 @@
 const { Markup } = require('telegraf');
 const { Scene } = require('telegraf-flow');
 const { scrobbleTrackFromDB } = require('../helpers/scrobbler');
-const { error } = require('../helpers/utils');
 const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 
 
@@ -15,15 +14,9 @@ editTrackAlbumScene.enter(async (ctx) => {
 });
 
 editTrackAlbumScene.on('text', async (ctx) => {
-  try {
-    const album = ctx.message.text;
-    ctx.user = await findUserByIdAndUpdate(ctx.from.id,
-      { 'track.album': album },
-      { new: true });
-    await scrobbleTrackFromDB(ctx);
-  } catch (e) {
-    await error(ctx, e);
-  }
+  const album = ctx.message.text;
+  ctx.user = await findUserByIdAndUpdate(ctx.from.id, { 'track.album': album });
+  await scrobbleTrackFromDB(ctx);
 });
 
 module.exports = editTrackAlbumScene;

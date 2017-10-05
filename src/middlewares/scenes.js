@@ -10,7 +10,6 @@ const setAlbumTracksScene = require('../scenes/setAlbumTracks');
 const editTrackAlbumScene = require('../scenes/editTrackAlbum');
 const { start, whoami, help, recentTracks } = require('../helpers/actions');
 const auth = require('./auth');
-const { error } = require('../helpers/utils');
 const limiter = require('./limiter');
 
 
@@ -21,16 +20,12 @@ flow.hears('💽 Album', auth, limiter, ctx => ctx.flow.enter('search_album'));
 flow.hears('📃 Tracklist', auth, limiter, ctx => ctx.flow.enter('tracklist'));
 
 flow.command('start', async (ctx, next) => {
-  try {
-    if (ctx.user) {
-      await next();
-      return;
-    }
-
-    await start(ctx, next);
-  } catch (e) {
-    await error(ctx, e);
+  if (ctx.user) {
+    await next();
+    return;
   }
+
+  await start(ctx, next);
 });
 
 flow.command('help', help);

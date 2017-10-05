@@ -158,17 +158,18 @@ async function requestError(ctx, e) {
       }
 
       await ctx.flow.enter('auth');
+      return;
     }
   }
 
   await scrobbleError(ctx, e);
 }
 
-async function isUserAuthorized(ctx) {
+function isUserAuthorized(ctx) {
   return ctx.user && ctx.user.key;
 }
 
-function validateTracksDurations(tracks = []) {
+function validateTrackDurations(tracks = []) {
   const defDur = 300;
   return tracks.map((track) => {
     let duration = 0;
@@ -198,5 +199,5 @@ module.exports = {
   multipleArray,
   fromQuerystringToTracksArray,
   fromTracksArrayToQuerystring,
-  validateTracksDurations,
+  validateTrackDurations,
 };

@@ -7,10 +7,12 @@ const auth = require('./middlewares/auth');
 const session = require('./middlewares/session');
 const limiter = require('./middlewares/limiter');
 const logger = require('./middlewares/logger');
+const error = require('./middlewares/error');
 const { SCROBBLERBOT_TOKEN } = require('../config');
-const { error, successfulScrobble, requestError, multipleArray, sendToAdmin } = require('./helpers/utils');
+const { successfulScrobble, requestError, multipleArray, sendToAdmin } = require('./helpers/utils');
 const { findSucceededMessageById, findFailedMessageById } = require('./helpers/dbmanager');
 require('./helpers/scheduler');
+require('./db');
 
 
 const bot = new Telegraf(SCROBBLERBOT_TOKEN, {
@@ -21,14 +23,16 @@ const bot = new Telegraf(SCROBBLERBOT_TOKEN, {
 
 bot.context.user = null;
 
-bot.telegram.getMe()
-  .then((data) => {
+setImmediate(async () => {
+  try {
+    const data = await bot.telegram.getMe();
     bot.options.username = data.username;
-  })
-  .catch((err) => {
-    console.log('Bot\'s getMe error:', err.message);
-  });
+  } catch (e) {
+    console.log(e.message);
+  }
+});
 
+bot.use(error);
 bot.use(user);
 bot.use(session);
 bot.use(logger);
@@ -39,19 +43,11 @@ bot.hears(/\/\w+/, async (ctx) => {
 });
 
 bot.on('text', auth, limiter, async (ctx) => {
-  try {
-    await scrobbleTrackFromText(ctx);
-  } catch (e) {
-    await error(ctx, e);
-  }
+  await scrobbleTrackFromText(ctx);
 });
 
 bot.on('inline_query', async (ctx) => {
-  try {
-    await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
-  } catch (e) {
-    await error(e, ctx);
-  }
+  await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
 });
 
 bot.action('CANCEL', async (ctx) => {
@@ -60,91 +56,79 @@ bot.action('CANCEL', async (ctx) => {
 });
 
 bot.action('RETRY', limiter, async (ctx) => {
-  try {
-    ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
-      Telegraf.Extra.HTML())).message_id;
-    const messageId = ctx.callbackQuery.message.message_id;
-    const message = await findFailedMessageById(messageId);
+  ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+    Telegraf.Extra.HTML())).message_id;
+  const messageId = ctx.callbackQuery.message.message_id;
+  const message = await findFailedMessageById(messageId);
 
-    if (!message) {
-      await ctx.editMessageText('Expired');
-      return;
-    }
-
-    try {
-      await scrobbleTracks(message.tracks, undefined, ctx.user.key);
-    } catch (e) {
-      await requestError(ctx, e);
-      return;
-    }
-
-    await successfulScrobble(ctx);
-  } catch (e) {
-    await error(ctx, e);
+  if (!message) {
+    await ctx.editMessageText('Expired');
+    return;
   }
+
+  try {
+    await scrobbleTracks(message.tracks, undefined, ctx.user.key);
+  } catch (e) {
+    await requestError(ctx, e);
+    return;
+  }
+
+  await successfulScrobble(ctx);
 });
 
 bot.action('REPEAT', async (ctx) => {
-  try {
-    const messageId = ctx.callbackQuery.message.message_id;
-    const message = await findSucceededMessageById(messageId);
+  const messageId = ctx.callbackQuery.message.message_id;
+  const message = await findSucceededMessageById(messageId);
 
-    if (!message) {
-      await ctx.editMessageText('Expired');
-      return;
-    }
-
-    await ctx.editMessageText('How many times do you want to scrobble this again?',
-      Telegraf.Markup.inlineKeyboard([
-        [
-          Telegraf.Markup.callbackButton('1', 'REPEAT:1'),
-          Telegraf.Markup.callbackButton('2', 'REPEAT:2'),
-          Telegraf.Markup.callbackButton('3', 'REPEAT:3'),
-          Telegraf.Markup.callbackButton('4', 'REPEAT:4'),
-          Telegraf.Markup.callbackButton('5', 'REPEAT:5'),
-        ],
-        [
-          Telegraf.Markup.callbackButton('6', 'REPEAT:6'),
-          Telegraf.Markup.callbackButton('7', 'REPEAT:7'),
-          Telegraf.Markup.callbackButton('8', 'REPEAT:8'),
-          Telegraf.Markup.callbackButton('9', 'REPEAT:9'),
-          Telegraf.Markup.callbackButton('10', 'REPEAT:10'),
-        ],
-      ]).extra());
-  } catch (e) {
-    await error(ctx, e);
+  if (!message) {
+    await ctx.editMessageText('Expired');
+    return;
   }
+
+  await ctx.editMessageText('How many times do you want to scrobble this again?',
+    Telegraf.Markup.inlineKeyboard([
+      [
+        Telegraf.Markup.callbackButton('1', 'REPEAT:1'),
+        Telegraf.Markup.callbackButton('2', 'REPEAT:2'),
+        Telegraf.Markup.callbackButton('3', 'REPEAT:3'),
+        Telegraf.Markup.callbackButton('4', 'REPEAT:4'),
+        Telegraf.Markup.callbackButton('5', 'REPEAT:5'),
+      ],
+      [
+        Telegraf.Markup.callbackButton('6', 'REPEAT:6'),
+        Telegraf.Markup.callbackButton('7', 'REPEAT:7'),
+        Telegraf.Markup.callbackButton('8', 'REPEAT:8'),
+        Telegraf.Markup.callbackButton('9', 'REPEAT:9'),
+        Telegraf.Markup.callbackButton('10', 'REPEAT:10'),
+      ],
+    ]).extra());
 });
 
 bot.action(/REPEAT:\d?\d/, limiter, async (ctx) => {
-  try {
-    ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
-      Telegraf.Extra.HTML())).message_id;
-    const messageId = ctx.callbackQuery.message.message_id;
-    const message = await findSucceededMessageById(messageId);
-    const count = ctx.callbackQuery.data.split(':')[1];
+  ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+    Telegraf.Extra.HTML())).message_id;
+  const messageId = ctx.callbackQuery.message.message_id;
+  const message = await findSucceededMessageById(messageId);
+  const count = ctx.callbackQuery.data.split(':')[1];
 
-    if (!message) {
-      await ctx.editMessageText('Expired');
-      return;
-    }
-
-    try {
-      await scrobbleTracks(multipleArray(message.tracks, count), undefined, ctx.user.key);
-    } catch (e) {
-      await requestError(ctx, e);
-      return;
-    }
-
-    await successfulScrobble(ctx, undefined, message.tracks);
-  } catch (e) {
-    await error(ctx, e);
+  if (!message) {
+    await ctx.editMessageText('Expired');
+    return;
   }
+
+  try {
+    await scrobbleTracks(multipleArray(message.tracks, count), undefined, ctx.user.key);
+  } catch (e) {
+    await requestError(ctx, e);
+    return;
+  }
+
+  await successfulScrobble(ctx, undefined, message.tracks);
 });
 
 bot.catch(async (e) => {
   console.log(e);
-  await sendToAdmin(e.message);
+  await sendToAdmin(`Unhandled! ${e.message}`);
 });
 
 module.exports = bot;
