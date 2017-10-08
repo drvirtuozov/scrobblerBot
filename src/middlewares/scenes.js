@@ -10,47 +10,29 @@ const setAlbumTracksScene = require('../scenes/setAlbumTracks');
 const editTrackAlbumScene = require('../scenes/editTrackAlbum');
 const { start, whoami, help, recentTracks } = require('../helpers/actions');
 const auth = require('./auth');
-const { error, GLOBAL_KEYBOARD } = require('../helpers/utils');
 const limiter = require('./limiter');
 
 
 const flow = new TelegrafFlow();
 
-flow.hears('🎵 Track', auth, limiter, (ctx) => {
-  ctx.flow.enter('search_track');
-});
-
-flow.hears('💽 Album', auth, limiter, (ctx) => {
-  ctx.flow.enter('search_album');
-});
-
-flow.hears('📃 Tracklist', auth, limiter, (ctx) => {
-  ctx.flow.enter('tracklist');
-});
+flow.hears('🎵 Track', auth, limiter, ctx => ctx.flow.enter('search_track'));
+flow.hears('💽 Album', auth, limiter, ctx => ctx.flow.enter('search_album'));
+flow.hears('📃 Tracklist', auth, limiter, ctx => ctx.flow.enter('tracklist'));
 
 flow.command('start', async (ctx, next) => {
-  try {
-    await start(ctx, next);
-  } catch (e) {
-    error(ctx, e);
+  if (ctx.user) {
+    await next();
+    return;
   }
+
+  await start(ctx, next);
 });
 
 flow.command('help', help);
 flow.command('whoami', auth, whoami);
 flow.command('recent', auth, recentTracks);
-
-flow.command('auth', (ctx) => {
-  ctx.flow.enter('auth');
-});
-
-flow.command('scrobble', auth, (ctx) => {
-  ctx.reply('Deprecated command. Use the new keyboard below', GLOBAL_KEYBOARD);
-});
-
-flow.command('wish', (ctx) => {
-  ctx.flow.enter('wish');
-});
+flow.command('auth', ctx => ctx.flow.enter('auth'));
+flow.command('wish', ctx => ctx.flow.enter('wish'));
 
 flow.register(wishScene);
 flow.register(authScene);

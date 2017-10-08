@@ -1,15 +1,16 @@
-const { Markup } = require('telegraf');
+const { Telegram, Markup } = require('telegraf');
 const crypto = require('crypto');
 const songs = require('../songs');
 const { findUserByIdAndUpdate, createSucceededMessage, createFailedMessage } = require('./dbmanager');
-const { ADMIN_ID } = require('../../config');
+const { ADMIN_ID, SCROBBLERBOT_TOKEN } = require('../../config');
 const querystring = require('querystring');
 
 
+const telegram = new Telegram(SCROBBLERBOT_TOKEN);
 const GLOBAL_KEYBOARD = Markup.keyboard([['🎵 Track', '💽 Album', '📃 Tracklist']]).resize().extra();
 
-function sendToAdmin(ctx, text) {
-  return ctx.telegram.sendMessage(ADMIN_ID, text);
+function sendToAdmin(text) {
+  return telegram.sendMessage(ADMIN_ID, text);
 }
 
 function md5(text) {
@@ -31,8 +32,8 @@ async function error(ctx, e) {
     await ctx.reply(errText);
   }
 
-  ctx.flow.leave();
-  return sendToAdmin(ctx, '❗️ An error occured. Check the logs...');
+  await ctx.flow.leave();
+  await sendToAdmin('❗️ An error occured. Check the logs...');
 }
 
 function utf8(text) {
@@ -64,7 +65,7 @@ async function successfulScrobble(ctx, text = '✅ Success!', tracks = []) {
   }
 
   await createSucceededMessage(message.message_id, tracks);
-  ctx.flow.leave();
+  await ctx.flow.leave();
 }
 
 function canScrobble(ctx) {
@@ -140,7 +141,7 @@ async function scrobbleError(ctx, e) {
     await createFailedMessage(messageId, fromQuerystringToTracksArray(e.config.data));
   }
 
-  return ctx.flow.leave();
+  await ctx.flow.leave();
 }
 
 async function requestError(ctx, e) {
@@ -156,18 +157,19 @@ async function requestError(ctx, e) {
         await ctx.reply(text);
       }
 
-      return ctx.flow.enter('auth');
+      await ctx.flow.enter('auth');
+      return;
     }
   }
 
-  return scrobbleError(ctx, e);
+  await scrobbleError(ctx, e);
 }
 
-async function isUserAuthorized(ctx) {
+function isUserAuthorized(ctx) {
   return ctx.user && ctx.user.key;
 }
 
-function validateTracksDurations(tracks = []) {
+function validateTrackDurations(tracks = []) {
   const defDur = 300;
   return tracks.map((track) => {
     let duration = 0;
@@ -197,5 +199,5 @@ module.exports = {
   multipleArray,
   fromQuerystringToTracksArray,
   fromTracksArrayToQuerystring,
-  validateTracksDurations,
+  validateTrackDurations,
 };

@@ -5,11 +5,7 @@ const dotenv = require('dotenv');
 if (process.env.NODE_ENV === 'production') {
   dotenv.config();
 } else if (process.env.NODE_ENV === 'development') {
-  const envConfig = dotenv.parse(fs.readFileSync('.env.dev'));
-
-  for (const k in envConfig) {
-    process.env[k] = envConfig[k];
-  }
+  process.env = dotenv.parse(fs.readFileSync('.env.dev'));
 }
 
 module.exports = {
@@ -21,6 +17,5 @@ module.exports = {
   LASTFM_KEY: process.env.LASTFM_KEY,
   LASTFM_SECRET: process.env.LASTFM_SECRET,
   ADMIN_ID: process.env.ADMIN_ID,
-  NOW_LOGS_SECRET: process.env.NOW_LOGS_SECRET,
   REDIS_URL: process.env.REDIS_URL,
 };
