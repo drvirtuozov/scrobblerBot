@@ -126,9 +126,9 @@ bot.action(/REPEAT:\d?\d/, limiter, async (ctx) => {
   await successfulScrobble(ctx, undefined, message.tracks);
 });
 
-bot.catch(async (e) => {
+bot.catch((e) => {
   console.log(e);
-  await sendToAdmin(`Unhandled! ${e.message}`);
+  sendToAdmin(`Unhandled Bot Error! ${e.message}`);
 });
 
 module.exports = bot;
