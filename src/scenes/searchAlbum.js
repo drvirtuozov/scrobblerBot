@@ -71,8 +71,8 @@ searchAlbumScene.on('text', async (ctx) => {
   const user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks });
   const { artist, title } = user.album;
   await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
-    `You are about to scrobble <a href="${encodeURI(`http://www.last.fm/music/${artist}/${title}`)}">${title}</a> ` +
-    `by <a href="${encodeURI(`http://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
+    `You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${title}`)}">${title}</a> ` +
+    `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
     `The following tracks were found on Last.fm and will be scrobbled:\n\n${user.album.tracks
       .map(track => track.name).join('\n')}`,
           Extra.HTML().webPreview(false).markup(Markup.inlineKeyboard([
