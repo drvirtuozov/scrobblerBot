@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "NODE_ENV=production node app.js",
-    "watch": "nodemon app.js --watch src"
+    "watch": "nodemon app.js --watch src",
+    "deploy": "eslint . && now && now alias"
   },
   "repository": {
     "type": "git",

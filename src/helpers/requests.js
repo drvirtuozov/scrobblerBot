@@ -10,7 +10,7 @@ async function proxyPost(url, data) {
     // throw { message: 'mock error', config: { data } };
     const res = await axios.post(url, data, {
       proxy: proxy.host ? proxy : null,
-      timeout: 8000,
+      timeout: 5000,
       maxRedirects: 0,
       validateStatus(status) {
         return status === 200;

@@ -23,6 +23,10 @@ function getRandomFavSong() {
 }
 
 async function error(ctx, e) {
+  if (e.code === 400) { // message is not modified
+    return;
+  }
+
   console.log(e);
   const errText = '❗️ Oops, something went wrong. Please try again later.';
 

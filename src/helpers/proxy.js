@@ -3,13 +3,12 @@ const axios = require('axios');
 const config = require('../../config');
 
 
-let uncheckedProxies = [];
 let checkedProxies = [];
 
 async function getUncheckedProxies() {
   const result = [];
   const gettingProxies = proxyLists.getProxies({
-    protocols: ['http'],
+    protocols: ['https'],
     ipTypes: ['ipv4'],
   });
 
@@ -29,40 +28,28 @@ async function getUncheckedProxies() {
   });
 }
 
-function getCheckedProxies() {
-  const result = [];
-  const startTimestamp = Date.now();
+async function startCheckingProxies(proxies) {
+  console.log('Started checking proxies...');
+  checkedProxies = [];
 
-  return new Promise(async (resolve) => {
-    uncheckedProxies.forEach(async (proxy) => {
-      try {
-        await axios.post(config.LASTFM_URL, null, {
-          timeout: 5000,
-          maxRedirects: 0,
-          proxy: {
-            host: proxy.ipAddress,
-            port: proxy.port,
-          },
-        });
-      } catch (e) {
-        if (e.response && e.response.status === 400) {
-          result.push(proxy);
-        }
+  for (const proxy of proxies) {
+    try {
+      await axios.post(config.LASTFM_URL, null, {
+        timeout: 3000,
+        maxRedirects: 0,
+        proxy: {
+          host: proxy.ipAddress,
+          port: proxy.port,
+        },
+      });
+    } catch (e) {
+      if (e.response && e.response.status === 400) { // normal behavior
+        checkedProxies.push(proxy);
       }
-    });
+    }
+  }
 
-    const interval = setInterval(() => {
-      if (Date.now() - startTimestamp > 10000) {
-        clearInterval(interval);
-        console.log('Proxies checked. Working count:', result.length);
-        resolve(result);
-      }
-    }, 1000);
-  });
-}
-
-function setCheckedProxies(proxies = []) {
-  checkedProxies = proxies;
+  console.log('Proxies checked. Working count:', checkedProxies.length);
 }
 
 function getRandomChekedProxy() {
@@ -82,13 +69,11 @@ function getRandomChekedProxy() {
 
 if (config.NODE_ENV === 'production') {
   setImmediate(async () => {
-    uncheckedProxies = await getUncheckedProxies();
-    checkedProxies = await getCheckedProxies();
+    startCheckingProxies(await getUncheckedProxies());
   });
 }
 
 module.exports = {
   getRandomChekedProxy,
-  getCheckedProxies,
-  setCheckedProxies,
+  startCheckingProxies,
 };
