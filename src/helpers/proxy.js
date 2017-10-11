@@ -74,6 +74,7 @@ if (config.NODE_ENV === 'production') {
 }
 
 module.exports = {
+  getUncheckedProxies,
   getRandomChekedProxy,
   startCheckingProxies,
 };
