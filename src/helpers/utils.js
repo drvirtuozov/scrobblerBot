@@ -36,7 +36,7 @@ async function error(ctx, e) {
     await ctx.reply(errText);
   }
 
-  await ctx.flow.leave();
+  if (ctx.flow) await ctx.flow.leave();
   await sendToAdmin('❗️ An error occured. Check the logs...');
 }
 
