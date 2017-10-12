@@ -51,8 +51,8 @@ bot.on('inline_query', async (ctx) => {
 });
 
 bot.action('CANCEL', async (ctx) => {
-  await ctx.editMessageText('Canceled');
   await ctx.flow.leave();
+  await ctx.editMessageText('Canceled');
 });
 
 bot.action('RETRY', limiter, async (ctx) => {
