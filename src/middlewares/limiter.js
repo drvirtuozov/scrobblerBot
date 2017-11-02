@@ -4,7 +4,12 @@ const { canScrobble } = require('../helpers/utils');
 
 module.exports = branch(canScrobble, async (ctx, next) => {
   await next();
-}, async (ctx) => {
+}, async (ctx, next) => {
+  if (ctx.inlineQuery) {
+    await next();
+    return;
+  }
+
   if (ctx.callbackQuery) {
     await ctx.answerCallbackQuery('Wait 30 seconds');
     return;

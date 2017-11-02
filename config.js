@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 if (process.env.NODE_ENV === 'production') {
   dotenv.config();
 } else if (process.env.NODE_ENV === 'development') {
-  process.env = dotenv.parse(fs.readFileSync('.env.dev'));
+  process.env = Object.assign(process.env, dotenv.parse(fs.readFileSync('.env.dev')));
 }
 
 module.exports = {
