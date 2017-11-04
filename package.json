@@ -22,6 +22,7 @@
   "dependencies": {
     "axios": "^0.15.3",
     "dotenv": "^4.0.0",
+    "he": "^1.1.1",
     "mongoose": "^4.11.14",
     "proxy-lists": "^1.14.1",
     "telegraf": "^3.12.1",

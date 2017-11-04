@@ -1,4 +1,5 @@
 const { Extra } = require('telegraf');
+const he = require('he');
 const { sendToAdmin, GLOBAL_KEYBOARD } = require('./utils');
 const { createUserById } = require('./dbmanager');
 const { LASTFM_URL, LASTFM_KEY } = require('../../config');
@@ -49,8 +50,8 @@ async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
   }
 
   const query = ctx.inlineQuery.query;
-  const res = await proxyGet(encodeURI(
-    `${LASTFM_URL}?method=${type}.search&${type}=${query}&api_key=${LASTFM_KEY}&format=json`));
+  const res = await proxyGet(encodeURI(he.decode(
+    `${LASTFM_URL}?method=${type}.search&${type}=${query}&api_key=${LASTFM_KEY}&format=json`)));
   const results = res.data.results[`${type}matches`][`${type}`];
   const inlineResults = results
     .filter(item => item.name !== '(null)')

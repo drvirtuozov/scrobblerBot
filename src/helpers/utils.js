@@ -32,6 +32,8 @@ async function error(ctx, e) {
 
   if (ctx.callbackQuery) {
     await ctx.editMessageText(errText);
+  } else if (ctx.inlineQuery) {
+    // pass
   } else {
     await ctx.reply(errText);
   }

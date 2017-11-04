@@ -50,10 +50,10 @@ searchTrackScene.on('text', async (ctx) => {
       return;
     }
 
+    const artist = parsedTrack[0];
+    const name = parsedTrack[1];
     const track = res.data.track || {};
     track.album = track.album || {};
-    const artist = track.artist.name || '';
-    const name = track.name || '';
     const album = track.album.title || '';
     await findUserByIdAndUpdate(ctx.from.id, { track: { name, artist, album } });
 
