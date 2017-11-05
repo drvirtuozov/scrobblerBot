@@ -1,9 +1,46 @@
 const proxyLists = require('proxy-lists');
-const axios = require('axios');
+const HttpsProxyAgent = require('https-proxy-agent');
+const { httpPost } = require('./utils');
 const config = require('../../config');
 
 
 let checkedProxies = [];
+
+function getRandomChekedProxy() {
+  if (checkedProxies.length) {
+    const proxy = checkedProxies[Math.floor(Math.random() * checkedProxies.length)];
+    return {
+      host: proxy.ipAddress,
+      port: proxy.port,
+    };
+  }
+
+  return {
+    host: null,
+    port: null,
+  };
+}
+
+async function proxyPost(url = '', data = {}) {
+  const proxy = getRandomChekedProxy();
+
+  try {
+    const res = await httpPost(url, data, {
+      redirect: 'error',
+      follow: 0,
+      timeout: 3000,
+      agent: new HttpsProxyAgent({
+        host: proxy.host,
+        port: proxy.port,
+        secureProxy: true,
+      }),
+    });
+
+    return res;
+  } catch (e) {
+    return httpPost(url, data);
+  }
+}
 
 async function getUncheckedProxies() {
   const result = [];
@@ -34,37 +71,25 @@ async function startCheckingProxies(proxies) {
 
   for (const proxy of proxies) {
     try {
-      await axios.post(config.LASTFM_URL, null, {
+      await httpPost(config.LASTFM_URL, null, {
+        redirect: 'error',
+        follow: 0,
         timeout: 3000,
-        maxRedirects: 0,
-        proxy: {
+        agent: new HttpsProxyAgent({
           host: proxy.ipAddress,
           port: proxy.port,
-        },
+          secureProxy: true,
+        }),
       });
     } catch (e) {
       if (e.response && e.response.status === 400) { // normal behavior
         checkedProxies.push(proxy);
+        continue;
       }
     }
   }
 
   console.log('Proxies checked. Working count:', checkedProxies.length);
-}
-
-function getRandomChekedProxy() {
-  if (checkedProxies.length) {
-    const proxy = checkedProxies[Math.floor(Math.random() * checkedProxies.length)];
-    return {
-      host: proxy.ipAddress,
-      port: proxy.port,
-    };
-  }
-
-  return {
-    host: null,
-    port: null,
-  };
 }
 
 if (config.NODE_ENV === 'production') {
@@ -77,4 +102,5 @@ module.exports = {
   getUncheckedProxies,
   getRandomChekedProxy,
   startCheckingProxies,
+  proxyPost,
 };

@@ -4,10 +4,10 @@
   "description": "An unofficial Last.fm Scrobbler for Telegram",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "eslint .",
     "start": "NODE_ENV=production node app.js",
     "watch": "nodemon app.js --watch src",
-    "deploy": "eslint . && now && now alias"
+    "deploy": "now && now alias"
   },
   "repository": {
     "type": "git",
@@ -23,7 +23,9 @@
     "axios": "^0.15.3",
     "dotenv": "^4.0.0",
     "he": "^1.1.1",
+    "https-proxy-agent": "^2.1.0",
     "mongoose": "^4.11.14",
+    "node-fetch": "^1.7.3",
     "proxy-lists": "^1.14.1",
     "telegraf": "^3.12.1",
     "telegraf-flow": "^8.3.0",

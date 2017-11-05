@@ -1,9 +1,10 @@
 const { Telegram, Markup } = require('telegraf');
 const crypto = require('crypto');
+const querystring = require('querystring');
+const fetch = require('node-fetch');
 const songs = require('../songs');
 const { findUserByIdAndUpdate, createSucceededMessage, createFailedMessage } = require('./dbmanager');
 const { ADMIN_ID, SCROBBLERBOT_TOKEN } = require('../../config');
-const querystring = require('querystring');
 
 
 const telegram = new Telegram(SCROBBLERBOT_TOKEN);
@@ -190,6 +191,29 @@ function validateTrackDurations(tracks = []) {
   });
 }
 
+async function httpRequest(url = '', opts = {}) {
+  const res = await fetch(url, opts);
+
+  if (res.status !== 200) {
+    const err = { message: res.statusText, response: res };
+    throw err;
+  }
+
+  return res;
+}
+
+async function httpPost(url = '', data = {}, opts = {}) {
+  const res = await httpRequest(url, Object.assign({
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: querystring.stringify(data),
+  }, opts));
+
+  return res.json();
+}
+
 module.exports = {
   sendToAdmin,
   md5,
@@ -206,4 +230,5 @@ module.exports = {
   fromQuerystringToTracksArray,
   fromTracksArrayToQuerystring,
   validateTrackDurations,
+  httpPost,
 };
