@@ -202,6 +202,14 @@ async function httpPost(url = '', data = {}, opts = {}) {
   return res.json();
 }
 
+async function httpGet(url = '', opts = {}) {
+  const res = await httpRequest(url, Object.assign({
+    method: 'GET',
+  }, opts));
+
+  return res.json();
+}
+
 module.exports = {
   sendToAdmin,
   md5,
@@ -218,4 +226,5 @@ module.exports = {
   fromQuerystringToTracksArray,
   validateTrackDurations,
   httpPost,
+  httpGet,
 };

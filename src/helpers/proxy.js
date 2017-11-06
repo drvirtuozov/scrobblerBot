@@ -1,10 +1,23 @@
 const proxyLists = require('proxy-lists');
 const HttpsProxyAgent = require('https-proxy-agent');
-const { httpPost } = require('./utils');
+const { httpPost, httpGet } = require('./utils');
 const config = require('../../config');
 
 
 let checkedProxies = [];
+
+function getDefaultProxyOpts(proxy = {}) {
+  return {
+    redirect: 'error',
+    follow: 0,
+    timeout: 3000,
+    agent: new HttpsProxyAgent({
+      host: proxy.host || proxy.ipAddress,
+      port: proxy.port,
+      secureProxy: true,
+    }),
+  };
+}
 
 function getRandomChekedProxy() {
   if (checkedProxies.length) {
@@ -18,21 +31,22 @@ function getRandomChekedProxy() {
   return null;
 }
 
+async function proxyGet(url = '') {
+  const proxy = getRandomChekedProxy();
+
+  try {
+    const res = await httpGet(url, getDefaultProxyOpts(proxy));
+    return res;
+  } catch (e) {
+    return httpGet(url);
+  }
+}
+
 async function proxyPost(url = '', data = {}) {
   const proxy = getRandomChekedProxy();
 
   try {
-    const res = await httpPost(url, data, {
-      redirect: 'error',
-      follow: 0,
-      timeout: 3000,
-      agent: new HttpsProxyAgent({
-        host: proxy.host,
-        port: proxy.port,
-        secureProxy: true,
-      }),
-    });
-
+    const res = await httpPost(url, data, getDefaultProxyOpts(proxy));
     return res;
   } catch (e) {
     return httpPost(url, data);
@@ -68,16 +82,7 @@ async function startCheckingProxies(proxies) {
 
   for (const proxy of proxies) {
     try {
-      await httpPost(config.LASTFM_URL, null, {
-        redirect: 'error',
-        follow: 0,
-        timeout: 3000,
-        agent: new HttpsProxyAgent({
-          host: proxy.ipAddress,
-          port: proxy.port,
-          secureProxy: true,
-        }),
-      });
+      await httpPost(config.LASTFM_URL, null, getDefaultProxyOpts(proxy));
     } catch (e) {
       if (e.response && e.response.status === 400) { // normal behavior
         checkedProxies.push(proxy);
@@ -100,4 +105,5 @@ module.exports = {
   getRandomChekedProxy,
   startCheckingProxies,
   proxyPost,
+  proxyGet,
 };
