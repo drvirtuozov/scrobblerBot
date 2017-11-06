@@ -113,18 +113,6 @@ function fromQuerystringToTracksArray(querystr = '') {
   return tracks;
 }
 
-function fromTracksArrayToQuerystring(tracksArray = []) {
-  const objectToQuerystring = {};
-
-  tracksArray.forEach((track, i) => {
-    objectToQuerystring[`track[${i}]`] = track.name;
-    objectToQuerystring[`artist[${i}]`] = track.artist;
-    objectToQuerystring[`album[${i}]`] = track.album;
-  });
-
-  return utf8(querystring.stringify(objectToQuerystring));
-}
-
 async function scrobbleError(ctx, e) {
   e.message = '❌ Failed';
   const extra = Markup.inlineKeyboard([
@@ -228,7 +216,6 @@ module.exports = {
   GLOBAL_KEYBOARD,
   multipleArray,
   fromQuerystringToTracksArray,
-  fromTracksArrayToQuerystring,
   validateTrackDurations,
   httpPost,
 };

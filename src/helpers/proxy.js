@@ -15,10 +15,7 @@ function getRandomChekedProxy() {
     };
   }
 
-  return {
-    host: null,
-    port: null,
-  };
+  return null;
 }
 
 async function proxyPost(url = '', data = {}) {
