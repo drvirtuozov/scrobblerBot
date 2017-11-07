@@ -8,4 +8,4 @@ setInterval(async () => {
 
 setInterval(async () => {
   startCheckingProxies(await getUncheckedProxies());
-}, 3600000 * 12); // every 12 hours
+}, 3600000 * 24); // every 24 hours

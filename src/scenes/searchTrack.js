@@ -11,7 +11,7 @@ const limiter = require('../middlewares/limiter');
 const searchTrackScene = new Scene('search_track');
 
 searchTrackScene.enter(async (ctx) => {
-  const text = 'OK. In order to start searching a track click the button below. ' +
+  const text = 'OK. In order to start searching a track push the button below. ' +
     'Or you can type track info in this format manually:\n\nArtist\nTrack Name\nAlbum Title';
 
   const extra = Markup.inlineKeyboard([
