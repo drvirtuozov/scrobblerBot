@@ -49,9 +49,8 @@ async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
     return;
   }
 
-  const query = ctx.inlineQuery.query;
-  const res = await proxyGet(encodeURI(he.decode(
-    `${LASTFM_URL}?method=${type}.search&${type}=${query}&api_key=${LASTFM_KEY}&format=json`)));
+  const query = encodeURIComponent(he.decode(ctx.inlineQuery.query));
+  const res = await proxyGet(`${LASTFM_URL}?method=${type}.search&${type}=${query}&api_key=${LASTFM_KEY}&format=json`);
   const results = res.results[`${type}matches`][`${type}`];
   const inlineResults = results
     .filter(item => item.name !== '(null)')
