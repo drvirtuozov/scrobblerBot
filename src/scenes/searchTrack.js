@@ -4,7 +4,7 @@ const { LASTFM_URL, LASTFM_KEY } = require('../../config');
 const { scrobbleTrackFromDB, scrobbleTrackFromText } = require('../helpers/scrobbler');
 const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 const { searchFromLastfmAndAnswerInlineQuery } = require('../helpers/actions');
-const { proxyGet } = require('../helpers/requests');
+const { proxyGet } = require('../helpers/proxy');
 const limiter = require('../middlewares/limiter');
 
 

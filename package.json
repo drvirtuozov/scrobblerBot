@@ -20,7 +20,6 @@
   },
   "homepage": "https://github.com/drvirtuozov/scrobblerBot#readme",
   "dependencies": {
-    "axios": "^0.15.3",
     "dotenv": "^4.0.0",
     "he": "^1.1.1",
     "https-proxy-agent": "^2.1.0",

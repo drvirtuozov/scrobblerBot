@@ -1,15 +1,14 @@
 const { Markup, Extra } = require('telegraf');
 const { Scene } = require('telegraf-flow');
-const axios = require('axios');
 const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
-const { md5, getRandomFavSong, requestError } = require('../helpers/utils');
+const { md5, getRandomFavSong, requestError, httpGet } = require('../helpers/utils');
 const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
 
 
 const authScene = new Scene('auth');
 
 authScene.enter(async (ctx) => {
-  const res = await axios(`${LASTFM_URL}?method=auth.gettoken&api_key=${LASTFM_KEY}&format=json`);
+  const res = await httpGet(`${LASTFM_URL}?method=auth.gettoken&api_key=${LASTFM_KEY}&format=json`);
   const token = res.data.token;
 
   await ctx.reply('Please, click the link below to grant access to your Last.fm account and then push the OK button',
@@ -24,10 +23,10 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
   const token = ctx.user.token;
   const sig = md5(`api_key${LASTFM_KEY}methodauth.getsessiontoken${token}${LASTFM_SECRET}`);
   const song = getRandomFavSong();
-  let res = null;
+  let res;
 
   try {
-    res = await axios(
+    res = await httpGet(
       `${LASTFM_URL}?method=auth.getsession&format=json&token=${token}&api_key=${LASTFM_KEY}&api_sig=${sig}`);
   } catch (e) {
     await requestError(ctx, e);

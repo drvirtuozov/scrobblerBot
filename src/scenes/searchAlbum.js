@@ -5,7 +5,7 @@ const { searchFromLastfmAndAnswerInlineQuery } = require('../helpers/actions');
 const { scrobbleAlbum } = require('../helpers/scrobbler');
 const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 const toTitleCase = require('to-title-case');
-const { proxyGet } = require('../helpers/requests');
+const { proxyGet } = require('../helpers/proxy');
 const limiter = require('../middlewares/limiter');
 
 
