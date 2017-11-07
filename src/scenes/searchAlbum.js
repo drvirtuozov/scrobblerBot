@@ -56,8 +56,10 @@ searchAlbumScene.on('text', async (ctx) => {
     },
   });
 
-  const res = await proxyGet(encodeURI(
-    `${LASTFM_URL}?method=album.getinfo&api_key=${LASTFM_KEY}&artist=${parsedArtist}&album=${parsedTitle}&format=json`));
+  const qartist = encodeURIComponent(parsedArtist);
+  const qalbum = encodeURIComponent(parsedTitle);
+  const res = await proxyGet(
+    `${LASTFM_URL}?method=album.getinfo&api_key=${LASTFM_KEY}&artist=${qartist}&album=${qalbum}&format=json`);
 
   if (res.album && res.album.tracks.track.length) {
     tracks = res.album.tracks.track.map(track => (

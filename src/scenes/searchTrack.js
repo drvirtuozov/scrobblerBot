@@ -42,8 +42,10 @@ searchTrackScene.on('text', async (ctx) => {
   } else if (parsedTrack.length === 2) {
     ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
       Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
-    const res = await proxyGet(encodeURI(`${LASTFM_URL}?method=track.getInfo&api_key=${
-      LASTFM_KEY}&artist=${parsedTrack[0]}&track=${parsedTrack[1]}&format=json`));
+    const qartist = encodeURIComponent(parsedTrack[0]);
+    const qtrack = encodeURIComponent(parsedTrack[1]);
+    const res = await proxyGet(`${LASTFM_URL}?method=track.getInfo&api_key=${
+      LASTFM_KEY}&artist=${qartist}&track=${qtrack}&format=json`);
 
     if (res.error) {
       await scrobbleTrackFromText(ctx);
