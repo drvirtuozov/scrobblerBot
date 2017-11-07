@@ -97,51 +97,10 @@ function multipleArray(array = [], multipleTimes = 1) {
   return array;
 }
 
-function fromQuerystringToTracksArray(querystr = '') {
-  const tracks = [];
-  const obj = querystring.parse(querystr);
-  const tracksCount = Object.keys(obj).filter(key => key.includes('track')).length;
-
-  for (let i = 0; i < tracksCount; i += 1) {
-    tracks.push({
-      name: obj[`track[${i}]`],
-      artist: obj[`artist[${i}]`],
-      album: obj[`album[${i}]`],
-    });
-  }
-
-  return tracks;
-}
-
-async function scrobbleError(ctx, e) {
-  e.message = '❌ Failed';
-  const extra = Markup.inlineKeyboard([
-    Markup.callbackButton('Retry', 'RETRY'),
-  ]).extra();
-
-  let messageId;
-
-  if (ctx.flow.state.messageIdToEdit) {
-    messageId = ctx.flow.state.messageIdToEdit;
-    await ctx.telegram.editMessageText(ctx.chat.id, messageId, null, e.message, extra);
-  } else if (ctx.callbackQuery) {
-    messageId = ctx.callbackQuery.message.message_id;
-    await ctx.editMessageText(e.message, extra);
-  } else {
-    const res = await ctx.reply(e.message, extra);
-    messageId = res.message_id;
-  }
-
-  if (e.config && e.config.data) {
-    await createFailedMessage(messageId, fromQuerystringToTracksArray(e.config.data));
-  }
-
-  await ctx.flow.leave();
-}
-
 async function requestError(ctx, e) {
-  if (e.response && e.response.data) {
-    const err = e.response.data.error;
+  if (e.response) {
+    const json = await e.response.json();
+    const err = json.error;
 
     if (err === 14 || err === 4 || err === 9) {
       const text = '❌ Access has not been granted. Please re-authenticate';
@@ -153,11 +112,35 @@ async function requestError(ctx, e) {
       }
 
       await ctx.flow.enter('auth');
-      return;
     }
   }
+}
 
-  await scrobbleError(ctx, e);
+async function scrobbleError(ctx, e, tracks = []) {
+  const msg = '❌ Failed';
+  const extra = Markup.inlineKeyboard([
+    Markup.callbackButton('Retry', 'RETRY'),
+  ]).extra();
+
+  let messageId;
+
+  if (ctx.flow.state.messageIdToEdit) {
+    messageId = ctx.flow.state.messageIdToEdit;
+    await ctx.telegram.editMessageText(ctx.chat.id, messageId, null, msg, extra);
+  } else if (ctx.callbackQuery) {
+    messageId = ctx.callbackQuery.message.message_id;
+    await ctx.editMessageText(msg, extra);
+  } else {
+    const res = await ctx.reply(msg, extra);
+    messageId = res.message_id;
+  }
+
+  if (tracks.length) {
+    await createFailedMessage(messageId, tracks);
+  }
+
+  await requestError(ctx, e);
+  await ctx.flow.leave();
 }
 
 function isUserAuthorized(ctx) {
@@ -196,7 +179,7 @@ async function httpPost(url = '', data = {}, opts = {}) {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: querystring.stringify(data),
+    body: typeof data === 'string' ? data : querystring.stringify(data),
   }, opts));
 
   return res.json();
@@ -218,12 +201,11 @@ module.exports = {
   successfulScrobble,
   canScrobble,
   error,
-  scrobbleError,
   requestError,
+  scrobbleError,
   isUserAuthorized,
   GLOBAL_KEYBOARD,
   multipleArray,
-  fromQuerystringToTracksArray,
   validateTrackDurations,
   httpPost,
   httpGet,

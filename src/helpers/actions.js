@@ -3,7 +3,7 @@ const he = require('he');
 const { sendToAdmin, GLOBAL_KEYBOARD } = require('./utils');
 const { createUserById } = require('./dbmanager');
 const { LASTFM_URL, LASTFM_KEY } = require('../../config');
-const { proxyGet } = require('./requests');
+const { proxyGet } = require('./proxy');
 
 
 async function start(ctx) {

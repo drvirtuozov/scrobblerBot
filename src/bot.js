@@ -9,7 +9,7 @@ const limiter = require('./middlewares/limiter');
 const logger = require('./middlewares/logger');
 const error = require('./middlewares/error');
 const { SCROBBLERBOT_TOKEN } = require('../config');
-const { successfulScrobble, requestError, multipleArray, sendToAdmin } = require('./helpers/utils');
+const { successfulScrobble, scrobbleError, multipleArray, sendToAdmin } = require('./helpers/utils');
 const { findSucceededMessageById, findFailedMessageById } = require('./helpers/dbmanager');
 require('./helpers/scheduler');
 require('./db');
@@ -69,7 +69,7 @@ bot.action('RETRY', limiter, async (ctx) => {
   try {
     await scrobbleTracks(message.tracks, undefined, ctx.user.key);
   } catch (e) {
-    await requestError(ctx, e);
+    await scrobbleError(ctx, e, message.tracks);
     return;
   }
 
@@ -110,6 +110,7 @@ bot.action(/REPEAT:\d?\d/, limiter, async (ctx) => {
   const messageId = ctx.callbackQuery.message.message_id;
   const message = await findSucceededMessageById(messageId);
   const count = ctx.callbackQuery.data.split(':')[1];
+  const tracks = multipleArray(message.tracks, count);
 
   if (!message) {
     await ctx.editMessageText('Expired');
@@ -117,9 +118,9 @@ bot.action(/REPEAT:\d?\d/, limiter, async (ctx) => {
   }
 
   try {
-    await scrobbleTracks(multipleArray(message.tracks, count), undefined, ctx.user.key);
+    await scrobbleTracks(tracks, undefined, ctx.user.key);
   } catch (e) {
-    await requestError(ctx, e);
+    await scrobbleError(ctx, e, tracks);
     return;
   }
 
