@@ -45,14 +45,14 @@ searchTrackScene.on('text', async (ctx) => {
     const res = await proxyGet(encodeURI(`${LASTFM_URL}?method=track.getInfo&api_key=${
       LASTFM_KEY}&artist=${parsedTrack[0]}&track=${parsedTrack[1]}&format=json`));
 
-    if (res.data.error) {
+    if (res.error) {
       await scrobbleTrackFromText(ctx);
       return;
     }
 
     const artist = parsedTrack[0];
     const name = parsedTrack[1];
-    const track = res.data.track || {};
+    const track = res.track || {};
     track.album = track.album || {};
     const album = track.album.title || '';
     await findUserByIdAndUpdate(ctx.from.id, { track: { name, artist, album } });

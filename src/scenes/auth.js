@@ -9,7 +9,7 @@ const authScene = new Scene('auth');
 
 authScene.enter(async (ctx) => {
   const res = await httpGet(`${LASTFM_URL}?method=auth.gettoken&api_key=${LASTFM_KEY}&format=json`);
-  const token = res.data.token;
+  const token = res.token;
 
   await ctx.reply('Please, click the link below to grant access to your Last.fm account and then push the OK button',
     Markup.inlineKeyboard([
@@ -33,7 +33,7 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
     return;
   }
 
-  const { name: account, key } = res.data.session;
+  const { name: account, key } = res.session;
   await findUserByIdAndUpdate(ctx.from.id, { account, key });
   await ctx.editMessageText(`Glad to see you, <a href="https://www.last.fm/user/${account}">${account}</a>!\n\n` +
     'Now you can scrobble your first song. To do it just type artist name, song name and album title separated ' +

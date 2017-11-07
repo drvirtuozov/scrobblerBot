@@ -47,7 +47,7 @@ async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   try {
     const res = await scrobbleTracks([track], undefined, ctx.user.key);
 
-    if (res.data.scrobbles['@attr'].ingored) {
+    if (res.scrobbles['@attr'].ingored) {
       await scrobbleError(ctx, {}, [track]);
       return;
     }
@@ -84,7 +84,7 @@ async function scrobbleTrackFromText(ctx) {
   try {
     const res = await scrobbleTracks([track], ctx.message.date, ctx.user.key);
 
-    if (res.data.scrobbles['@attr'].ingored) {
+    if (res.scrobbles['@attr'].ingored) {
       await scrobbleError(ctx, {}, [track]);
       return;
     }
@@ -162,7 +162,7 @@ async function scrobbleTracklist(ctx) {
   }
 
   const ignored = [];
-  const scrobbles = res.data.scrobbles.scrobble;
+  const scrobbles = res.scrobbles.scrobble;
 
   if (Array.isArray(scrobbles)) {
     scrobbles.filter(scr => scr.ignoredMessage.code === '1')

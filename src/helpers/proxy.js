@@ -86,7 +86,6 @@ async function startCheckingProxies(proxies) {
     } catch (e) {
       if (e.response && e.response.status === 400) { // normal behavior
         checkedProxies.push(proxy);
-        continue;
       }
     }
   }

@@ -52,7 +52,7 @@ async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
   const query = ctx.inlineQuery.query;
   const res = await proxyGet(encodeURI(he.decode(
     `${LASTFM_URL}?method=${type}.search&${type}=${query}&api_key=${LASTFM_KEY}&format=json`)));
-  const results = res.data.results[`${type}matches`][`${type}`];
+  const results = res.results[`${type}matches`][`${type}`];
   const inlineResults = results
     .filter(item => item.name !== '(null)')
     .map((item, i) => {
@@ -80,7 +80,7 @@ async function recentTracks(ctx) {
     Extra.HTML())).message_id;
   const res = await proxyGet(
     `${LASTFM_URL}?method=user.getrecenttracks&user=${ctx.user.account}&limit=15&api_key=${LASTFM_KEY}&format=json`);
-  const tracks = res.data.recenttracks.track
+  const tracks = res.recenttracks.track
     .filter((track) => {
       if (track['@attr']) {
         return !track['@attr'].nowplaying;

@@ -59,8 +59,8 @@ searchAlbumScene.on('text', async (ctx) => {
   const res = await proxyGet(encodeURI(
     `${LASTFM_URL}?method=album.getinfo&api_key=${LASTFM_KEY}&artist=${parsedArtist}&album=${parsedTitle}&format=json`));
 
-  if (res.data.album && res.data.album.tracks.track.length) {
-    tracks = res.data.album.tracks.track.map(track => (
+  if (res.album && res.album.tracks.track.length) {
+    tracks = res.album.tracks.track.map(track => (
       { name: track.name, duration: track.duration }
     ));
   } else {
