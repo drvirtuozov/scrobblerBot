@@ -193,6 +193,24 @@ async function httpGet(url = '', opts = {}) {
   return res.json();
 }
 
+function getIgnoredTracksFromLastfmRes(res) {
+  const ignored = [];
+  const scrobbles = res.scrobbles.scrobble;
+
+  if (Array.isArray(scrobbles)) {
+    scrobbles.filter(scr => scr.ignoredMessage.code === '1')
+      .forEach(scr => ignored.push(scr));
+  } else if (scrobbles.ignoredMessage.code === '1') {
+    ignored.push(scrobbles);
+  }
+
+  return ignored.map(track => ({
+    artist: track.artist['#text'],
+    name: track.track['#text'],
+    album: track.album['#text'],
+  }));
+}
+
 module.exports = {
   sendToAdmin,
   md5,
@@ -209,4 +227,5 @@ module.exports = {
   validateTrackDurations,
   httpPost,
   httpGet,
+  getIgnoredTracksFromLastfmRes,
 };
