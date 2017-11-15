@@ -33,6 +33,10 @@ async function scrobbleTracksByParts(ctx, tracks = []) {
   const batchCount = 50; // 50 is the max count allowed by last.fm at once
   const partsCount = Math.ceil(tracks.length / batchCount);
   const responses = [];
+  const vtracks = validateTrackDurations(tracks);
+  let startTimestamp = Math.floor(Date.now() / 1000) - vtracks
+    .map(track => track.duration)
+    .reduce((prev, next) => prev + next);
   let errorsCount = 0; // use error checker later
 
   for (let i = 0; i < partsCount; i += 1) {
@@ -42,9 +46,12 @@ async function scrobbleTracksByParts(ctx, tracks = []) {
         Extra.HTML());
     }
 
+    const trcks = vtracks.slice(i * batchCount, (i + 1) * batchCount);
+    startTimestamp += trcks.map(track => track.duration)
+      .reduce((prev, next) => prev + next);
+
     try {
-      const trcks = tracks.slice(i * batchCount, (i + 1) * batchCount);
-      const res = await scrobbleTracks(trcks, undefined, ctx.user.key); // change timestamp later
+      const res = await scrobbleTracks(trcks, startTimestamp, ctx.user.key);
       responses.push(res);
     } catch (e) {
       responses.push(e);
