@@ -1,7 +1,7 @@
 const { Markup, Extra } = require('telegraf');
 const {
   getRandomFavSong, md5, utf8, successfulScrobble,
-  scrobbleError, validateTrackDurations } = require('./utils');
+  scrobbleError, validateTrackDurations, getIgnoredTracksFromLastfmRes } = require('./utils');
 const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
 const { proxyPost } = require('./proxy');
 
@@ -27,6 +27,36 @@ function scrobbleTracks(tracks = [], timestamp = Math.floor(Date.now() / 1000), 
     queryTimestamps}${queryTracks}${LASTFM_SECRET}`.replace(/[&=]/g, '')));
   return proxyPost(LASTFM_URL, `${queryAlbums.slice(1)}&api_key=${LASTFM_KEY}&api_sig=${apiSig}${
     queryArtists}&format=json&method=track.scrobble&sk=${key}${queryTimestamps}${queryTracks}`);
+}
+
+async function scrobbleTracksByParts(ctx, tracks = []) {
+  const batchCount = 50; // 50 is the max count allowed by last.fm at once
+  const partsCount = Math.ceil(tracks.length / batchCount);
+  const responses = [];
+  let errorsCount = 0; // use error checker later
+
+  for (let i = 0; i < partsCount; i += 1) {
+    if (partsCount > 1) {
+      await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
+        `Too many tracks to scrobble at once.\n\n<i>Scrobbling by parts... ${i + 1} of ${partsCount}</i>`,
+        Extra.HTML());
+    }
+
+    try {
+      const trcks = tracks.slice(i * batchCount, (i + 1) * batchCount);
+      const res = await scrobbleTracks(trcks, undefined, ctx.user.key); // change timestamp later
+      responses.push(res);
+    } catch (e) {
+      responses.push(e);
+      errorsCount += 1;
+    }
+  }
+
+  if (errorsCount === partsCount) {
+    throw responses[errorsCount - 1];
+  }
+
+  return responses;
 }
 
 async function scrobbleTrackFromDB(ctx, isAlbum = true) {
@@ -152,28 +182,24 @@ async function scrobbleTracklist(ctx) {
   ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
     Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
 
-  let res;
+  let responses = [];
 
   try {
-    res = await scrobbleTracks(tracks, undefined, ctx.user.key);
+    responses = await scrobbleTracksByParts(ctx, tracks);
   } catch (e) {
     await scrobbleError(ctx, e, tracks);
     return;
   }
 
   const ignored = [];
-  const scrobbles = res.scrobbles.scrobble;
 
-  if (Array.isArray(scrobbles)) {
-    scrobbles.filter(scr => scr.ignoredMessage.code === '1')
-      .forEach(scr => ignored.push(scr));
-  } else if (scrobbles.ignoredMessage.code === '1') {
-    ignored.push(scrobbles);
+  for (let i = 0; i < responses.length; i += 1) {
+    ignored.push(...getIgnoredTracksFromLastfmRes(responses[i]));
   }
 
   if (ignored.length) {
     await successfulScrobble(ctx, '✅ Success, but...\nThe following tracks were ignored:\n\n' +
-      `${ignored.map(track => `${track.artist['#text']} | ${track.track['#text']} | ${track.album['#text']}`).join('\n')}`,
+      `${ignored.map(track => `${track.artist} | ${track.name} | ${track.album}`).join('\n')}`,
       tracks);
 
     return;
@@ -188,4 +214,5 @@ module.exports = {
   scrobbleTrackFromText,
   scrobbleAlbum,
   scrobbleTracklist,
+  scrobbleTracksByParts,
 };

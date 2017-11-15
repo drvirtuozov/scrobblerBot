@@ -1,5 +1,5 @@
 const Telegraf = require('telegraf');
-const { scrobbleTracks, scrobbleTrackFromText } = require('./helpers/scrobbler');
+const { scrobbleTracks, scrobbleTrackFromText, scrobbleTracksByParts } = require('./helpers/scrobbler');
 const { searchFromLastfmAndAnswerInlineQuery } = require('./helpers/actions');
 const user = require('./middlewares/user');
 const scenes = require('./middlewares/scenes');
@@ -120,7 +120,7 @@ bot.action(/REPEAT:\d?\d/, limiter, async (ctx) => {
   }
 
   try {
-    await scrobbleTracks(tracks, undefined, ctx.user.key);
+    await scrobbleTracksByParts(ctx, tracks);
   } catch (e) {
     await scrobbleError(ctx, e, tracks);
     return;
