@@ -6,6 +6,8 @@ const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
 const { proxyPost } = require('./proxy');
 
 
+const MAX_BATCH_LENGTH = 50; // 50 is the max count allowed by last.fm at once
+
 // low-level function
 function scrobbleTracks(tracks = [], timestamp = Math.floor(Date.now() / 1000), key = '') {
   const vtracks = validateTrackDurations(tracks);
@@ -30,14 +32,12 @@ function scrobbleTracks(tracks = [], timestamp = Math.floor(Date.now() / 1000), 
 }
 
 async function scrobbleTracksByParts(ctx, tracks = []) {
-  const batchCount = 50; // 50 is the max count allowed by last.fm at once
-  const partsCount = Math.ceil(tracks.length / batchCount);
+  const partsCount = Math.ceil(tracks.length / MAX_BATCH_LENGTH);
   const responses = [];
   const vtracks = validateTrackDurations(tracks);
   let startTimestamp = Math.floor(Date.now() / 1000) - vtracks
     .map(track => track.duration)
     .reduce((prev, next) => prev + next);
-  let errorsCount = 0; // use error checker later
 
   for (let i = 0; i < partsCount; i += 1) {
     if (partsCount > 1) {
@@ -46,21 +46,11 @@ async function scrobbleTracksByParts(ctx, tracks = []) {
         Extra.HTML());
     }
 
-    const trcks = vtracks.slice(i * batchCount, (i + 1) * batchCount);
+    const trcks = vtracks.slice(i * MAX_BATCH_LENGTH, (i + 1) * MAX_BATCH_LENGTH);
     startTimestamp += trcks.map(track => track.duration)
       .reduce((prev, next) => prev + next);
-
-    try {
-      const res = await scrobbleTracks(trcks, startTimestamp, ctx.user.key);
-      responses.push(res);
-    } catch (e) {
-      responses.push(e);
-      errorsCount += 1;
-    }
-  }
-
-  if (errorsCount === partsCount) {
-    throw responses[errorsCount - 1];
+    const res = await scrobbleTracks(trcks, startTimestamp, ctx.user.key);
+    responses.push(res);
   }
 
   return responses;

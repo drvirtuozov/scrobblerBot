@@ -193,7 +193,8 @@ async function httpGet(url = '', opts = {}) {
   return res.json();
 }
 
-function getIgnoredTracksFromLastfmRes(res) {
+function getIgnoredTracksFromLastfmRes(res = {}) {
+  if (!res.scrobbles) return [];
   const ignored = [];
   const scrobbles = res.scrobbles.scrobble;
 
