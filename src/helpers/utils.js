@@ -99,7 +99,16 @@ function multipleArray(array = [], multipleTimes = 1) {
 
 async function requestError(ctx, e) {
   if (e.response) {
-    const json = await e.response.json();
+    let json;
+
+    try {
+      json = await e.response.json();
+    } catch (err) {
+      console.log(err);
+      await sendToAdmin('Got xml response. Check the logs...');
+      return;
+    }
+
     const err = json.error;
 
     if (err === 14 || err === 4 || err === 9) {
@@ -116,8 +125,7 @@ async function requestError(ctx, e) {
   }
 }
 
-async function scrobbleError(ctx, e, tracks = []) {
-  const msg = '❌ Failed';
+async function scrobbleError(ctx, e, tracks = [], msg = '❌ Failed') {
   const extra = Markup.inlineKeyboard([
     Markup.callbackButton('Retry', 'RETRY'),
   ]).extra();
