@@ -104,8 +104,8 @@ async function requestError(ctx, e) {
     try {
       json = await e.response.json();
     } catch (err) {
-      const text = await e.response.text();
-      await sendToAdmin(`Got xml response:\n\n${text}`);
+      console.log(e.response);
+      await sendToAdmin(`Got strange response. Check the console:\n\n${e.message}`);
       return;
     }
 
