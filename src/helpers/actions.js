@@ -50,7 +50,15 @@ async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
   }
 
   const query = encodeURIComponent(he.decode(ctx.inlineQuery.query));
-  const res = await httpGet(`${LASTFM_URL}?method=${type}.search&${type}=${query}&api_key=${LASTFM_KEY}&format=json`);
+  let res;
+
+  try {
+    res = await httpGet(`${LASTFM_URL}?method=${type}.search&${type}=${query}&api_key=${LASTFM_KEY}&format=json`);
+  } catch (e) {
+    await requestError(ctx, e);
+    return;
+  }
+
   const results = res.results[`${type}matches`][`${type}`];
   const inlineResults = results
     .filter(item => item.name !== '(null)')

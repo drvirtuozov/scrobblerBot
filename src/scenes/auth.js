@@ -8,9 +8,16 @@ const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
 const authScene = new Scene('auth');
 
 authScene.enter(async (ctx) => {
-  const res = await httpGet(`${LASTFM_URL}?method=auth.gettoken&api_key=${LASTFM_KEY}&format=json`);
-  const token = res.token;
+  let res;
 
+  try {
+    res = await httpGet(`${LASTFM_URL}?method=auth.gettoken&api_key=${LASTFM_KEY}&format=json`);
+  } catch (e) {
+    await requestError(ctx, e);
+    return;
+  }
+
+  const token = res.token;
   await ctx.reply('Please, click the link below to grant access to your Last.fm account and then push the OK button',
     Markup.inlineKeyboard([
       Markup.urlButton('Grant access...', `https://www.last.fm/api/auth?api_key=${LASTFM_KEY}&token=${token}`),
@@ -36,7 +43,7 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
   const { name: account, key } = res.session;
   await findUserByIdAndUpdate(ctx.from.id, { account, key });
   await ctx.editMessageText(`Glad to see you, <a href="https://www.last.fm/user/${account}">${account}</a>!\n\n` +
-    'Now you can scrobble your first song. To do it just type artist name, song name and album title separated ' +
+    'You may scrobble your first song now. To do it just type artist name, song name and album title separated ' +
     `by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for more info`,
       Extra.HTML().webPreview(false));
 
