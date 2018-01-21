@@ -34,9 +34,7 @@ flow.command('whoami', auth, whoami);
 flow.command('recent', auth, recentTracks);
 flow.command('auth', ctx => ctx.flow.enter('auth'));
 flow.command('wish', ctx => ctx.flow.enter('wish'));
-flow.command('proxy', async (ctx) => {
-  await ctx.reply(`Proxy status was set to ${setProxyEnabled()}`);
-});
+flow.command('proxy', ctx => ctx.reply(`Proxy status was set to ${setProxyEnabled()}`));
 
 flow.register(wishScene);
 flow.register(authScene);

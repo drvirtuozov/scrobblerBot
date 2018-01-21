@@ -6,6 +6,7 @@ const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 const { searchFromLastfmAndAnswerInlineQuery } = require('../helpers/actions');
 const { proxyGet } = require('../helpers/proxy');
 const limiter = require('../middlewares/limiter');
+const { requestError } = require('../helpers/utils');
 
 
 const searchTrackScene = new Scene('search_track');
@@ -44,8 +45,15 @@ searchTrackScene.on('text', async (ctx) => {
       Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
     const qartist = encodeURIComponent(parsedTrack[0]);
     const qtrack = encodeURIComponent(parsedTrack[1]);
-    const res = await proxyGet(`${LASTFM_URL}?method=track.getInfo&api_key=${
-      LASTFM_KEY}&artist=${qartist}&track=${qtrack}&format=json`);
+    let res;
+
+    try {
+      res = await proxyGet(`${LASTFM_URL}?method=track.getInfo&api_key=${
+        LASTFM_KEY}&artist=${qartist}&track=${qtrack}&format=json`);
+    } catch (e) {
+      await requestError(ctx, e);
+      return;
+    }
 
     if (res.error) {
       await scrobbleTrackFromText(ctx);

@@ -21,7 +21,7 @@ function getDefaultProxyOpts(proxy = {}) {
   return {
     redirect: 'error',
     follow: 0,
-    timeout: 3000,
+    timeout: 15000,
     agent: new HttpsProxyAgent({
       host: proxy.host || proxy.ipAddress,
       port: proxy.port,

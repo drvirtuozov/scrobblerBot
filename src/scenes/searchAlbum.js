@@ -7,6 +7,7 @@ const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
 const toTitleCase = require('to-title-case');
 const { proxyGet } = require('../helpers/proxy');
 const limiter = require('../middlewares/limiter');
+const { requestError } = require('../helpers/utils');
 
 
 const searchAlbumScene = new Scene('search_album');
@@ -58,8 +59,15 @@ searchAlbumScene.on('text', async (ctx) => {
 
   const qartist = encodeURIComponent(parsedArtist);
   const qalbum = encodeURIComponent(parsedTitle);
-  const res = await proxyGet(
-    `${LASTFM_URL}?method=album.getinfo&api_key=${LASTFM_KEY}&artist=${qartist}&album=${qalbum}&format=json`);
+  let res;
+
+  try {
+    res = await proxyGet(
+      `${LASTFM_URL}?method=album.getinfo&api_key=${LASTFM_KEY}&artist=${qartist}&album=${qalbum}&format=json`);
+  } catch (e) {
+    await requestError(ctx, e);
+    return;
+  }
 
   if (res.album && res.album.tracks.track.length) {
     tracks = res.album.tracks.track.map(track => (

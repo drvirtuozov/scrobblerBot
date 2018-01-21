@@ -1,6 +1,6 @@
 const { Extra } = require('telegraf');
 const he = require('he');
-const { sendToAdmin, GLOBAL_KEYBOARD, httpGet } = require('./utils');
+const { sendToAdmin, GLOBAL_KEYBOARD, httpGet, requestError } = require('./utils');
 const { createUserById } = require('./dbmanager');
 const { LASTFM_URL, LASTFM_KEY } = require('../../config');
 const { proxyGet } = require('./proxy');
@@ -77,8 +77,16 @@ async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
 async function recentTracks(ctx) {
   ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
     Extra.HTML())).message_id;
-  const res = await proxyGet(
-    `${LASTFM_URL}?method=user.getrecenttracks&user=${ctx.user.account}&limit=15&api_key=${LASTFM_KEY}&format=json`);
+  let res;
+
+  try {
+    res = await proxyGet(
+      `${LASTFM_URL}?method=user.getrecenttracks&user=${ctx.user.account}&limit=15&api_key=${LASTFM_KEY}&format=json`);
+  } catch (e) {
+    await requestError(ctx, e);
+    return;
+  }
+
   const tracks = res.recenttracks.track
     .filter((track) => {
       if (track['@attr']) {
