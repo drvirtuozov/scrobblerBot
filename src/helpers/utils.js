@@ -170,7 +170,11 @@ function validateTrackDurations(tracks = []) {
   });
 }
 
-async function httpRequest(url = '', opts = {}) {
+async function httpRequest(url = '', options = {}) {
+  const opts = Object.assign({}, options);
+  opts.headers = Object.assign(opts.headers || {}, {
+    'User-Agent': 'telegram@scrobblerBot/1.0.0 (+https://github.com/drvirtuozov/scrobblerBot)',
+  });
   const res = await fetch(url, opts);
 
   if (res.status !== 200) {
