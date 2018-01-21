@@ -1,10 +1,21 @@
 const proxyLists = require('proxy-lists');
 const HttpsProxyAgent = require('https-proxy-agent');
-const { httpPost, httpGet } = require('./utils');
+const { httpPost, httpGet, sendToAdmin } = require('./utils');
 const config = require('../../config');
 
 
 let checkedProxies = [];
+let isProxyEnabled = false;
+
+function setProxyEnabled(value) {
+  if (typeof value === 'undefined') {
+    isProxyEnabled = !isProxyEnabled;
+    return isProxyEnabled;
+  }
+
+  isProxyEnabled = !!value;
+  return isProxyEnabled;
+}
 
 function getDefaultProxyOpts(proxy = {}) {
   return {
@@ -32,24 +43,40 @@ function getRandomChekedProxy() {
 }
 
 async function proxyGet(url = '') {
-  const proxy = getRandomChekedProxy();
+  if (isProxyEnabled) {
+    const proxy = getRandomChekedProxy();
+    return httpGet(url, getDefaultProxyOpts(proxy));
+  }
 
   try {
-    const res = await httpGet(url, getDefaultProxyOpts(proxy));
+    const res = await httpGet(url);
     return res;
   } catch (e) {
-    return httpGet(url);
+    if (e.response.code === 429) { // too many requests
+      console.log(e.response);
+      sendToAdmin(`${e.message}\n\nActivating proxy mode... ${setProxyEnabled(true)}`);
+    }
+
+    throw e;
   }
 }
 
 async function proxyPost(url = '', data = {}) {
-  const proxy = getRandomChekedProxy();
+  if (isProxyEnabled) {
+    const proxy = getRandomChekedProxy();
+    return httpPost(url, data, getDefaultProxyOpts(proxy));
+  }
 
   try {
-    const res = await httpPost(url, data, getDefaultProxyOpts(proxy));
+    const res = await httpPost(url, data);
     return res;
   } catch (e) {
-    return httpPost(url, data);
+    if (e.response.code === 429) { // too many requests
+      console.log(e.response);
+      sendToAdmin(`${e.message}\n\nActivating proxy mode... ${setProxyEnabled(true)}`);
+    }
+
+    throw e;
   }
 }
 
@@ -105,4 +132,5 @@ module.exports = {
   startCheckingProxies,
   proxyPost,
   proxyGet,
+  setProxyEnabled,
 };
