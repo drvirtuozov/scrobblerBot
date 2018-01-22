@@ -5,6 +5,7 @@ const fetch = require('node-fetch');
 const songs = require('../songs');
 const { findUserByIdAndUpdate, createSucceededMessage, createFailedMessage } = require('./dbmanager');
 const { ADMIN_ID, SCROBBLERBOT_TOKEN } = require('../../config');
+const { setProxyEnabled } = require('./proxy');
 
 
 const telegram = new Telegram(SCROBBLERBOT_TOKEN);
@@ -47,7 +48,7 @@ function utf8(text) {
   return decodeURI(decodeURIComponent(text));
 }
 
-async function successfulScrobble(ctx, text = '✅ Success!', tracks = []) {
+async function successfulScrobble(ctx, text = '✅ Scrobbled', tracks = []) {
   await findUserByIdAndUpdate(ctx.from.id, {
     $inc: { scrobbles: 1 },
     username: ctx.from.username,
@@ -98,30 +99,36 @@ function multipleArray(array = [], multipleTimes = 1) {
 }
 
 async function requestError(ctx, e) {
-  if (e.response) {
-    let json;
+  if (!e.response) throw new Error('Haven\'t got any response');
 
-    try {
-      json = await e.response.json();
-    } catch (err) {
-      console.log(e.response);
-      await sendToAdmin(`Got strange response. Check the console:\n\n${e.message}`);
-      return;
+  if (e.response.code === 429) { // too many requests
+    console.log(e.response);
+    await sendToAdmin(`${e.message}\n\nActivating proxy mode... ${setProxyEnabled(true)}`);
+    return;
+  }
+
+  let json;
+
+  try {
+    json = await e.response.json();
+  } catch (err) {
+    console.log(e.response);
+    await sendToAdmin(`Got strange response. Check the console:\n\n${e.message}`);
+    return;
+  }
+
+  const err = json.error;
+
+  if (err === 14 || err === 4 || err === 9) {
+    const text = '❌ Access has not been granted. Please re-authenticate';
+
+    if (ctx.callbackQuery) {
+      await ctx.editMessageText(text);
+    } else {
+      await ctx.reply(text);
     }
 
-    const err = json.error;
-
-    if (err === 14 || err === 4 || err === 9) {
-      const text = '❌ Access has not been granted. Please re-authenticate';
-
-      if (ctx.callbackQuery) {
-        await ctx.editMessageText(text);
-      } else {
-        await ctx.reply(text);
-      }
-
-      await ctx.flow.enter('auth');
-    }
+    await ctx.flow.enter('auth');
   }
 }
 

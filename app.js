@@ -6,7 +6,7 @@ const bot = require('./src/bot');
 
 if (NODE_ENV === 'production') {
   bot.startWebhook(`/${SCROBBLERBOT_TOKEN}`, null, PORT);
-} else if (NODE_ENV === 'development') {
+} else {
   const tlsOptions = {
     key: fs.readFileSync('key.key'),
     cert: fs.readFileSync('cert.pem'),

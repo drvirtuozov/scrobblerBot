@@ -42,42 +42,22 @@ function getRandomChekedProxy() {
   return null;
 }
 
-async function proxyGet(url = '') {
+function proxyGet(url = '') {
   if (isProxyEnabled) {
     const proxy = getRandomChekedProxy();
     return httpGet(url, getDefaultProxyOpts(proxy));
   }
 
-  try {
-    const res = await httpGet(url);
-    return res;
-  } catch (e) {
-    if (e.response.code === 429) { // too many requests
-      console.log(e.response);
-      sendToAdmin(`${e.message}\n\nActivating proxy mode... ${setProxyEnabled(true)}`);
-    }
-
-    throw e;
-  }
+  return httpGet(url);
 }
 
-async function proxyPost(url = '', data = {}) {
+function proxyPost(url = '', data = {}) {
   if (isProxyEnabled) {
     const proxy = getRandomChekedProxy();
     return httpPost(url, data, getDefaultProxyOpts(proxy));
   }
 
-  try {
-    const res = await httpPost(url, data);
-    return res;
-  } catch (e) {
-    if (e.response.code === 429) { // too many requests
-      console.log(e.response);
-      sendToAdmin(`${e.message}\n\nActivating proxy mode... ${setProxyEnabled(true)}`);
-    }
-
-    throw e;
-  }
+  return httpPost(url, data);
 }
 
 async function getUncheckedProxies() {
