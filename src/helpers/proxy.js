@@ -1,6 +1,6 @@
 const proxyLists = require('proxy-lists');
 const HttpsProxyAgent = require('https-proxy-agent');
-const { httpPost, httpGet, sendToAdmin } = require('./utils');
+const { httpPost, httpGet } = require('./utils');
 const config = require('../../config');
 
 

@@ -101,23 +101,13 @@ function multipleArray(array = [], multipleTimes = 1) {
 async function requestError(ctx, e) {
   if (!e.response) throw new Error('Haven\'t got any response');
 
-  if (e.response.code === 429) { // too many requests
+  if (e.code === 429) { // too many requests
     console.log(e.response);
     await sendToAdmin(`${e.message}\n\nActivating proxy mode... ${setProxyEnabled(true)}`);
     return;
   }
 
-  let json;
-
-  try {
-    json = await e.response.json();
-  } catch (err) {
-    console.log(e.response);
-    await sendToAdmin(`Got strange response. Check the console:\n\n${e.message}`);
-    return;
-  }
-
-  const err = json.error;
+  const err = e.response.error;
 
   if (err === 14 || err === 4 || err === 9) {
     const text = '❌ Access has not been granted. Please re-authenticate';
@@ -154,7 +144,7 @@ async function scrobbleError(ctx, e, tracks = [], msg = '❌ Failed') {
     await createFailedMessage(messageId, tracks);
   }
 
-  await requestError(ctx, e);
+  if (e) await requestError(ctx, e);
   await ctx.flow.leave();
 }
 
@@ -183,33 +173,32 @@ async function httpRequest(url = '', options = {}) {
     'User-Agent': 'telegram@scrobblerBot/1.0.0 (+https://github.com/drvirtuozov/scrobblerBot)',
   });
   const res = await fetch(url, opts);
+  const json = await res.json();
 
   if (res.status !== 200) {
-    const err = { message: res.statusText, response: res };
+    const err = new Error(res.statusText);
+    err.code = res.status;
+    err.response = json;
     throw err;
   }
 
-  return res;
+  return json;
 }
 
-async function httpPost(url = '', data = {}, opts = {}) {
-  const res = await httpRequest(url, Object.assign({
+function httpPost(url = '', data = {}, opts = {}) {
+  return httpRequest(url, Object.assign({
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: typeof data === 'string' ? data : querystring.stringify(data),
   }, opts));
-
-  return res.json();
 }
 
-async function httpGet(url = '', opts = {}) {
-  const res = await httpRequest(url, Object.assign({
+function httpGet(url = '', opts = {}) {
+  return httpRequest(url, Object.assign({
     method: 'GET',
   }, opts));
-
-  return res.json();
 }
 
 function getIgnoredTracksFromLastfmRes(res = {}) {

@@ -112,7 +112,7 @@ async function scrobbleTrackFromText(ctx) {
     const res = await scrobbleTracks([track], ctx.message.date, ctx.user.key);
 
     if (res.scrobbles['@attr'].ingored) {
-      await scrobbleError(ctx, {}, [track]);
+      await scrobbleError(ctx, null, [track]);
       return;
     }
   } catch (e) {
