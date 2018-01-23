@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const { MONGODB_URL } = require('../config');
+import mongoose from 'mongoose';
+import { MONGODB_URL } from '../config';
 
 
 const db = mongoose.connection;
@@ -33,5 +33,5 @@ db.on('open', () => {
   console.log('Connection to database established!');
 });
 
-module.exports = db;
+export default db;
 

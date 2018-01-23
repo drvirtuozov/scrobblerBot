@@ -1,7 +1,7 @@
-const fs = require('fs');
-const { NODE_ENV, PORT, SCROBBLERBOT_TOKEN } = require('./config');
-const { sendToAdmin } = require('./src/helpers/utils');
-const bot = require('./src/bot');
+import fs from 'fs';
+import { NODE_ENV, PORT, SCROBBLERBOT_TOKEN } from './config';
+import { sendToAdmin } from './src/helpers/util';
+import bot from './src/bot';
 
 
 if (NODE_ENV === 'production') {

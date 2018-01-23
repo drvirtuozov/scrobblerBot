@@ -1,11 +1,11 @@
-const { Markup, Extra } = require('telegraf');
-const { Scene } = require('telegraf-flow');
-const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
-const { md5, getRandomFavSong, requestError, httpGet } = require('../helpers/utils');
-const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
+import Telegraf from 'telegraf';
+import TelegrafFlow from 'telegraf-flow';
+import { findUserByIdAndUpdate } from '../helpers/dbmanager';
+import { md5, getRandomFavSong, requestError, httpGet } from '../helpers/util';
+import { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } from '../../config';
 
 
-const authScene = new Scene('auth');
+const authScene = new TelegrafFlow.Scene('auth');
 
 authScene.enter(async (ctx) => {
   let res;
@@ -19,9 +19,9 @@ authScene.enter(async (ctx) => {
 
   const token = res.token;
   await ctx.reply('Please, click the link below to grant access to your Last.fm account and then push the OK button',
-    Markup.inlineKeyboard([
-      Markup.urlButton('Grant access...', `https://www.last.fm/api/auth?api_key=${LASTFM_KEY}&token=${token}`),
-      Markup.callbackButton('OK', 'ACCESS_GRANTED'),
+    Telegraf.Markup.inlineKeyboard([
+      Telegraf.Markup.urlButton('Grant access...', `https://www.last.fm/api/auth?api_key=${LASTFM_KEY}&token=${token}`),
+      Telegraf.Markup.callbackButton('OK', 'ACCESS_GRANTED'),
     ]).extra());
   await findUserByIdAndUpdate(ctx.from.id, { token });
 });
@@ -45,9 +45,9 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
   await ctx.editMessageText(`Glad to see you, <a href="https://www.last.fm/user/${account}">${account}</a>!\n\n` +
     'You may scrobble your first song now. To do it just type artist name, song name and album title separated ' +
     `by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for more info`,
-      Extra.HTML().webPreview(false));
+      Telegraf.Extra.HTML().webPreview(false));
 
   await ctx.flow.leave();
 });
 
-module.exports = authScene;
+export default authScene;

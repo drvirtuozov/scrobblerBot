@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 
 const succeededMessageSchema = mongoose.Schema({
@@ -27,4 +27,4 @@ const succeededMessageSchema = mongoose.Schema({
   },
 }, { collection: 'scrobbler_succeeded_messages' });
 
-module.exports = mongoose.model('SucceededMessage', succeededMessageSchema);
+export default mongoose.model('SucceededMessage', succeededMessageSchema);

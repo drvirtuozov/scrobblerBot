@@ -1,17 +1,17 @@
-const { Markup } = require('telegraf');
-const { Scene } = require('telegraf-flow');
-const { scrobbleAlbum } = require('../helpers/scrobbler');
-const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
+import Telegraf from 'telegraf';
+import TelegrafFlow from 'telegraf-flow';
+import { scrobbleAlbum } from '../helpers/scrobbler';
+import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 
 
-const editAlbumScene = new Scene('edit_album');
+const editAlbumScene = new TelegrafFlow.Scene('edit_album');
 
 editAlbumScene.enter(async (ctx) => {
   const tracks = ctx.user.album.tracks;
   await ctx.editMessageText('Edit the track list and send it back to me:');
   await ctx.reply(`${tracks.map(track => track.name).join('\n')}`,
-    Markup.inlineKeyboard([
-      Markup.callbackButton('Cancel', 'CANCEL'),
+    Telegraf.Markup.inlineKeyboard([
+      TelegrafFlow.Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
 });
 
@@ -21,4 +21,4 @@ editAlbumScene.on('text', async (ctx) => {
   await scrobbleAlbum(ctx);
 });
 
-module.exports = editAlbumScene;
+export default editAlbumScene;

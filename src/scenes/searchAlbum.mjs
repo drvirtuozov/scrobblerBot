@@ -1,24 +1,24 @@
-const { Markup, Extra } = require('telegraf');
-const { Scene } = require('telegraf-flow');
-const { LASTFM_URL, LASTFM_KEY } = require('../../config');
-const { searchFromLastfmAndAnswerInlineQuery } = require('../helpers/actions');
-const { scrobbleAlbum } = require('../helpers/scrobbler');
-const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
-const toTitleCase = require('to-title-case');
-const { proxyGet } = require('../helpers/proxy');
-const limiter = require('../middlewares/limiter');
-const { requestError } = require('../helpers/utils');
+import Telegraf from 'telegraf';
+import TelegrafFlow from 'telegraf-flow';
+import toTitleCase from 'to-title-case';
+import { LASTFM_URL, LASTFM_KEY } from '../../config';
+import { searchFromLastfmAndAnswerInlineQuery } from '../helpers/actions';
+import { scrobbleAlbum } from '../helpers/scrobbler';
+import { findUserByIdAndUpdate } from '../helpers/dbmanager';
+import { proxyGet } from '../helpers/proxy';
+import limiter from '../middlewares/limiter';
+import { requestError } from '../helpers/util';
 
 
-const searchAlbumScene = new Scene('search_album');
+const searchAlbumScene = new TelegrafFlow.Scene('search_album');
 
 searchAlbumScene.enter(async (ctx) => {
   const text = 'OK. In order to start searching an album push the button below. ' +
     'Or you can type album info in this format manually:\n\nArtist\nAlbum Title';
 
-  const extra = Markup.inlineKeyboard([
-    Markup.switchToCurrentChatButton('Search...', ''),
-    Markup.callbackButton('Cancel', 'CANCEL'),
+  const extra = Telegraf.Markup.inlineKeyboard([
+    Telegraf.Markup.switchToCurrentChatButton('Search...', ''),
+    Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
   ]).extra();
 
   if (ctx.callbackQuery) {
@@ -38,15 +38,15 @@ searchAlbumScene.on('text', async (ctx) => {
   const parsedAlbum = ctx.message.text.split('\n');
 
   if (parsedAlbum.length < 2) {
-    await ctx.reply('Format:\n\nArtist\nAlbum Title', Markup.inlineKeyboard([
-      Markup.callbackButton('Cancel', 'CANCEL'),
+    await ctx.reply('Format:\n\nArtist\nAlbum Title', Telegraf.Markup.inlineKeyboard([
+      Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
 
     return;
   }
 
   ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
-    Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+    Telegraf.Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
   const parsedTitle = toTitleCase(parsedAlbum[1]);
   const parsedArtist = toTitleCase(parsedAlbum[0]);
   let tracks = [];
@@ -85,10 +85,10 @@ searchAlbumScene.on('text', async (ctx) => {
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
     `The following tracks were found on Last.fm and will be scrobbled:\n\n${user.album.tracks
       .map(track => track.name).join('\n')}`,
-          Extra.HTML().webPreview(false).markup(Markup.inlineKeyboard([
-            Markup.callbackButton('Edit', 'EDIT'),
-            Markup.callbackButton('OK', 'OK'),
-            Markup.callbackButton('Cancel', 'CANCEL'),
+          Telegraf.Extra.HTML().webPreview(false).markup(Telegraf.Markup.inlineKeyboard([
+            Telegraf.Markup.callbackButton('Edit', 'EDIT'),
+            Telegraf.Markup.callbackButton('OK', 'OK'),
+            Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
           ])));
 });
 
@@ -100,4 +100,4 @@ searchAlbumScene.action('EDIT', async (ctx) => {
   await ctx.flow.enter('edit_album', ctx.flow.state);
 });
 
-module.exports = searchAlbumScene;
+export default searchAlbumScene;

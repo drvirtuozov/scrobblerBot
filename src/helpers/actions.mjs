@@ -1,12 +1,12 @@
-const { Extra } = require('telegraf');
-const he = require('he');
-const { sendToAdmin, GLOBAL_KEYBOARD, httpGet, requestError } = require('./utils');
-const { createUserById } = require('./dbmanager');
-const { LASTFM_URL, LASTFM_KEY } = require('../../config');
-const { proxyGet } = require('./proxy');
+import Telegraf from 'telegraf';
+import he from 'he';
+import { sendToAdmin, GLOBAL_KEYBOARD, httpGet, requestError } from './util';
+import { createUserById } from './dbmanager';
+import { LASTFM_URL, LASTFM_KEY } from '../../config';
+import { proxyGet } from './proxy';
 
 
-async function start(ctx) {
+export async function start(ctx) {
   await createUserById(ctx.from.id);
   await ctx.reply(`Hello, ${ctx.from.first_name}!\n\n` +
     'This bot allows you to scrobble songs, albums and track lists in text mode. ' +
@@ -16,7 +16,7 @@ async function start(ctx) {
   await sendToAdmin(`We've got a new user! @${ctx.from.username}`);
 }
 
-async function help(ctx) {
+export async function help(ctx) {
   await ctx.reply('To scrobble a track simply type its info in this format:\n\n' +
     'Artist\nTrack Name\nAlbum Title\n\n' +
     '<b>Note: Track scrobbling is enabled all the time by default.</b> ' +
@@ -24,18 +24,18 @@ async function help(ctx) {
     '/auth — grant access or change account\n' +
     '/recent — see recent scrobbled tracks from your account\n\n' +
     'If you have any ideas or improvements for the bot please tell us about them via /wish command',
-  Extra.HTML().load(GLOBAL_KEYBOARD));
+  Telegraf.Extra.HTML().load(GLOBAL_KEYBOARD));
 }
 
-async function whoami(ctx) {
+export async function whoami(ctx) {
   ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
-    Extra.HTML())).message_id;
+    Telegraf.Extra.HTML())).message_id;
   await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
     `You are logged in as <a href="https://www.last.fm/user/${ctx.user.account}">${ctx.user.account}</a>`,
-      Extra.HTML().webPreview(false));
+      Telegraf.Extra.HTML().webPreview(false));
 }
 
-async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
+export async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
   if (!ctx.inlineQuery.query) {
     await ctx.answerInlineQuery([{
       type: 'article',
@@ -82,9 +82,9 @@ async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
   await ctx.answerInlineQuery(inlineResults);
 }
 
-async function recentTracks(ctx) {
+export async function recentTracks(ctx) {
   ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
-    Extra.HTML())).message_id;
+    Telegraf.Extra.HTML())).message_id;
   let res;
 
   try {
@@ -115,13 +115,5 @@ async function recentTracks(ctx) {
     `${(tracks.map(track => `<a href="${
       encodeURI(`https://www.last.fm/music/${track.artist}`)
       }">${track.artist}</a> — <a href="${track.url}">${track.name}</a>`).join('\n'))}`,
-    Extra.HTML().webPreview(false));
+    Telegraf.Extra.HTML().webPreview(false));
 }
-
-module.exports = {
-  start,
-  help,
-  whoami,
-  searchFromLastfmAndAnswerInlineQuery,
-  recentTracks,
-};

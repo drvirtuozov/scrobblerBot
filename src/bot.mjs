@@ -1,19 +1,19 @@
-const Telegraf = require('telegraf');
-const { scrobbleTracks, scrobbleTrackFromText, scrobbleTracksByParts } = require('./helpers/scrobbler');
-const { searchFromLastfmAndAnswerInlineQuery } = require('./helpers/actions');
-const user = require('./middlewares/user');
-const scenes = require('./middlewares/scenes');
-const auth = require('./middlewares/auth');
-const session = require('./middlewares/session');
-const limiter = require('./middlewares/limiter');
-const logger = require('./middlewares/logger');
-const error = require('./middlewares/error');
-const asyncer = require('./middlewares/asyncer');
-const { SCROBBLERBOT_TOKEN } = require('../config');
-const { successfulScrobble, scrobbleError, multipleArray, sendToAdmin } = require('./helpers/utils');
-const { findSucceededMessageById, findFailedMessageById } = require('./helpers/dbmanager');
-require('./helpers/scheduler');
-require('./db');
+import Telegraf from 'telegraf';
+import { scrobbleTracks, scrobbleTrackFromText, scrobbleTracksByParts } from './helpers/scrobbler';
+import { searchFromLastfmAndAnswerInlineQuery } from './helpers/actions';
+import user from './middlewares/user';
+import scenes from './middlewares/scenes';
+import auth from './middlewares/auth';
+import session from './middlewares/session';
+import limiter from './middlewares/limiter';
+import logger from './middlewares/logger';
+import error from './middlewares/error';
+import asyncer from './middlewares/asyncer';
+import { SCROBBLERBOT_TOKEN } from '../config';
+import { successfulScrobble, scrobbleError, multipleArray, sendToAdmin } from './helpers/util';
+import { findSucceededMessageById, findFailedMessageById } from './helpers/dbmanager';
+import './helpers/scheduler';
+import './db';
 
 
 const bot = new Telegraf(SCROBBLERBOT_TOKEN, {
@@ -134,4 +134,4 @@ bot.catch((e) => {
   sendToAdmin(`Unhandled Bot Error! ${e.message}`);
 });
 
-module.exports = bot;
+export default bot;

@@ -1,5 +1,5 @@
-const { deleteOldMessages } = require('./dbmanager');
-const { startCheckingProxies, getUncheckedProxies } = require('./proxy');
+import { deleteOldMessages } from './dbmanager';
+import { startCheckingProxies, getUncheckedProxies } from './proxy';
 
 
 setInterval(async () => {

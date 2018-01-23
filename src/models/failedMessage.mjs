@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 
 const failedMessageSchema = mongoose.Schema({
@@ -27,4 +27,4 @@ const failedMessageSchema = mongoose.Schema({
   },
 }, { collection: 'scrobbler_failed_messages' });
 
-module.exports = mongoose.model('FailedMessage', failedMessageSchema);
+export default mongoose.model('FailedMessage', failedMessageSchema);

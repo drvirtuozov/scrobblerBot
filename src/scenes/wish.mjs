@@ -1,14 +1,14 @@
-const { Markup } = require('telegraf');
-const { Scene } = require('telegraf-flow');
-const { sendToAdmin } = require('../helpers/utils');
+import Telegraf from 'telegraf';
+import TelegrafFlow from 'telegraf-flow';
+import { sendToAdmin } from '../helpers/util';
 
 
-const wishScene = new Scene('wish');
+const wishScene = new TelegrafFlow.Scene('wish');
 
 wishScene.enter(async (ctx) => {
   await ctx.reply('OK, I\'m listening. Tell me what feature do you want...',
-    Markup.inlineKeyboard([
-      Markup.callbackButton('Cancel', 'CANCEL'),
+    Telegraf.Markup.inlineKeyboard([
+      Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
 });
 
@@ -18,4 +18,4 @@ wishScene.on('text', async (ctx) => {
   await ctx.flow.leave();
 });
 
-module.exports = wishScene;
+export default wishScene;

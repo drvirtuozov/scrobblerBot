@@ -1,15 +1,15 @@
-const { Markup } = require('telegraf');
-const { Scene } = require('telegraf-flow');
-const { scrobbleAlbum } = require('../helpers/scrobbler');
-const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
+import Telegraf from 'telegraf';
+import TelegrafFlow from 'telegraf-flow';
+import { scrobbleAlbum } from '../helpers/scrobbler';
+import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 
 
-const setAlbumTracksScene = new Scene('set_album_tracks');
+const setAlbumTracksScene = new TelegrafFlow.Scene('set_album_tracks');
 
 setAlbumTracksScene.enter(async (ctx) => {
   await ctx.editMessageText('Just send me song names of the album separated by new lines',
-    Markup.inlineKeyboard([
-      Markup.callbackButton('Cancel', 'CANCEL'),
+    Telegraf.Markup.inlineKeyboard([
+      Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
 });
 
@@ -18,8 +18,8 @@ setAlbumTracksScene.on('text', async (ctx) => {
 
   if (tracks.length <= 1) {
     await ctx.reply('Send me song names separated by new lines',
-      Markup.inlineKeyboard([
-        Markup.callbackButton('Cancel', 'CANCEL'),
+      Telegraf.Markup.inlineKeyboard([
+        Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
       ]).extra());
 
     return;
@@ -29,4 +29,4 @@ setAlbumTracksScene.on('text', async (ctx) => {
   await scrobbleAlbum(ctx);
 });
 
-module.exports = setAlbumTracksScene;
+export default setAlbumTracksScene;

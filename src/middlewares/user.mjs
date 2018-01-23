@@ -1,7 +1,7 @@
-const { findUserById } = require('../helpers/dbmanager');
+import { findUserById } from '../helpers/dbmanager';
 
 
-module.exports = async (ctx, next) => {
+export default async (ctx, next) => {
   if (ctx.inlineQuery) {
     await next();
     return;

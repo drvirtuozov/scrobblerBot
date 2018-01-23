@@ -2,11 +2,11 @@
   "name": "scrobblerbot",
   "version": "1.0.0",
   "description": "An unofficial Last.fm Scrobbler for Telegram",
-  "main": "app.js",
+  "main": "app.mjs",
   "scripts": {
-    "test": "eslint .",
-    "start": "NODE_ENV=production node app.js",
-    "watch": "nodemon app.js --watch src",
+    "test": "eslint --ext=js,mjs .",
+    "start": "NODE_ENV=production node --experimental-modules app.mjs",
+    "watch": "nodemon -x 'node --experimental-modules app.mjs' --watch src",
     "deploy": "now && now alias"
   },
   "repository": {
@@ -39,7 +39,7 @@
     "nodemon": "^1.12.1"
   },
   "engines": {
-    "node": ">=7.6.0"
+    "node": "9.4.0"
   },
   "now": {
     "alias": "scrobblerbot.now.sh"

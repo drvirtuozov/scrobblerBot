@@ -1,8 +1,8 @@
-const { branch } = require('telegraf');
-const { canScrobble } = require('../helpers/utils');
+import Telegraf from 'telegraf';
+import { canScrobble } from '../helpers/util';
 
 
-module.exports = branch(canScrobble, async (ctx, next) => {
+export default Telegraf.branch(canScrobble, async (ctx, next) => {
   await next();
 }, async (ctx, next) => {
   if (ctx.inlineQuery) {

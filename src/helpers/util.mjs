@@ -1,30 +1,30 @@
-const { Telegram, Markup } = require('telegraf');
-const crypto = require('crypto');
-const querystring = require('querystring');
-const fetch = require('node-fetch');
-const songs = require('../songs');
-const { findUserByIdAndUpdate, createSucceededMessage, createFailedMessage } = require('./dbmanager');
-const { ADMIN_ID, SCROBBLERBOT_TOKEN } = require('../../config');
-const { setProxyEnabled } = require('./proxy');
+import Telegraf from 'telegraf';
+import crypto from 'crypto';
+import querystring from 'querystring';
+import fetch from 'node-fetch';
+import songs from '../songs';
+import { findUserByIdAndUpdate, createSucceededMessage, createFailedMessage } from './dbmanager';
+import { ADMIN_ID, SCROBBLERBOT_TOKEN } from '../../config';
+import { setProxyEnabled } from './proxy';
 
 
-const telegram = new Telegram(SCROBBLERBOT_TOKEN);
-const GLOBAL_KEYBOARD = Markup.keyboard([['🎵 Track', '💽 Album', '📃 Tracklist']]).resize().extra();
+const telegram = new Telegraf.Telegram(SCROBBLERBOT_TOKEN);
+export const GLOBAL_KEYBOARD = Telegraf.Markup.keyboard([['🎵 Track', '💽 Album', '📃 Tracklist']]).resize().extra();
 
-function sendToAdmin(text) {
+export function sendToAdmin(text) {
   return telegram.sendMessage(ADMIN_ID, text);
 }
 
-function md5(text) {
+export function md5(text) {
   return crypto.createHash('md5').update(text, 'utf8').digest('hex');
 }
 
-function getRandomFavSong() {
+export function getRandomFavSong() {
   const index = Math.floor(Math.random() * songs.length);
   return songs[index];
 }
 
-async function error(ctx, e) {
+export async function error(ctx, e) {
   if (e.code === 400) { // message is not modified
     return;
   }
@@ -44,11 +44,11 @@ async function error(ctx, e) {
   await sendToAdmin('❗️ An error occured. Check the logs...');
 }
 
-function utf8(text) {
+export function utf8(text) {
   return decodeURI(decodeURIComponent(text));
 }
 
-async function successfulScrobble(ctx, text = '✅ Scrobbled', tracks = []) {
+export async function successfulScrobble(ctx, text = '✅ Scrobbled', tracks = []) {
   await findUserByIdAndUpdate(ctx.from.id, {
     $inc: { scrobbles: 1 },
     username: ctx.from.username,
@@ -57,8 +57,8 @@ async function successfulScrobble(ctx, text = '✅ Scrobbled', tracks = []) {
     track: {},
   });
 
-  const extra = Markup.inlineKeyboard([
-    Markup.callbackButton('Repeat', 'REPEAT'),
+  const extra = Telegraf.Markup.inlineKeyboard([
+    Telegraf.Markup.callbackButton('Repeat', 'REPEAT'),
   ]).extra();
 
   let message;
@@ -76,7 +76,7 @@ async function successfulScrobble(ctx, text = '✅ Scrobbled', tracks = []) {
   await ctx.flow.leave();
 }
 
-function canScrobble(ctx) {
+export function canScrobble(ctx) {
   if (!ctx.user || Date.now() - +ctx.user.last_scrobble <= 30000) {
     return false;
   }
@@ -84,7 +84,7 @@ function canScrobble(ctx) {
   return true;
 }
 
-function multipleArray(array = [], multipleTimes = 1) {
+export function multipleArray(array = [], multipleTimes = 1) {
   let multipliedArray = [];
 
   if (multipleTimes > 1) {
@@ -98,7 +98,7 @@ function multipleArray(array = [], multipleTimes = 1) {
   return array;
 }
 
-async function requestError(ctx, e) {
+export async function requestError(ctx, e) {
   if (!e.response) throw new Error('Haven\'t got any response');
 
   if (e.code === 429) { // too many requests
@@ -122,9 +122,9 @@ async function requestError(ctx, e) {
   }
 }
 
-async function scrobbleError(ctx, e, tracks = [], msg = '❌ Failed') {
-  const extra = Markup.inlineKeyboard([
-    Markup.callbackButton('Retry', 'RETRY'),
+export async function scrobbleError(ctx, e, tracks = [], msg = '❌ Failed') {
+  const extra = Telegraf.Markup.inlineKeyboard([
+    Telegraf.Markup.callbackButton('Retry', 'RETRY'),
   ]).extra();
 
   let messageId;
@@ -148,11 +148,11 @@ async function scrobbleError(ctx, e, tracks = [], msg = '❌ Failed') {
   await ctx.flow.leave();
 }
 
-function isUserAuthorized(ctx) {
+export function isUserAuthorized(ctx) {
   return ctx.user && ctx.user.key;
 }
 
-function validateTrackDurations(tracks = []) {
+export function validateTrackDurations(tracks = []) {
   const defDur = 300;
   return tracks.map((track) => {
     let duration = 0;
@@ -167,7 +167,7 @@ function validateTrackDurations(tracks = []) {
   });
 }
 
-async function httpRequest(url = '', options = {}) {
+export async function httpRequest(url = '', options = {}) {
   const opts = Object.assign({}, options);
   opts.headers = Object.assign(opts.headers || {}, {
     'User-Agent': 'telegram@scrobblerBot/1.0.0 (+https://github.com/drvirtuozov/scrobblerBot)',
@@ -185,7 +185,7 @@ async function httpRequest(url = '', options = {}) {
   return json;
 }
 
-function httpPost(url = '', data = {}, opts = {}) {
+export function httpPost(url = '', data = {}, opts = {}) {
   return httpRequest(url, Object.assign({
     method: 'POST',
     headers: {
@@ -195,13 +195,13 @@ function httpPost(url = '', data = {}, opts = {}) {
   }, opts));
 }
 
-function httpGet(url = '', opts = {}) {
+export function httpGet(url = '', opts = {}) {
   return httpRequest(url, Object.assign({
     method: 'GET',
   }, opts));
 }
 
-function getIgnoredTracksFromLastfmRes(res = {}) {
+export function getIgnoredTracksFromLastfmRes(res = {}) {
   if (!res.scrobbles) return [];
   const ignored = [];
   const scrobbles = res.scrobbles.scrobble;
@@ -219,22 +219,3 @@ function getIgnoredTracksFromLastfmRes(res = {}) {
     album: track.album['#text'],
   }));
 }
-
-module.exports = {
-  sendToAdmin,
-  md5,
-  getRandomFavSong,
-  utf8,
-  successfulScrobble,
-  canScrobble,
-  error,
-  requestError,
-  scrobbleError,
-  isUserAuthorized,
-  GLOBAL_KEYBOARD,
-  multipleArray,
-  validateTrackDurations,
-  httpPost,
-  httpGet,
-  getIgnoredTracksFromLastfmRes,
-};

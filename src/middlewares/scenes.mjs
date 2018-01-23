@@ -1,17 +1,17 @@
-const TelegrafFlow = require('telegraf-flow');
-const wishScene = require('../scenes/wish');
-const authScene = require('../scenes/auth');
-const searchTrackScene = require('../scenes/searchTrack');
-const tracklistScene = require('../scenes/tracklist');
-const searchAlbumScene = require('../scenes/searchAlbum');
-const noAlbumInfoScene = require('../scenes/noAlbumInfo');
-const editAlbumScene = require('../scenes/editAlbum');
-const setAlbumTracksScene = require('../scenes/setAlbumTracks');
-const editTrackAlbumScene = require('../scenes/editTrackAlbum');
-const { start, whoami, help, recentTracks } = require('../helpers/actions');
-const auth = require('./auth');
-const limiter = require('./limiter');
-const { setProxyEnabled } = require('../helpers/proxy');
+import TelegrafFlow from 'telegraf-flow';
+import wishScene from '../scenes/wish';
+import authScene from '../scenes/auth';
+import searchTrackScene from '../scenes/searchTrack';
+import tracklistScene from '../scenes/tracklist';
+import searchAlbumScene from '../scenes/searchAlbum';
+import noAlbumInfoScene from '../scenes/noAlbumInfo';
+import editAlbumScene from '../scenes/editAlbum';
+import setAlbumTracksScene from '../scenes/setAlbumTracks';
+import editTrackAlbumScene from '../scenes/editTrackAlbum';
+import { start, whoami, help, recentTracks } from '../helpers/actions';
+import auth from './auth';
+import limiter from './limiter';
+import { setProxyEnabled } from '../helpers/proxy';
 
 
 const flow = new TelegrafFlow();
@@ -46,4 +46,4 @@ flow.register(editAlbumScene);
 flow.register(setAlbumTracksScene);
 flow.register(editTrackAlbumScene);
 
-module.exports = flow.middleware();
+export default flow.middleware();

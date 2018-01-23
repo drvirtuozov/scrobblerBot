@@ -1,23 +1,23 @@
-const { Markup, Extra } = require('telegraf');
-const { Scene } = require('telegraf-flow');
-const { LASTFM_URL, LASTFM_KEY } = require('../../config');
-const { scrobbleTrackFromDB, scrobbleTrackFromText } = require('../helpers/scrobbler');
-const { findUserByIdAndUpdate } = require('../helpers/dbmanager');
-const { searchFromLastfmAndAnswerInlineQuery } = require('../helpers/actions');
-const { proxyGet } = require('../helpers/proxy');
-const limiter = require('../middlewares/limiter');
-const { requestError } = require('../helpers/utils');
+import Telegraf from 'telegraf';
+import TelegrafFlow from 'telegraf-flow';
+import { LASTFM_URL, LASTFM_KEY } from '../../config';
+import { scrobbleTrackFromDB, scrobbleTrackFromText } from '../helpers/scrobbler';
+import { findUserByIdAndUpdate } from '../helpers/dbmanager';
+import { searchFromLastfmAndAnswerInlineQuery } from '../helpers/actions';
+import { proxyGet } from '../helpers/proxy';
+import limiter from '../middlewares/limiter';
+import { requestError } from '../helpers/util';
 
 
-const searchTrackScene = new Scene('search_track');
+const searchTrackScene = new TelegrafFlow.Scene('search_track');
 
 searchTrackScene.enter(async (ctx) => {
   const text = 'OK. In order to start searching a track push the button below. ' +
     'Or you can type track info in this format manually:\n\nArtist\nTrack Name\nAlbum Title';
 
-  const extra = Markup.inlineKeyboard([
-    Markup.switchToCurrentChatButton('Search...', ''),
-    Markup.callbackButton('Cancel', 'CANCEL'),
+  const extra = Telegraf.Markup.inlineKeyboard([
+    Telegraf.Markup.switchToCurrentChatButton('Search...', ''),
+    Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
   ]).extra();
 
   if (ctx.callbackQuery) {
@@ -37,12 +37,12 @@ searchTrackScene.on('text', async (ctx) => {
   const parsedTrack = ctx.message.text.split('\n');
 
   if (parsedTrack.length < 2 || parsedTrack.length > 3) {
-    await ctx.reply('Format:\n\nArtist\nSong Name\nAlbum Title', Markup.inlineKeyboard([
-      Markup.callbackButton('Cancel', 'CANCEL'),
+    await ctx.reply('Format:\n\nArtist\nSong Name\nAlbum Title', Telegraf.Markup.inlineKeyboard([
+      Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
   } else if (parsedTrack.length === 2) {
     ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
-      Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+    Telegraf.Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
     const qartist = encodeURIComponent(parsedTrack[0]);
     const qtrack = encodeURIComponent(parsedTrack[1]);
     let res;
@@ -71,13 +71,13 @@ searchTrackScene.on('text', async (ctx) => {
       await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
         `Last.fm has album info of this track:\n\n${artist}\n${name}\n${album}\n\n` +
         'Would you like to scrobble it with the new info or leave it as is?',
-          Extra.webPreview(false).markup(Markup.inlineKeyboard([
+          Telegraf.Extra.webPreview(false).markup(Telegraf.Markup.inlineKeyboard([
             [
-              Markup.callbackButton('Scrobble', 'SCR'),
-              Markup.callbackButton('Leave', 'SCR_WITHOUT_ALBUM'),
-              Markup.callbackButton('Edit album', 'EDIT_TRACK_ALBUM'),
+              Telegraf.Markup.callbackButton('Scrobble', 'SCR'),
+              Telegraf.Markup.callbackButton('Leave', 'SCR_WITHOUT_ALBUM'),
+              Telegraf.Markup.callbackButton('Edit album', 'EDIT_TRACK_ALBUM'),
             ], [
-              Markup.callbackButton('Cancel', 'CANCEL'),
+              Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
             ],
           ])));
 
@@ -86,10 +86,10 @@ searchTrackScene.on('text', async (ctx) => {
 
     await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
       'Last.fm has no album info of this track. Would you like to enter album title manually?',
-        Extra.webPreview(false).markup(Markup.inlineKeyboard([
-          Markup.callbackButton('Yes', 'EDIT_TRACK_ALBUM'),
-          Markup.callbackButton('No, scrobble', 'SCR_WITHOUT_ALBUM'),
-          Markup.callbackButton('Cancel', 'CANCEL'),
+        Telegraf.Extra.webPreview(false).markup(Telegraf.Markup.inlineKeyboard([
+          Telegraf.Markup.callbackButton('Yes', 'EDIT_TRACK_ALBUM'),
+          Telegraf.Markup.callbackButton('No, scrobble', 'SCR_WITHOUT_ALBUM'),
+          Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
         ])));
   } else {
     await scrobbleTrackFromText(ctx);
@@ -108,4 +108,4 @@ searchTrackScene.action('SCR_WITHOUT_ALBUM', limiter, async (ctx) => {
   await scrobbleTrackFromDB(ctx, false);
 });
 
-module.exports = searchTrackScene;
+export default searchTrackScene;

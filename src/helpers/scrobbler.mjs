@@ -1,15 +1,15 @@
-const { Markup, Extra } = require('telegraf');
-const {
+import Telegraf from 'telegraf';
+import {
   getRandomFavSong, md5, utf8, successfulScrobble,
-  scrobbleError, validateTrackDurations, getIgnoredTracksFromLastfmRes } = require('./utils');
-const { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } = require('../../config');
-const { proxyPost } = require('./proxy');
+  scrobbleError, validateTrackDurations, getIgnoredTracksFromLastfmRes } from './util';
+import { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } from '../../config';
+import { proxyPost } from './proxy';
 
 
 const MAX_BATCH_LENGTH = 50; // 50 is the max count allowed by last.fm at once
 
 // low-level function
-function scrobbleTracks(tracks = [], timestamp = Math.floor(Date.now() / 1000), key = '') {
+export function scrobbleTracks(tracks = [], timestamp = Math.floor(Date.now() / 1000), key = '') {
   const vtracks = validateTrackDurations(tracks);
   let startTimestamp = timestamp - vtracks
     .map(track => track.duration)
@@ -31,7 +31,7 @@ function scrobbleTracks(tracks = [], timestamp = Math.floor(Date.now() / 1000), 
     queryArtists}&format=json&method=track.scrobble&sk=${key}${queryTimestamps}${queryTracks}`);
 }
 
-async function scrobbleTracksByParts(ctx, tracks = []) {
+export async function scrobbleTracksByParts(ctx, tracks = []) {
   const partsCount = Math.ceil(tracks.length / MAX_BATCH_LENGTH);
   const responses = [];
   const vtracks = validateTrackDurations(tracks);
@@ -43,7 +43,7 @@ async function scrobbleTracksByParts(ctx, tracks = []) {
     if (partsCount > 1) {
       await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
         `Too many tracks to scrobble at once.\n\n<i>Scrobbling by parts... ${i + 1} of ${partsCount}</i>`,
-        Extra.HTML());
+        Telegraf.Extra.HTML());
     }
 
     const trcks = vtracks.slice(i * MAX_BATCH_LENGTH, (i + 1) * MAX_BATCH_LENGTH);
@@ -56,7 +56,7 @@ async function scrobbleTracksByParts(ctx, tracks = []) {
   return responses;
 }
 
-async function scrobbleTrackFromDB(ctx, isAlbum = true) {
+export async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   const track = {
     artist: ctx.user.track.artist,
     name: ctx.user.track.name,
@@ -65,10 +65,10 @@ async function scrobbleTrackFromDB(ctx, isAlbum = true) {
 
   if (ctx.callbackQuery) {
     ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
-      Extra.HTML())).message_id;
+      Telegraf.Extra.HTML())).message_id;
   } else {
     ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
-      Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+      Telegraf.Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
   }
 
   try {
@@ -86,21 +86,21 @@ async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   await successfulScrobble(ctx, undefined, [track]);
 }
 
-async function scrobbleTrackFromText(ctx) {
+export async function scrobbleTrackFromText(ctx) {
   const parsedTrack = ctx.message.text.split('\n');
   const song = getRandomFavSong();
 
   if (parsedTrack.length < 2 || parsedTrack.length > 3) {
     await ctx.reply('Please, send me valid data separated by new lines. Example:\n\n' +
       `${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for more info`,
-        Extra.HTML().webPreview(false));
+        Telegraf.Extra.HTML().webPreview(false));
 
     return;
   }
 
   ctx.flow.state.messageIdToReply = ctx.message.message_id;
   ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
-    Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+    Telegraf.Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
 
   const track = {
     artist: parsedTrack[0],
@@ -123,13 +123,13 @@ async function scrobbleTrackFromText(ctx) {
   await successfulScrobble(ctx, undefined, [track]);
 }
 
-async function scrobbleAlbum(ctx) {
+export async function scrobbleAlbum(ctx) {
   if (ctx.callbackQuery) {
     ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
-      Extra.HTML())).message_id;
+      Telegraf.Extra.HTML())).message_id;
   } else {
     ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
-      Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+      Telegraf.Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
   }
 
   const tracks = ctx.user.album.tracks.map(track => ({
@@ -149,7 +149,7 @@ async function scrobbleAlbum(ctx) {
   await successfulScrobble(ctx, undefined, tracks);
 }
 
-async function scrobbleTracklist(ctx) {
+export async function scrobbleTracklist(ctx) {
   let isValid = true;
   const tracks = ctx.message.text.split('\n')
     .map((string) => {
@@ -168,8 +168,8 @@ async function scrobbleTracklist(ctx) {
 
   if (!isValid) {
     await ctx.reply('Please, send me valid data with the valid syntax:\n\nArtist | Track Name | Album Title',
-      Markup.inlineKeyboard([
-        Markup.callbackButton('Cancel', 'CANCEL'),
+      Telegraf.Markup.inlineKeyboard([
+        Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
       ]).extra());
 
     return;
@@ -177,7 +177,7 @@ async function scrobbleTracklist(ctx) {
 
   ctx.flow.state.messageIdToReply = ctx.message.message_id;
   ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
-    Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+    Telegraf.Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
 
   let responses = [];
 
@@ -204,12 +204,3 @@ async function scrobbleTracklist(ctx) {
 
   await successfulScrobble(ctx, undefined, tracks);
 }
-
-module.exports = {
-  scrobbleTracks,
-  scrobbleTrackFromDB,
-  scrobbleTrackFromText,
-  scrobbleAlbum,
-  scrobbleTracklist,
-  scrobbleTracksByParts,
-};

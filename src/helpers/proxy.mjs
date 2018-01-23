@@ -1,13 +1,13 @@
-const proxyLists = require('proxy-lists');
-const HttpsProxyAgent = require('https-proxy-agent');
-const { httpPost, httpGet } = require('./utils');
-const config = require('../../config');
+import proxyLists from 'proxy-lists';
+import HttpsProxyAgent from 'https-proxy-agent';
+import { httpPost, httpGet } from './util';
+import { LASTFM_URL, NODE_ENV } from '../../config';
 
 
 let checkedProxies = [];
 let isProxyEnabled = false;
 
-function setProxyEnabled(value) {
+export function setProxyEnabled(value) {
   if (typeof value === 'undefined') {
     isProxyEnabled = !isProxyEnabled;
     return isProxyEnabled;
@@ -17,7 +17,7 @@ function setProxyEnabled(value) {
   return isProxyEnabled;
 }
 
-function getDefaultProxyOpts(proxy = {}) {
+export function getDefaultProxyOpts(proxy = {}) {
   return {
     redirect: 'error',
     follow: 0,
@@ -30,7 +30,7 @@ function getDefaultProxyOpts(proxy = {}) {
   };
 }
 
-function getRandomChekedProxy() {
+export function getRandomChekedProxy() {
   if (checkedProxies.length) {
     const proxy = checkedProxies[Math.floor(Math.random() * checkedProxies.length)];
     return {
@@ -42,7 +42,7 @@ function getRandomChekedProxy() {
   return null;
 }
 
-function proxyGet(url = '') {
+export function proxyGet(url = '') {
   if (isProxyEnabled) {
     const proxy = getRandomChekedProxy();
     return httpGet(url, getDefaultProxyOpts(proxy));
@@ -51,7 +51,7 @@ function proxyGet(url = '') {
   return httpGet(url);
 }
 
-function proxyPost(url = '', data = {}) {
+export function proxyPost(url = '', data = {}) {
   if (isProxyEnabled) {
     const proxy = getRandomChekedProxy();
     return httpPost(url, data, getDefaultProxyOpts(proxy));
@@ -60,7 +60,7 @@ function proxyPost(url = '', data = {}) {
   return httpPost(url, data);
 }
 
-async function getUncheckedProxies() {
+export async function getUncheckedProxies() {
   const result = [];
   const gettingProxies = proxyLists.getProxies({
     protocols: ['https'],
@@ -83,13 +83,13 @@ async function getUncheckedProxies() {
   });
 }
 
-async function startCheckingProxies(proxies) {
+export async function startCheckingProxies(proxies) {
   console.log('Started checking proxies...');
   checkedProxies = [];
 
   for (const proxy of proxies) {
     try {
-      await httpPost(config.LASTFM_URL, null, getDefaultProxyOpts(proxy));
+      await httpPost(LASTFM_URL, null, getDefaultProxyOpts(proxy));
     } catch (e) {
       if (e.response && e.response.status === 400) { // normal behavior
         checkedProxies.push(proxy);
@@ -100,17 +100,8 @@ async function startCheckingProxies(proxies) {
   console.log('Proxies checked. Working count:', checkedProxies.length);
 }
 
-if (config.NODE_ENV === 'production') {
+if (NODE_ENV === 'production') {
   setImmediate(async () => {
     startCheckingProxies(await getUncheckedProxies());
   });
 }
-
-module.exports = {
-  getUncheckedProxies,
-  getRandomChekedProxy,
-  startCheckingProxies,
-  proxyPost,
-  proxyGet,
-  setProxyEnabled,
-};
