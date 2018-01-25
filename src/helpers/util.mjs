@@ -152,6 +152,10 @@ export function isUserAuthorized(ctx) {
   return ctx.user && ctx.user.key;
 }
 
+export function isUserAdmin(ctx) {
+  return ctx.from.id === +ADMIN_ID;
+}
+
 export function validateTrackDurations(tracks = []) {
   const defDur = 300;
   return tracks.map((track) => {

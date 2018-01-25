@@ -6,7 +6,7 @@
   "scripts": {
     "test": "eslint --ext=js,mjs .",
     "start": "NODE_ENV=production node --experimental-modules app.mjs",
-    "watch": "nodemon -x 'node --experimental-modules app.mjs' --watch src",
+    "watch": "nodemon --watch src -e .js,.mjs -x 'node --experimental-modules app.mjs'",
     "deploy": "now && now alias"
   },
   "repository": {

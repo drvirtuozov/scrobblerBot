@@ -12,6 +12,7 @@ import { start, whoami, help, recentTracks } from '../helpers/actions';
 import auth from './auth';
 import limiter from './limiter';
 import { setProxyEnabled } from '../helpers/proxy';
+import admin from '../middlewares/admin';
 
 
 const flow = new TelegrafFlow();
@@ -34,7 +35,7 @@ flow.command('whoami', auth, whoami);
 flow.command('recent', auth, recentTracks);
 flow.command('auth', ctx => ctx.flow.enter('auth'));
 flow.command('wish', ctx => ctx.flow.enter('wish'));
-flow.command('proxy', ctx => ctx.reply(`Proxy status was set to ${setProxyEnabled()}`));
+flow.command('proxy', admin, ctx => ctx.reply(`Proxy status was set to ${setProxyEnabled()}`));
 
 flow.register(wishScene);
 flow.register(authScene);
