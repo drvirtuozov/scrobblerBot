@@ -11,7 +11,7 @@ editAlbumScene.enter(async (ctx) => {
   await ctx.editMessageText('Edit the track list and send it back to me:');
   await ctx.reply(`${tracks.map(track => track.name).join('\n')}`,
     Telegraf.Markup.inlineKeyboard([
-      TelegrafFlow.Markup.callbackButton('Cancel', 'CANCEL'),
+      Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
 });
 
