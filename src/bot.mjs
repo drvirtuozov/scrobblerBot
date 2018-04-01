@@ -111,13 +111,14 @@ bot.action(/REPEAT:\d?\d/, limiter, async (ctx) => {
     Telegraf.Extra.HTML())).message_id;
   const messageId = ctx.callbackQuery.message.message_id;
   const message = await findSucceededMessageById(messageId);
-  const count = ctx.callbackQuery.data.split(':')[1];
-  const tracks = multipleArray(message.tracks, count);
 
   if (!message) {
     await ctx.editMessageText('Expired');
     return;
   }
+
+  const count = ctx.callbackQuery.data.split(':')[1];
+  const tracks = multipleArray(message.tracks, count);
 
   try {
     await scrobbleTracksByParts(ctx, tracks);
