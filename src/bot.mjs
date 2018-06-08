@@ -1,7 +1,9 @@
 import Telegraf from 'telegraf';
 import HttpsProxyAgent from 'https-proxy-agent';
-import { scrobbleTrackFromText } from './helpers/scrobbler';
-import { searchFromLastfmAndAnswerInlineQuery, cancel, retry, repeat, repeatMany } from './handlers/actions';
+import { scrobbleTrackFromText, scrobbleTrackFromAudio } from './helpers/scrobbler';
+import {
+  searchFromLastfmAndAnswerInlineQuery, cancel, retry, repeat, repeatMany,
+} from './handlers/actions';
 import user from './middlewares/user';
 import scenes from './middlewares/scenes';
 import auth from './middlewares/auth';
@@ -20,8 +22,8 @@ const bot = new Telegraf(SCROBBLERBOT_TOKEN, {
   telegram: {
     webhookReply: false,
     agent: process.env.NODE_ENV === 'development' ? new HttpsProxyAgent({ // proxy for russian blocked devs
-      host: '207.154.197.214',
-      port: 8888,
+      host: process.env.https_proxy && process.env.https_proxy.split(':')[0],
+      port: process.env.https_proxy && process.env.https_proxy.split(':')[1],
       secureProxy: true,
     }) : null,
   },
@@ -50,15 +52,16 @@ bot.hears(/\/\w+/, async (ctx) => {
 });
 
 bot.on('text', auth, limiter, scrobbleTrackFromText);
+bot.on('audio', auth, limiter, scrobbleTrackFromAudio);
 
 bot.on('inline_query', async (ctx) => {
   await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
 });
 
 bot.action('CANCEL', cancel);
-bot.action('RETRY', limiter, retry);
+bot.action('RETRY', retry);
 bot.action('REPEAT', repeat);
-bot.action(/REPEAT:\d?\d/, limiter, repeatMany);
+bot.action(/REPEAT:\d?\d/, repeatMany);
 
 bot.catch((e) => {
   console.error(e);

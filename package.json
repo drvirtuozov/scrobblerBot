@@ -24,6 +24,7 @@
     "he": "^1.1.1",
     "https-proxy-agent": "^2.1.0",
     "mongoose": "^4.11.14",
+    "music-metadata": "^2.0.1",
     "node-fetch": "^1.7.3",
     "proxy-lists": "^1.14.1",
     "telegraf": "^3.12.1",

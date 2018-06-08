@@ -1,4 +1,6 @@
 import Telegraf from 'telegraf';
+import fetch from 'node-fetch';
+import mm from 'music-metadata';
 import {
   getRandomFavSong, md5, utf8, successfulScrobble,
   scrobbleError, validateTrackDurations, getIgnoredTracksFromLastfmRes } from './util';
@@ -203,4 +205,58 @@ export async function scrobbleTracklist(ctx) {
   }
 
   await successfulScrobble(ctx, undefined, tracks);
+}
+
+export async function scrobbleTrackFromAudio(ctx) {
+  const {
+    file_id: fileId,
+    mime_type: mime,
+    file_size: fileSize,
+    performer,
+    title,
+  } = ctx.message.audio;
+
+  if (!performer || !title) {
+    await ctx.reply('Audio file\'s tags not found',
+      Telegraf.Extra.inReplyTo(ctx.message.message_id));
+    return;
+  }
+
+  ctx.flow.state.messageIdToReply = ctx.message.message_id;
+  ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Downloading audio file...</i>',
+    Telegraf.Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+
+  const link = await ctx.telegram.getFileLink(fileId);
+  const res = await fetch(link, {
+    agent: ctx.telegram.options.agent,
+  });
+
+  const metadata = await mm.parseStream(res.body, mime, {
+    fileSize,
+    skipCovers: true,
+    duration: false,
+  });
+
+  const track = {
+    name: metadata.common.title || title,
+    artist: metadata.common.artist || performer,
+    album: metadata.common.album,
+  };
+
+  await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
+    '<i>Scrobbling...</i>', Telegraf.Extra.HTML());
+
+  try {
+    const resp = await scrobbleTracks([track], ctx.message.date, ctx.user.key);
+
+    if (resp.scrobbles['@attr'].ingored) {
+      await scrobbleError(ctx, null, [track]);
+      return;
+    }
+  } catch (e) {
+    await scrobbleError(ctx, e, [track]);
+    return;
+  }
+
+  await successfulScrobble(ctx, undefined, [track]);
 }
