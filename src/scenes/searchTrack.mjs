@@ -3,7 +3,7 @@ import TelegrafFlow from 'telegraf-flow';
 import { LASTFM_URL, LASTFM_KEY } from '../../config';
 import { scrobbleTrackFromDB, scrobbleTrackFromText } from '../helpers/scrobbler';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
-import { searchFromLastfmAndAnswerInlineQuery } from '../helpers/actions';
+import { searchFromLastfmAndAnswerInlineQuery } from '../handlers/actions';
 import { proxyGet } from '../helpers/proxy';
 import limiter from '../middlewares/limiter';
 import { requestError } from '../helpers/util';

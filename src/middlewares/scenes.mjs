@@ -8,7 +8,7 @@ import noAlbumInfoScene from '../scenes/noAlbumInfo';
 import editAlbumScene from '../scenes/editAlbum';
 import setAlbumTracksScene from '../scenes/setAlbumTracks';
 import editTrackAlbumScene from '../scenes/editTrackAlbum';
-import { start, whoami, help, recentTracks } from '../helpers/actions';
+import { start, whoami, help, recent } from '../handlers/commands';
 import auth from './auth';
 import limiter from './limiter';
 import { setProxyEnabled } from '../helpers/proxy';
@@ -32,7 +32,7 @@ flow.command('start', async (ctx, next) => {
 
 flow.command('help', help);
 flow.command('whoami', auth, whoami);
-flow.command('recent', auth, recentTracks);
+flow.command('recent', auth, recent);
 flow.command('auth', ctx => ctx.flow.enter('auth'));
 flow.command('wish', ctx => ctx.flow.enter('wish'));
 flow.command('proxy', admin, ctx => ctx.reply(`Proxy status was set to ${setProxyEnabled()}`));

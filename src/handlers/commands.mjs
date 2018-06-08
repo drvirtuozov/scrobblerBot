@@ -1,16 +1,15 @@
 import Telegraf from 'telegraf';
-import he from 'he';
-import { sendToAdmin, GLOBAL_KEYBOARD, httpGet, requestError } from './util';
-import { createUserById } from './dbmanager';
+import { sendToAdmin, GLOBAL_KEYBOARD, requestError } from '../helpers/util';
+import { createUserById } from '../helpers/dbmanager';
 import { LASTFM_URL, LASTFM_KEY } from '../../config';
-import { proxyGet } from './proxy';
+import { proxyGet } from '../helpers/proxy';
 
 
 export async function start(ctx) {
   await createUserById(ctx.from.id);
   await ctx.reply(`Hello, ${ctx.from.first_name}!\n\n` +
     'This bot allows you to scrobble songs, albums and track lists in text mode. ' +
-    'To take advantage of these opportunities you have to grant access to your Last.fm account...',
+    'In order to use these features you have to grant access to your Last.fm account...',
     GLOBAL_KEYBOARD);
   await ctx.flow.enter('auth');
   await sendToAdmin(`We've got a new user! @${ctx.from.username}`);
@@ -23,8 +22,8 @@ export async function help(ctx) {
     'So use the keyboard below for album and track list scrobbling.\n\n' +
     '/auth — grant access or change account\n' +
     '/recent — see recent scrobbled tracks from your account\n\n' +
-    'If you have any ideas or improvements for the bot please tell us about them via /wish command',
-  Telegraf.Extra.HTML().load(GLOBAL_KEYBOARD));
+    'If you have any ideas or improvements for the bot let us know via /wish command',
+    Telegraf.Extra.HTML().load(GLOBAL_KEYBOARD));
 }
 
 export async function whoami(ctx) {
@@ -32,57 +31,10 @@ export async function whoami(ctx) {
     Telegraf.Extra.HTML())).message_id;
   await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
     `You are logged in as <a href="https://www.last.fm/user/${ctx.user.account}">${ctx.user.account}</a>`,
-      Telegraf.Extra.HTML().webPreview(false));
+    Telegraf.Extra.HTML().webPreview(false));
 }
 
-export async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
-  if (!ctx.inlineQuery.query) {
-    await ctx.answerInlineQuery([{
-      type: 'article',
-      title: 'Type your query below...',
-      id: ctx.inlineQuery.id,
-      input_message_content: {
-        message_text: 'Type your query below...',
-      },
-    }]);
-
-    return;
-  }
-
-  const query = encodeURIComponent(he.decode(ctx.inlineQuery.query));
-  let res;
-
-  try {
-    res = await httpGet(`${LASTFM_URL}?method=${type}.search&${type}=${query}&api_key=${LASTFM_KEY}&format=json`);
-  } catch (e) {
-    await requestError(ctx, e);
-    return;
-  }
-
-  const results = res.results[`${type}matches`][`${type}`];
-  const inlineResults = results
-    .filter(item => item.name !== '(null)')
-    .map((item, i) => {
-      const photoUrl = item.image[2]['#text'] || 'http://img2-ak.lst.fm/i/u/174s/c6f59c1e5e7240a4c0d427abd71f3dbb.png';
-
-      return {
-        type: 'article',
-        id: String(i),
-        thumb_url: photoUrl,
-        photo_width: 174,
-        photo_height: 174,
-        title: item.name,
-        description: `${item.artist}`,
-        input_message_content: {
-          message_text: `${item.artist}\n${item.name}`,
-        },
-      };
-    });
-
-  await ctx.answerInlineQuery(inlineResults);
-}
-
-export async function recentTracks(ctx) {
+export async function recent(ctx) {
   ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
     Telegraf.Extra.HTML())).message_id;
   let res;

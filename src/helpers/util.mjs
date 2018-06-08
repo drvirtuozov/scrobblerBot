@@ -29,7 +29,7 @@ export async function error(ctx, e) {
     return;
   }
 
-  console.log(e);
+  console.error(e);
   const errText = '❗️ Oops, something went wrong. Please try again later.';
 
   if (ctx.callbackQuery) {

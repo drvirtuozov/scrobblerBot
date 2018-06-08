@@ -2,7 +2,7 @@ import Telegraf from 'telegraf';
 import TelegrafFlow from 'telegraf-flow';
 import toTitleCase from 'to-title-case';
 import { LASTFM_URL, LASTFM_KEY } from '../../config';
-import { searchFromLastfmAndAnswerInlineQuery } from '../helpers/actions';
+import { searchFromLastfmAndAnswerInlineQuery } from '../handlers/actions';
 import { scrobbleAlbum } from '../helpers/scrobbler';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 import { proxyGet } from '../helpers/proxy';
