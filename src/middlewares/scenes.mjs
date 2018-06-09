@@ -1,4 +1,4 @@
-import TelegrafFlow from 'telegraf-flow';
+import Stage from 'telegraf/stage';
 import wishScene from '../scenes/wish';
 import authScene from '../scenes/auth';
 import searchTrackScene from '../scenes/searchTrack';
@@ -8,20 +8,14 @@ import noAlbumInfoScene from '../scenes/noAlbumInfo';
 import editAlbumScene from '../scenes/editAlbum';
 import setAlbumTracksScene from '../scenes/setAlbumTracks';
 import editTrackAlbumScene from '../scenes/editTrackAlbum';
-import { start, whoami, help, recent } from '../handlers/commands';
-import auth from './auth';
-import limiter from './limiter';
-import { setProxyEnabled } from '../helpers/proxy';
-import admin from '../middlewares/admin';
+import auth from '../middlewares/auth';
+import limiter from '../middlewares/limiter';
+import { start, help, whoami, recent } from '../handlers/commands';
 
 
-const flow = new TelegrafFlow();
+const stage = new Stage();
 
-flow.hears('🎵 Track', auth, limiter, ctx => ctx.flow.enter('search_track'));
-flow.hears('💽 Album', auth, limiter, ctx => ctx.flow.enter('search_album'));
-flow.hears('📃 Tracklist', auth, limiter, ctx => ctx.flow.enter('tracklist'));
-
-flow.command('start', async (ctx, next) => {
+stage.command('start', async (ctx, next) => {
   if (ctx.user) {
     await next();
     return;
@@ -30,21 +24,28 @@ flow.command('start', async (ctx, next) => {
   await start(ctx, next);
 });
 
-flow.command('help', help);
-flow.command('whoami', auth, whoami);
-flow.command('recent', auth, recent);
-flow.command('auth', ctx => ctx.flow.enter('auth'));
-flow.command('wish', ctx => ctx.flow.enter('wish'));
-flow.command('proxy', admin, ctx => ctx.reply(`Proxy status was set to ${setProxyEnabled()}`));
+stage.command('help', help);
+stage.command('whoami', auth, whoami);
+stage.command('recent', auth, recent);
+stage.command('auth', ctx => ctx.scene.enter('auth'));
+stage.command('wish', ctx => ctx.scene.enter('wish'));
 
-flow.register(wishScene);
-flow.register(authScene);
-flow.register(searchTrackScene);
-flow.register(tracklistScene);
-flow.register(searchAlbumScene);
-flow.register(noAlbumInfoScene);
-flow.register(editAlbumScene);
-flow.register(setAlbumTracksScene);
-flow.register(editTrackAlbumScene);
+stage.hears(/\/\w+/, async (ctx) => {
+  await ctx.reply('If you are confused type /help');
+});
 
-export default flow.middleware();
+stage.hears('🎵 Track', auth, limiter, ctx => ctx.scene.enter('search_track'));
+stage.hears('💽 Album', auth, limiter, ctx => ctx.scene.enter('search_album'));
+stage.hears('📃 Tracklist', auth, limiter, ctx => ctx.scene.enter('tracklist'));
+
+stage.register(wishScene);
+stage.register(authScene);
+stage.register(searchTrackScene);
+stage.register(tracklistScene);
+stage.register(searchAlbumScene);
+stage.register(noAlbumInfoScene);
+stage.register(editAlbumScene);
+stage.register(setAlbumTracksScene);
+stage.register(editTrackAlbumScene);
+
+export default stage.middleware();

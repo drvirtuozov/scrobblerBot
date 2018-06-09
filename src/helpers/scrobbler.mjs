@@ -1,11 +1,10 @@
-import Telegraf from 'telegraf';
+import Telegram from 'telegraf';
 import fetch from 'node-fetch';
 import mm from 'music-metadata';
 import {
   getRandomFavSong, md5, utf8, successfulScrobble,
-  scrobbleError, validateTrackDurations, getIgnoredTracksFromLastfmRes } from './util';
+  scrobbleError, validateTrackDurations, getIgnoredTracksFromLastfmRes, httpPost } from './util';
 import { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } from '../../config';
-import { proxyPost } from './proxy';
 
 
 const MAX_BATCH_LENGTH = 50; // 50 is the max count allowed by last.fm at once
@@ -29,7 +28,7 @@ export function scrobbleTracks(tracks = [], timestamp = Math.floor(Date.now() / 
   const queryTracks = names.map((name, i) => `&track[${i}]=${encodeURIComponent(name)}`).sort().join('');
   const apiSig = md5(utf8(`${queryAlbums}api_key${LASTFM_KEY}${queryArtists}methodtrack.scrobblesk${key}${
     queryTimestamps}${queryTracks}${LASTFM_SECRET}`.replace(/[&=]/g, '')));
-  return proxyPost(LASTFM_URL, `${queryAlbums.slice(1)}&api_key=${LASTFM_KEY}&api_sig=${apiSig}${
+  return httpPost(LASTFM_URL, `${queryAlbums.slice(1)}&api_key=${LASTFM_KEY}&api_sig=${apiSig}${
     queryArtists}&format=json&method=track.scrobble&sk=${key}${queryTimestamps}${queryTracks}`);
 }
 
@@ -43,9 +42,9 @@ export async function scrobbleTracksByParts(ctx, tracks = []) {
 
   for (let i = 0; i < partsCount; i += 1) {
     if (partsCount > 1) {
-      await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
+      await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
         `Too many tracks to scrobble at once.\n\n<i>Scrobbling by parts... ${i + 1} of ${partsCount}</i>`,
-        Telegraf.Extra.HTML());
+        Telegram.Extra.HTML());
     }
 
     const trcks = vtracks.slice(i * MAX_BATCH_LENGTH, (i + 1) * MAX_BATCH_LENGTH);
@@ -66,11 +65,11 @@ export async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   };
 
   if (ctx.callbackQuery) {
-    ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
-      Telegraf.Extra.HTML())).message_id;
+    ctx.session.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+      Telegram.Extra.HTML())).message_id;
   } else {
-    ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
-      Telegraf.Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+    ctx.session.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+      Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
   }
 
   try {
@@ -95,14 +94,14 @@ export async function scrobbleTrackFromText(ctx) {
   if (parsedTrack.length < 2 || parsedTrack.length > 3) {
     await ctx.reply('Please, send me valid data separated by new lines. Example:\n\n' +
       `${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for more info`,
-        Telegraf.Extra.HTML().webPreview(false));
+        Telegram.Extra.HTML().webPreview(false));
 
     return;
   }
 
-  ctx.flow.state.messageIdToReply = ctx.message.message_id;
-  ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
-    Telegraf.Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+  ctx.session.messageIdToReply = ctx.message.message_id;
+  ctx.session.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+    Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
 
   const track = {
     artist: parsedTrack[0],
@@ -127,11 +126,11 @@ export async function scrobbleTrackFromText(ctx) {
 
 export async function scrobbleAlbum(ctx) {
   if (ctx.callbackQuery) {
-    ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
-      Telegraf.Extra.HTML())).message_id;
+    ctx.session.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+      Telegram.Extra.HTML())).message_id;
   } else {
-    ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
-      Telegraf.Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+    ctx.session.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+      Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
   }
 
   const tracks = ctx.user.album.tracks.map(track => ({
@@ -170,16 +169,16 @@ export async function scrobbleTracklist(ctx) {
 
   if (!isValid) {
     await ctx.reply('Please, send me valid data with the valid syntax:\n\nArtist | Track Name | Album Title',
-      Telegraf.Markup.inlineKeyboard([
-        Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
+      Telegram.Markup.inlineKeyboard([
+        Telegram.Markup.callbackButton('Cancel', 'CANCEL'),
       ]).extra());
 
     return;
   }
 
-  ctx.flow.state.messageIdToReply = ctx.message.message_id;
-  ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
-    Telegraf.Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+  ctx.session.messageIdToReply = ctx.message.message_id;
+  ctx.session.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+    Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
 
   let responses = [];
 
@@ -218,13 +217,13 @@ export async function scrobbleTrackFromAudio(ctx) {
 
   if (!performer || !title) {
     await ctx.reply('Audio file\'s tags not found',
-      Telegraf.Extra.inReplyTo(ctx.message.message_id));
+      Telegram.Extra.inReplyTo(ctx.message.message_id));
     return;
   }
 
-  ctx.flow.state.messageIdToReply = ctx.message.message_id;
-  ctx.flow.state.messageIdToEdit = (await ctx.reply('<i>Downloading audio file...</i>',
-    Telegraf.Extra.HTML().inReplyTo(ctx.flow.state.messageIdToReply))).message_id;
+  ctx.session.messageIdToReply = ctx.message.message_id;
+  ctx.session.messageIdToEdit = (await ctx.reply('<i>Downloading audio file...</i>',
+    Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
 
   const link = await ctx.telegram.getFileLink(fileId);
   const res = await fetch(link, {
@@ -243,8 +242,8 @@ export async function scrobbleTrackFromAudio(ctx) {
     album: metadata.common.album,
   };
 
-  await ctx.telegram.editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null,
-    '<i>Scrobbling...</i>', Telegraf.Extra.HTML());
+  await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
+    '<i>Scrobbling...</i>', Telegram.Extra.HTML());
 
   try {
     const resp = await scrobbleTracks([track], ctx.message.date, ctx.user.key);

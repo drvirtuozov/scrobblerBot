@@ -1,11 +1,11 @@
-import Telegraf from 'telegraf';
-import TelegrafFlow from 'telegraf-flow';
+import Telegram from 'telegraf';
+import Scene from 'telegraf/scenes/base';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 import { md5, getRandomFavSong, requestError, httpGet } from '../helpers/util';
 import { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } from '../../config';
 
 
-const authScene = new TelegrafFlow.Scene('auth');
+const authScene = new Scene('auth');
 
 authScene.enter(async (ctx) => {
   let res;
@@ -14,14 +14,15 @@ authScene.enter(async (ctx) => {
     res = await httpGet(`${LASTFM_URL}?method=auth.gettoken&api_key=${LASTFM_KEY}&format=json`);
   } catch (e) {
     await requestError(ctx, e);
+    await ctx.scene.leave();
     return;
   }
 
   const token = res.token;
   await ctx.reply('Please, click the link below to grant access to your Last.fm account and then push the OK button',
-    Telegraf.Markup.inlineKeyboard([
-      Telegraf.Markup.urlButton('Grant access...', `https://www.last.fm/api/auth?api_key=${LASTFM_KEY}&token=${token}`),
-      Telegraf.Markup.callbackButton('OK', 'ACCESS_GRANTED'),
+    Telegram.Markup.inlineKeyboard([
+      Telegram.Markup.urlButton('Grant access...', `https://www.last.fm/api/auth?api_key=${LASTFM_KEY}&token=${token}`),
+      Telegram.Markup.callbackButton('OK', 'ACCESS_GRANTED'),
     ]).extra());
   await findUserByIdAndUpdate(ctx.from.id, { token });
 });
@@ -37,6 +38,7 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
       `${LASTFM_URL}?method=auth.getsession&format=json&token=${token}&api_key=${LASTFM_KEY}&api_sig=${sig}`);
   } catch (e) {
     await requestError(ctx, e);
+    await ctx.scene.leave();
     return;
   }
 
@@ -45,9 +47,9 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
   await ctx.editMessageText(`Glad to see you, <a href="https://www.last.fm/user/${account}">${account}</a>!\n\n` +
     'You may scrobble your first song now. To do it just type artist name, song name and album title separated ' +
     `by new lines. Example:\n\n${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for more info`,
-      Telegraf.Extra.HTML().webPreview(false));
+      Telegram.Extra.HTML().webPreview(false));
 
-  await ctx.flow.leave();
+  await ctx.scene.leave();
 });
 
 export default authScene;

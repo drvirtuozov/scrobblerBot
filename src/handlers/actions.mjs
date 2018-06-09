@@ -1,4 +1,4 @@
-import Telegraf from 'telegraf';
+import Telegram from 'telegraf';
 import he from 'he';
 import {
   httpGet, requestError, successfulScrobble, scrobbleError, multipleArray,
@@ -9,7 +9,7 @@ import { findSucceededMessageById, findFailedMessageById } from '../helpers/dbma
 
 
 export async function cancel(ctx) {
-  await ctx.flow.leave();
+  await ctx.scene.leave();
   await ctx.editMessageText('Canceled');
 }
 
@@ -61,8 +61,8 @@ export async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') 
 }
 
 export async function retry(ctx) {
-  ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
-    Telegraf.Extra.HTML())).message_id;
+  ctx.session.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+    Telegram.Extra.HTML())).message_id;
   const messageId = ctx.callbackQuery.message.message_id;
   const message = await findFailedMessageById(messageId);
 
@@ -91,27 +91,27 @@ export async function repeat(ctx) {
   }
 
   await ctx.editMessageText('How many times do you want to scrobble this again?',
-    Telegraf.Markup.inlineKeyboard([
+    Telegram.Markup.inlineKeyboard([
       [
-        Telegraf.Markup.callbackButton('1', 'REPEAT:1'),
-        Telegraf.Markup.callbackButton('2', 'REPEAT:2'),
-        Telegraf.Markup.callbackButton('3', 'REPEAT:3'),
-        Telegraf.Markup.callbackButton('4', 'REPEAT:4'),
-        Telegraf.Markup.callbackButton('5', 'REPEAT:5'),
+        Telegram.Markup.callbackButton('1', 'REPEAT:1'),
+        Telegram.Markup.callbackButton('2', 'REPEAT:2'),
+        Telegram.Markup.callbackButton('3', 'REPEAT:3'),
+        Telegram.Markup.callbackButton('4', 'REPEAT:4'),
+        Telegram.Markup.callbackButton('5', 'REPEAT:5'),
       ],
       [
-        Telegraf.Markup.callbackButton('6', 'REPEAT:6'),
-        Telegraf.Markup.callbackButton('7', 'REPEAT:7'),
-        Telegraf.Markup.callbackButton('8', 'REPEAT:8'),
-        Telegraf.Markup.callbackButton('9', 'REPEAT:9'),
-        Telegraf.Markup.callbackButton('10', 'REPEAT:10'),
+        Telegram.Markup.callbackButton('6', 'REPEAT:6'),
+        Telegram.Markup.callbackButton('7', 'REPEAT:7'),
+        Telegram.Markup.callbackButton('8', 'REPEAT:8'),
+        Telegram.Markup.callbackButton('9', 'REPEAT:9'),
+        Telegram.Markup.callbackButton('10', 'REPEAT:10'),
       ],
     ]).extra());
 }
 
 export async function repeatMany(ctx) {
-  ctx.flow.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
-    Telegraf.Extra.HTML())).message_id;
+  ctx.session.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+    Telegram.Extra.HTML())).message_id;
   const messageId = ctx.callbackQuery.message.message_id;
   const message = await findSucceededMessageById(messageId);
 

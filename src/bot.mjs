@@ -45,11 +45,7 @@ bot.use(error);
 bot.use(user);
 bot.use(session);
 bot.use(logger);
-bot.use(scenes);
-
-bot.hears(/\/\w+/, async (ctx) => {
-  await ctx.reply('If you are confused type /help');
-});
+bot.use(scenes); // global commands are here
 
 bot.on('text', auth, limiter, scrobbleTrackFromText);
 bot.on('audio', auth, limiter, scrobbleTrackFromAudio);
@@ -61,7 +57,7 @@ bot.on('inline_query', async (ctx) => {
 bot.action('CANCEL', cancel);
 bot.action('RETRY', retry);
 bot.action('REPEAT', repeat);
-bot.action(/REPEAT:\d?\d/, repeatMany);
+bot.action(/REPEAT:\d?\d/, auth, limiter, repeatMany);
 
 bot.catch((e) => {
   console.error(e);

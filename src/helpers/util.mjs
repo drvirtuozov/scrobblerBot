@@ -1,18 +1,17 @@
-import Telegraf from 'telegraf';
+import Telegram from 'telegraf';
 import crypto from 'crypto';
 import querystring from 'querystring';
 import fetch from 'node-fetch';
 import songs from '../songs';
 import { findUserByIdAndUpdate, createSucceededMessage, createFailedMessage } from './dbmanager';
-import { ADMIN_ID, SCROBBLERBOT_TOKEN } from '../../config';
-import { setProxyEnabled } from './proxy';
+import { ADMIN_ID } from '../../config';
+import bot from '../bot';
 
 
-const telegram = new Telegraf.Telegram(SCROBBLERBOT_TOKEN);
-export const GLOBAL_KEYBOARD = Telegraf.Markup.keyboard([['🎵 Track', '💽 Album', '📃 Tracklist']]).resize().extra();
+export const GLOBAL_KEYBOARD = Telegram.Markup.keyboard([['🎵 Track', '💽 Album', '📃 Tracklist']]).resize().extra();
 
 export function sendToAdmin(text) {
-  return telegram.sendMessage(ADMIN_ID, text);
+  return bot.telegram.sendMessage(ADMIN_ID, text);
 }
 
 export function md5(text) {
@@ -40,7 +39,6 @@ export async function error(ctx, e) {
     await ctx.reply(errText);
   }
 
-  if (ctx.flow) await ctx.flow.leave();
   await sendToAdmin('❗️ An error occured. Check the logs...');
 }
 
@@ -57,23 +55,22 @@ export async function successfulScrobble(ctx, text = '✅ Scrobbled', tracks = [
     track: {},
   });
 
-  const extra = Telegraf.Markup.inlineKeyboard([
-    Telegraf.Markup.callbackButton('Repeat', 'REPEAT'),
+  const extra = Telegram.Markup.inlineKeyboard([
+    Telegram.Markup.callbackButton('Repeat', 'REPEAT'),
   ]).extra();
 
   let message;
 
   if (ctx.callbackQuery) {
     message = await ctx.editMessageText(text, extra);
-  } else if (ctx.flow.state.messageIdToEdit) {
+  } else if (ctx.session.messageIdToEdit) {
     message = await ctx.telegram
-      .editMessageText(ctx.chat.id, ctx.flow.state.messageIdToEdit, null, text, extra);
+      .editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null, text, extra);
   } else {
     message = await ctx.reply(text, extra);
   }
 
   await createSucceededMessage(message.message_id, tracks);
-  await ctx.flow.leave();
 }
 
 export function canScrobble(ctx) {
@@ -103,7 +100,7 @@ export async function requestError(ctx, e) {
 
   if (e.code === 429) { // too many requests
     console.log(e.response);
-    await sendToAdmin(`${e.message}\n\nActivating proxy mode... ${setProxyEnabled(true)}`);
+    await sendToAdmin(`${e.message}\n\nToo many requests!`);
     return;
   }
 
@@ -118,19 +115,19 @@ export async function requestError(ctx, e) {
       await ctx.reply(text);
     }
 
-    await ctx.flow.enter('auth');
+    await ctx.scene.enter('auth');
   }
 }
 
 export async function scrobbleError(ctx, e, tracks = [], msg = '❌ Failed') {
-  const extra = Telegraf.Markup.inlineKeyboard([
-    Telegraf.Markup.callbackButton('Retry', 'RETRY'),
+  const extra = Telegram.Markup.inlineKeyboard([
+    Telegram.Markup.callbackButton('Retry', 'RETRY'),
   ]).extra();
 
   let messageId;
 
-  if (ctx.flow.state.messageIdToEdit) {
-    messageId = ctx.flow.state.messageIdToEdit;
+  if (ctx.session.messageIdToEdit) {
+    messageId = ctx.session.messageIdToEdit;
     await ctx.telegram.editMessageText(ctx.chat.id, messageId, null, msg, extra);
   } else if (ctx.callbackQuery) {
     messageId = ctx.callbackQuery.message.message_id;
@@ -145,7 +142,6 @@ export async function scrobbleError(ctx, e, tracks = [], msg = '❌ Failed') {
   }
 
   if (e) await requestError(ctx, e);
-  await ctx.flow.leave();
 }
 
 export function isUserAuthorized(ctx) {

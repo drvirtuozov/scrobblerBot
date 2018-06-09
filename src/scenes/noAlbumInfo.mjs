@@ -1,20 +1,20 @@
-import Telegraf from 'telegraf';
-import TelegrafFlow from 'telegraf-flow';
+import Telegram from 'telegraf';
+import Scene from 'telegraf/scenes/base';
 
 
-const noAlbumInfoScene = new TelegrafFlow.Scene('no_album_info');
+const noAlbumInfoScene = new Scene('no_album_info');
 
 noAlbumInfoScene.enter(async (ctx) => {
-  await ctx.telegram.editMessageText(ctx.from.id, ctx.flow.state.messageIdToEdit, null,
+  await ctx.telegram.editMessageText(ctx.from.id, ctx.session.messageIdToEdit, null,
     'Last.fm has no any info about this album. Would you like to enter its track list manually?',
-      Telegraf.Extra.webPreview(false).markup(Telegraf.Markup.inlineKeyboard([
-        Telegraf.Markup.callbackButton('Yes', 'YES'),
-        Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
+      Telegram.Extra.webPreview(false).markup(Telegram.Markup.inlineKeyboard([
+        Telegram.Markup.callbackButton('Yes', 'YES'),
+        Telegram.Markup.callbackButton('Cancel', 'CANCEL'),
       ])));
 });
 
 noAlbumInfoScene.action('YES', async (ctx) => {
-  await ctx.flow.enter('set_album_tracks', ctx.flow.state);
+  await ctx.scene.enter('set_album_tracks');
 });
 
 export default noAlbumInfoScene;
