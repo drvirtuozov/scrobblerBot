@@ -47,17 +47,17 @@ bot.use(session);
 bot.use(logger);
 bot.use(scenes); // global commands are here
 
-bot.on('text', auth, limiter, scrobbleTrackFromText);
-bot.on('audio', auth, limiter, scrobbleTrackFromAudio);
+bot.on('text', auth, limiter, ctx => scrobbleTrackFromText(ctx));
+bot.on('audio', auth, limiter, ctx => scrobbleTrackFromAudio(ctx));
 
 bot.on('inline_query', async (ctx) => {
   await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
 });
 
-bot.action('CANCEL', cancel);
-bot.action('RETRY', retry);
-bot.action('REPEAT', repeat);
-bot.action(/REPEAT:\d?\d/, auth, limiter, repeatMany);
+bot.action('CANCEL', ctx => cancel(ctx));
+bot.action('RETRY', ctx => retry(ctx));
+bot.action('REPEAT', ctx => repeat(ctx));
+bot.action(/REPEAT:\d?\d/, auth, limiter, ctx => repeatMany(ctx));
 
 bot.catch((e) => {
   console.error(e);

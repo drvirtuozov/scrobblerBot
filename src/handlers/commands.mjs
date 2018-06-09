@@ -21,8 +21,16 @@ export async function help(ctx) {
     'So use the keyboard below for album and track list scrobbling.\n\n' +
     '/auth — grant access or change account\n' +
     '/recent — see recent scrobbled tracks from your account\n\n' +
+    '<b>Update:</b>\nYou can scrobble tracks by sending audio files to the bot. ' +
+    'It will take some time to download and parse audio tags from the file. ' +
+    'Be sure to check the tags before sending it.\n\n' +
+    '<b>Q/A:</b>\n\n — Why don\'t you let us to scrobble with the specific time and date?\n\n' +
+    '<i>The main goal we created this bot was our wish to scrobble "here and now", wherever you are ' +
+    'by using your phone. There are some third-party scrobblers for this purpose exist. ' +
+    'Also, we don\'t want to complicate the bot by adding inconvenient features. ' +
+    'If there\'ll be many more requests we will think about it.</i>\n\n' +
     'If you have any ideas or improvements for the bot let us know via /wish command',
-    Telegram.Extra.HTML().load(GLOBAL_KEYBOARD));
+      Telegram.Extra.HTML().load(GLOBAL_KEYBOARD));
 }
 
 export async function whoami(ctx) {
@@ -30,7 +38,7 @@ export async function whoami(ctx) {
     Telegram.Extra.HTML())).message_id;
   await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
     `You are logged in as <a href="https://www.last.fm/user/${ctx.user.account}">${ctx.user.account}</a>`,
-    Telegram.Extra.HTML().webPreview(false));
+      Telegram.Extra.HTML().webPreview(false));
 }
 
 export async function recent(ctx) {
@@ -66,5 +74,5 @@ export async function recent(ctx) {
     `${(tracks.map(track => `<a href="${
       encodeURI(`https://www.last.fm/music/${track.artist}`)
       }">${track.artist}</a> — <a href="${track.url}">${track.name}</a>`).join('\n'))}`,
-    Telegram.Extra.HTML().webPreview(false));
+        Telegram.Extra.HTML().webPreview(false));
 }

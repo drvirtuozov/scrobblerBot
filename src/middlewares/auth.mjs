@@ -2,8 +2,6 @@ import Telegraf from 'telegraf';
 import { isUserAuthorized } from '../helpers/util';
 
 
-export default Telegraf.branch(isUserAuthorized, async (ctx, next) => {
-  await next();
-}, async (ctx) => {
-  await ctx.scene.enter('auth');
-});
+export default Telegraf.branch(isUserAuthorized,
+  (ctx, next) => next(),
+  ctx => ctx.scene.enter('auth'));

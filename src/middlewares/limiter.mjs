@@ -2,18 +2,14 @@ import Telegraf from 'telegraf';
 import { canScrobble } from '../helpers/util';
 
 
-export default Telegraf.branch(canScrobble, async (ctx, next) => {
-  await next();
-}, async (ctx, next) => {
+export default Telegraf.branch(canScrobble, (ctx, next) => next(), (ctx, next) => {
   if (ctx.inlineQuery) {
-    await next();
-    return;
+    return next();
   }
 
   if (ctx.callbackQuery) {
-    await ctx.answerCallbackQuery('Wait 30 seconds');
-    return;
+    return ctx.answerCallbackQuery('Wait 30 seconds');
   }
 
-  await ctx.reply('⚠️ You can\'t scrobble more than once in 30 seconds');
+  return ctx.reply('⚠️ You can\'t scrobble more than once in 30 seconds');
 });

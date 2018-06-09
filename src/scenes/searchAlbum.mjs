@@ -83,7 +83,7 @@ searchAlbumScene.on('text', async (ctx) => {
   await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
     `You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${title}`)}">${title}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
-    `The following tracks were found on Last.fm and will be scrobbled:\n\n${user.album.tracks
+    `The following tracks have been found on Last.fm and will be scrobbled:\n\n${user.album.tracks
       .map(track => track.name).join('\n')}`,
           Telegram.Extra.HTML().webPreview(false).markup(Telegram.Markup.inlineKeyboard([
             Telegram.Markup.callbackButton('Edit', 'EDIT'),

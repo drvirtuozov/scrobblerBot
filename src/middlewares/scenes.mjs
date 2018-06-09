@@ -24,9 +24,9 @@ stage.command('start', async (ctx, next) => {
   await start(ctx, next);
 });
 
-stage.command('help', help);
-stage.command('whoami', auth, whoami);
-stage.command('recent', auth, recent);
+stage.command('help', ctx => help(ctx));
+stage.command('whoami', auth, ctx => whoami(ctx));
+stage.command('recent', auth, ctx => recent(ctx));
 stage.command('auth', ctx => ctx.scene.enter('auth'));
 stage.command('wish', ctx => ctx.scene.enter('wish'));
 

@@ -3,18 +3,16 @@ import { findUserById } from '../helpers/dbmanager';
 
 export default async (ctx, next) => {
   if (ctx.inlineQuery) {
-    await next();
-    return;
+    return next();
   } else if (ctx.callbackQuery) {
     switch (ctx.callbackQuery.data) {
       case 'CANCEL':
       case 'REPEAT':
-        await next();
-        return;
+        return next();
       default: // pass
     }
   }
 
   ctx.user = await findUserById(ctx.from.id);
-  await next();
+  return next();
 };

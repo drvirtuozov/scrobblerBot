@@ -1,3 +1,1 @@
-export default (ctx, next) => {
-  process.nextTick(next);
-};
+export default (ctx, next) => process.nextTick(next);
