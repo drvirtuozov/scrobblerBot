@@ -27,7 +27,7 @@
     "music-metadata": "^2.0.1",
     "node-fetch": "^1.7.3",
     "telegraf": "^3.21.2",
-    "telegraf-logger": "^2.0.1",
+    "telegraf-logger": "^3.0.0",
     "telegraf-session-redis": "^5.0.0",
     "to-title-case": "^1.0.0"
   },
