@@ -38,7 +38,7 @@
     "nodemon": "^1.12.1"
   },
   "engines": {
-    "node": "9.4.0"
+    "node": "9.0.0"
   },
   "now": {
     "alias": "scrobblerbot.now.sh"
