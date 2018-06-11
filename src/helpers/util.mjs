@@ -219,3 +219,11 @@ export function getIgnoredTracksFromLastfmRes(res = {}) {
     album: track.album['#text'],
   }));
 }
+
+export function validateMimeType(mimeType) {
+  const map = {
+    'audio/mp3': 'audio/mpeg',
+  };
+
+  return map[mimeType] || mimeType;
+}

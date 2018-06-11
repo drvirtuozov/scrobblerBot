@@ -1,13 +1,16 @@
 import Telegram from 'telegraf';
 import fetch from 'node-fetch';
-import mm from 'music-metadata';
+import mm from '../../../music-metadata/lib';
 import {
   getRandomFavSong, md5, utf8, successfulScrobble,
-  scrobbleError, validateTrackDurations, getIgnoredTracksFromLastfmRes, httpPost } from './util';
+  scrobbleError, validateTrackDurations, getIgnoredTracksFromLastfmRes,
+  httpPost, validateMimeType,
+} from './util';
 import { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } from '../../config';
 
 
 const MAX_BATCH_LENGTH = 50; // 50 is the max count allowed by last.fm at once
+const MAX_AUDIO_FILE_SIZE = 20 * 1024 * 1024; // 20 mb is the max allowed by telegram
 
 // low-level function
 export function scrobbleTracks(tracks = [], timestamp = Math.floor(Date.now() / 1000), key = '') {
@@ -215,6 +218,12 @@ export async function scrobbleTrackFromAudio(ctx) {
     title,
   } = ctx.message.audio;
 
+  if (fileSize > MAX_AUDIO_FILE_SIZE) {
+    await ctx.reply('Sorry, audio file is too large. Max size is 20 MB',
+      Telegram.Extra.inReplyTo(ctx.message.message_id));
+    return;
+  }
+
   if (!performer || !title) {
     await ctx.reply('Audio file\'s tags not found',
       Telegram.Extra.inReplyTo(ctx.message.message_id));
@@ -230,7 +239,7 @@ export async function scrobbleTrackFromAudio(ctx) {
     agent: ctx.telegram.options.agent,
   });
 
-  const metadata = await mm.parseStream(res.body, mime, {
+  const metadata = await mm.parseStream(res.body, validateMimeType(mime), {
     fileSize,
     skipCovers: true,
     duration: false,
