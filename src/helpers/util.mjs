@@ -35,6 +35,8 @@ export async function error(ctx, e) {
     await ctx.editMessageText(errText);
   } else if (ctx.inlineQuery) {
     // pass
+  } else if (ctx.session.messageIdToReply) {
+    await ctx.reply(errText, Telegram.Extra.inReplyTo(ctx.message.message_id));
   } else {
     await ctx.reply(errText);
   }
@@ -70,6 +72,8 @@ export async function successfulScrobble(ctx, text = '✅ Scrobbled', tracks = [
     message = await ctx.reply(text, extra);
   }
 
+  ctx.session.messageIdToEdit = null;
+  ctx.session.messageIdToReply = null;
   await createSucceededMessage(message.message_id, tracks);
 }
 
