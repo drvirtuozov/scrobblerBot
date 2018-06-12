@@ -1,6 +1,6 @@
 import Telegram from 'telegraf';
 import fetch from 'node-fetch';
-import mm from '../../../music-metadata/lib';
+import mm from 'music-metadata';
 import {
   getRandomFavSong, md5, utf8, successfulScrobble,
   scrobbleError, validateTrackDurations, getIgnoredTracksFromLastfmRes,
