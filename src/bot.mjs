@@ -48,7 +48,10 @@ bot.use(logger);
 bot.use(scenes); // global commands are here
 
 bot.on('text', auth, limiter, ctx => scrobbleTrackFromText(ctx));
-bot.on('audio', auth, limiter, ctx => scrobbleTrackFromAudio(ctx));
+bot.on('audio', auth, limiter, async (ctx) => {
+  await scrobbleTrackFromAudio(ctx);
+  await ctx.scene.leave();
+});
 
 bot.on('inline_query', async (ctx) => {
   await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
