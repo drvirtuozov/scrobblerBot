@@ -29,8 +29,6 @@ const bot = new Telegraf(SCROBBLERBOT_TOKEN, {
   },
 });
 
-bot.context.user = null;
-
 setImmediate(async () => {
   try {
     const data = await bot.telegram.getMe();
@@ -42,8 +40,8 @@ setImmediate(async () => {
 
 bot.use(asyncer);
 bot.use(error);
-bot.use(user);
 bot.use(session);
+bot.use(user);
 bot.use(logger);
 bot.use(scenes); // global commands are here
 

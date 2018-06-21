@@ -16,7 +16,7 @@ import { start, help, whoami, recent } from '../handlers/commands';
 const stage = new Stage();
 
 stage.command('start', async (ctx, next) => {
-  if (ctx.user) {
+  if (ctx.session.user) {
     await next();
     return;
   }
