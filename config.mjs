@@ -1,13 +1,3 @@
-import fs from 'fs';
-import dotenv from 'dotenv';
-
-
-if (process.env.NODE_ENV === 'production') {
-  dotenv.config();
-} else {
-  process.env = Object.assign(process.env, dotenv.parse(fs.readFileSync('.env.dev')));
-}
-
 export const NODE_ENV = process.env.NODE_ENV;
 export const PORT = process.env.PORT;
 export const MONGODB_URL = process.env.MONGODB_URL;

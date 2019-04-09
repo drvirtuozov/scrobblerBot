@@ -5,8 +5,8 @@
   "main": "app.mjs",
   "scripts": {
     "test": "eslint --ext=js,mjs .",
-    "start": "NODE_ENV=production node --experimental-modules app.mjs",
-    "watch": "nodemon --watch src -e .js,.mjs -x 'node --experimental-modules app.mjs'",
+    "start": "eval `cat .env` node --experimental-modules app.mjs",
+    "watch": "nodemon --watch src -e .js,.mjs -x 'eval `cat .env.dev` node --experimental-modules app.mjs'",
     "deploy": "now && now alias"
   },
   "repository": {
@@ -20,9 +20,7 @@
   },
   "homepage": "https://github.com/drvirtuozov/scrobblerBot#readme",
   "dependencies": {
-    "dotenv": "^4.0.0",
     "he": "^1.1.1",
-    "https-proxy-agent": "^2.1.0",
     "mongoose": "^4.11.14",
     "music-metadata": "^2.0.1",
     "node-fetch": "^1.7.3",
