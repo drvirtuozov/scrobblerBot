@@ -17,10 +17,11 @@ searchAppleMusicScene.enter(async (ctx) => {
 
   if (u.pathname.includes('album')) {
     const albumID = u.pathname.match(/\/\d+/g)[0].substring(1);
+    const countryCode = u.pathname.match(/\/[A-z]{2}\//g)[0].substring(1, 3);
     let res;
 
     try {
-      res = await httpGet(`https://amp-api.music.apple.com/v1/catalog/RU/albums?ids=${albumID}`, {
+      res = await httpGet(`https://amp-api.music.apple.com/v1/catalog/${countryCode}/albums?ids=${albumID}`, {
         headers: {
           Authorization: `Bearer ${APPLE_MUSIC_API_TOKEN}`,
         },
