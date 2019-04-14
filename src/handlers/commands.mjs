@@ -34,10 +34,11 @@ export async function help(ctx) {
 }
 
 export async function whoami(ctx) {
+  const username = ctx.session.user.account;
   ctx.session.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
     Telegram.Extra.HTML())).message_id;
   await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
-    `You are logged in as <a href="https://www.last.fm/user/${ctx.user.account}">${ctx.user.account}</a>`,
+    `You are logged in as <a href="https://www.last.fm/user/${username}">${username}</a>`,
       Telegram.Extra.HTML().webPreview(false));
 }
 
@@ -47,8 +48,9 @@ export async function recent(ctx) {
   let res;
 
   try {
+    const username = ctx.session.user.account;
     res = await httpGet(
-      `${LASTFM_URL}?method=user.getrecenttracks&user=${ctx.user.account}&limit=15&api_key=${LASTFM_KEY}&format=json`);
+      `${LASTFM_URL}?method=user.getrecenttracks&user=${username}&limit=15&api_key=${LASTFM_KEY}&format=json`);
   } catch (e) {
     await requestError(ctx, e);
     return;

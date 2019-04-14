@@ -66,7 +66,7 @@ searchTrackScene.on('text', async (ctx) => {
     const track = res.track || {};
     track.album = track.album || {};
     const album = track.album.title || '';
-    await findUserByIdAndUpdate(ctx.from.id, { track: { name, artist, album } });
+    ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, { track: { name, artist, album } });
 
     if (Object.keys(track.album).length) {
       await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,

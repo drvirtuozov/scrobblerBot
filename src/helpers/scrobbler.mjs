@@ -53,7 +53,7 @@ export async function scrobbleTracksByParts(ctx, tracks = []) {
     const trcks = vtracks.slice(i * MAX_BATCH_LENGTH, (i + 1) * MAX_BATCH_LENGTH);
     startTimestamp += trcks.map(track => track.duration)
       .reduce((prev, next) => prev + next);
-    const res = await scrobbleTracks(trcks, startTimestamp, ctx.user.key);
+    const res = await scrobbleTracks(trcks, startTimestamp, ctx.session.user.key);
     responses.push(res);
   }
 
@@ -62,9 +62,9 @@ export async function scrobbleTracksByParts(ctx, tracks = []) {
 
 export async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   const track = {
-    artist: ctx.user.track.artist,
-    name: ctx.user.track.name,
-    album: isAlbum ? ctx.user.track.album : '',
+    artist: ctx.session.user.track.artist,
+    name: ctx.session.user.track.name,
+    album: isAlbum ? ctx.session.user.track.album : '',
   };
 
   if (ctx.callbackQuery) {
@@ -76,7 +76,7 @@ export async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   }
 
   try {
-    const res = await scrobbleTracks([track], undefined, ctx.user.key);
+    const res = await scrobbleTracks([track], undefined, ctx.session.user.key);
 
     if (res.scrobbles['@attr'].ingored) {
       await scrobbleError(ctx, {}, [track]);
@@ -113,7 +113,7 @@ export async function scrobbleTrackFromText(ctx) {
   };
 
   try {
-    const res = await scrobbleTracks([track], ctx.message.date, ctx.user.key);
+    const res = await scrobbleTracks([track], ctx.message.date, ctx.session.user.key);
 
     if (res.scrobbles['@attr'].ingored) {
       await scrobbleError(ctx, null, [track]);
@@ -136,15 +136,15 @@ export async function scrobbleAlbum(ctx) {
       Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
   }
 
-  const tracks = ctx.user.album.tracks.map(track => ({
+  const tracks = ctx.session.user.album.tracks.map(track => ({
     name: track.name,
-    artist: ctx.user.album.artist,
-    album: ctx.user.album.title,
+    artist: ctx.session.user.album.artist,
+    album: ctx.session.user.album.title,
     duration: track.duration,
   }));
 
   try {
-    await scrobbleTracks(tracks, undefined, ctx.user.key);
+    await scrobbleTracks(tracks, undefined, ctx.session.user.key);
   } catch (e) {
     await scrobbleError(ctx, e, tracks);
     return;
@@ -255,7 +255,7 @@ export async function scrobbleTrackFromAudio(ctx) {
     '<i>Scrobbling...</i>', Telegram.Extra.HTML());
 
   try {
-    const resp = await scrobbleTracks([track], ctx.message.date, ctx.user.key);
+    const resp = await scrobbleTracks([track], ctx.message.date, ctx.session.user.key);
 
     if (resp.scrobbles['@attr'].ingored) {
       await scrobbleError(ctx, null, [track]);

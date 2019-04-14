@@ -72,7 +72,7 @@ export async function retry(ctx) {
   }
 
   try {
-    await scrobbleTracks(message.tracks, undefined, ctx.user.key);
+    await scrobbleTracks(message.tracks, undefined, ctx.session.user.key);
   } catch (e) {
     await scrobbleError(ctx, e, message.tracks);
     return;

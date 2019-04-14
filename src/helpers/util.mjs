@@ -49,7 +49,7 @@ export function utf8(text) {
 }
 
 export async function successfulScrobble(ctx, text = '✅ Scrobbled', tracks = []) {
-  await findUserByIdAndUpdate(ctx.from.id, {
+  ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, {
     $inc: { scrobbles: 1 },
     username: ctx.from.username,
     last_scrobble: new Date(),
@@ -78,7 +78,7 @@ export async function successfulScrobble(ctx, text = '✅ Scrobbled', tracks = [
 }
 
 export function canScrobble(ctx) {
-  if (!ctx.user || Date.now() - +ctx.user.last_scrobble <= 30000) {
+  if (!ctx.session.user || Date.now() - +ctx.session.user.last_scrobble <= 30000) {
     return false;
   }
 
@@ -104,7 +104,7 @@ export async function requestError(ctx, e) {
 
   if (e.code === 429) { // too many requests
     console.log(e.response);
-    await sendToAdmin(`${e.message}\n\nToo many requests!`);
+    await sendToAdmin(`${e.message}\n\n${e.response}`);
     return;
   }
 
@@ -120,7 +120,11 @@ export async function requestError(ctx, e) {
     }
 
     await ctx.scene.enter('auth');
+    return;
   }
+
+  console.error(e);
+  throw new Error(`Unkown request error: ${e.message}`);
 }
 
 export async function scrobbleError(ctx, e, tracks = [], msg = '❌ Failed') {
@@ -149,7 +153,7 @@ export async function scrobbleError(ctx, e, tracks = [], msg = '❌ Failed') {
 }
 
 export function isUserAuthorized(ctx) {
-  return ctx.user && ctx.user.key;
+  return ctx.session.user && ctx.session.user.key;
 }
 
 export function isUserAdmin(ctx) {

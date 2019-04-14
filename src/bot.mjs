@@ -1,5 +1,4 @@
 import Telegraf from 'telegraf';
-import HttpsProxyAgent from 'https-proxy-agent';
 import { scrobbleTrackFromText, scrobbleTrackFromAudio } from './helpers/scrobbler';
 import {
   searchFromLastfmAndAnswerInlineQuery, cancel, retry, repeat, repeatMany,
@@ -21,15 +20,8 @@ import './db';
 const bot = new Telegraf(SCROBBLERBOT_TOKEN, {
   telegram: {
     webhookReply: false,
-    agent: process.env.NODE_ENV === 'development' ? new HttpsProxyAgent({ // proxy for russian blocked devs
-      host: process.env.https_proxy && process.env.https_proxy.split(':')[0],
-      port: process.env.https_proxy && process.env.https_proxy.split(':')[1],
-      secureProxy: true,
-    }) : null,
   },
 });
-
-bot.context.user = null;
 
 setImmediate(async () => {
   try {
@@ -42,13 +34,17 @@ setImmediate(async () => {
 
 bot.use(asyncer);
 bot.use(error);
-bot.use(user);
 bot.use(session);
+bot.use(user);
 bot.use(logger);
 bot.use(scenes); // global commands are here
 
 bot.on('text', auth, limiter, ctx => scrobbleTrackFromText(ctx));
-bot.on('audio', auth, limiter, ctx => scrobbleTrackFromAudio(ctx));
+
+bot.on('audio', auth, limiter, async (ctx) => {
+  await scrobbleTrackFromAudio(ctx);
+  await ctx.scene.leave();
+});
 
 bot.on('inline_query', async (ctx) => {
   await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');

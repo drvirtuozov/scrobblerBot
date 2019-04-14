@@ -25,7 +25,7 @@ setAlbumTracksScene.on('text', async (ctx) => {
     return;
   }
 
-  ctx.user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks });
+  ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks });
   await scrobbleAlbum(ctx);
   await ctx.scene.leave();
 });
