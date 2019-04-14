@@ -8,7 +8,14 @@ const editAlbumTracksScene = new Scene('edit_album_tracks');
 
 editAlbumTracksScene.enter(async (ctx) => {
   const tracks = ctx.session.user.album.tracks;
-  await ctx.reply('Edit the album\'s tracklist and send it back to me:');
+  const msg = 'Edit the album\'s tracklist and send it back to me:';
+
+  if (ctx.callbackQuery) {
+    await ctx.editMessageText(msg);
+  } else {
+    await ctx.reply(msg);
+  }
+
   await ctx.reply(`${tracks.map(track => track.name).join('\n')}`,
     Telegram.Markup.inlineKeyboard([
       Telegram.Markup.callbackButton('Cancel', 'CANCEL'),
