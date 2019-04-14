@@ -38,7 +38,6 @@ authScene.action('ACCESS_GRANTED', async (ctx) => {
       `${LASTFM_URL}?method=auth.getsession&format=json&token=${token}&api_key=${LASTFM_KEY}&api_sig=${sig}`);
   } catch (e) {
     await requestError(ctx, e);
-    await ctx.scene.leave();
     return;
   }
 
