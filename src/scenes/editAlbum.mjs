@@ -22,6 +22,7 @@ editAlbumScene.on('text', async (ctx) => {
     return ctx.reply('Format:\n\nArtist Name\nAlbum Title');
   }
 
+  ctx.session.messageIdToReply = ctx.message.message_id;
   ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, {
     'album.artist': artist,
     'album.title': title,
