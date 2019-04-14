@@ -33,22 +33,21 @@ searchTrackScene.on('inline_query', async (ctx) => {
 
 searchTrackScene.on('text', async (ctx) => {
   ctx.session.messageIdToReply = ctx.message.message_id;
-  const parsedTrack = ctx.message.text.split('\n');
+  const [artist, name, album] = ctx.message.text.split('\n');
 
-  if (parsedTrack.length < 2 || parsedTrack.length > 3) {
+  if (!artist || !name) {
     await ctx.reply('Format:\n\nArtist\nSong Name\nAlbum Title', Telegram.Markup.inlineKeyboard([
       Telegram.Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
-  } else if (parsedTrack.length === 2) {
+  } else if (artist && name && !album) {
     ctx.session.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
     Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
-    const qartist = encodeURIComponent(parsedTrack[0]);
-    const qtrack = encodeURIComponent(parsedTrack[1]);
+
     let res;
 
     try {
       res = await httpGet(`${LASTFM_URL}?method=track.getInfo&api_key=${
-        LASTFM_KEY}&artist=${qartist}&track=${qtrack}&format=json`);
+        LASTFM_KEY}&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(name)}&format=json`);
     } catch (e) {
       await requestError(ctx, e);
       await ctx.scene.leave();
@@ -61,16 +60,16 @@ searchTrackScene.on('text', async (ctx) => {
       return;
     }
 
-    const artist = parsedTrack[0];
-    const name = parsedTrack[1];
     const track = res.track || {};
-    track.album = track.album || {};
-    const album = track.album.title || '';
-    ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, { track: { name, artist, album } });
+    track.name = name;
+    track.artist = artist;
+    track.album = (track.album || {}).title || '';
 
-    if (Object.keys(track.album).length) {
+    ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, { track });
+
+    if (track.album) {
       await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
-        `Last.fm has album info of this track:\n\n${artist}\n${name}\n${album}\n\n` +
+        `Last.fm has album info of this track:\n\n${artist}\n${name}\n${track.album}\n\n` +
         'Would you like to scrobble it with the new info or leave it as is?',
           Telegram.Extra.webPreview(false).markup(Telegram.Markup.inlineKeyboard([
             [

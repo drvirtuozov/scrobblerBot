@@ -1,6 +1,5 @@
-import Telegram from 'telegraf';
+import Telegraf from 'telegraf';
 import Scene from 'telegraf/scenes/base';
-import toTitleCase from 'to-title-case';
 import { LASTFM_URL, LASTFM_KEY } from '../../config';
 import { searchFromLastfmAndAnswerInlineQuery } from '../handlers/actions';
 import { scrobbleAlbum } from '../helpers/scrobbler';
@@ -15,9 +14,9 @@ searchAlbumScene.enter(async (ctx) => {
   const text = 'OK. In order to start searching an album push the button below. ' +
     'Or you can type album info in this format manually:\n\nArtist\nAlbum Title';
 
-  const extra = Telegram.Markup.inlineKeyboard([
-    Telegram.Markup.switchToCurrentChatButton('Search...', ''),
-    Telegram.Markup.callbackButton('Cancel', 'CANCEL'),
+  const extra = Telegraf.Markup.inlineKeyboard([
+    Telegraf.Markup.switchToCurrentChatButton('Search...', ''),
+    Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
   ]).extra();
 
   if (ctx.callbackQuery) {
@@ -34,35 +33,24 @@ searchAlbumScene.on('inline_query', async (ctx) => {
 
 searchAlbumScene.on('text', async (ctx) => {
   ctx.session.messageIdToReply = ctx.message.message_id;
-  const parsedAlbum = ctx.message.text.split('\n');
+  let [artist, album] = ctx.message.text.split('\n');
 
-  if (parsedAlbum.length < 2) {
-    await ctx.reply('Format:\n\nArtist\nAlbum Title', Telegram.Markup.inlineKeyboard([
-      Telegram.Markup.callbackButton('Cancel', 'CANCEL'),
+  if (!artist || !album) {
+    await ctx.reply('Format:\n\nArtist\nAlbum Title', Telegraf.Markup.inlineKeyboard([
+      Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
 
     return;
   }
 
   ctx.session.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
-    Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
-  const parsedTitle = toTitleCase(parsedAlbum[1]);
-  const parsedArtist = toTitleCase(parsedAlbum[0]);
+    Telegraf.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
   let tracks = [];
-
-  ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, {
-    $set: {
-      album: { title: parsedTitle, artist: parsedArtist },
-    },
-  });
-
-  const qartist = encodeURIComponent(parsedArtist);
-  const qalbum = encodeURIComponent(parsedTitle);
   let res;
 
   try {
     res = await httpGet(
-      `${LASTFM_URL}?method=album.getinfo&api_key=${LASTFM_KEY}&artist=${qartist}&album=${qalbum}&format=json`);
+      `${LASTFM_URL}?method=album.getinfo&api_key=${LASTFM_KEY}&artist=${encodeURIComponent(artist)}&album=${encodeURIComponent(album)}&format=json`);
   } catch (e) {
     await requestError(ctx, e);
     await ctx.scene.leave();
@@ -70,6 +58,8 @@ searchAlbumScene.on('text', async (ctx) => {
   }
 
   if (res.album && res.album.tracks.track.length) {
+    artist = res.album.artist;
+    album = res.album.name;
     tracks = res.album.tracks.track.map(track => (
       { name: track.name, duration: track.duration }
     ));
@@ -78,17 +68,21 @@ searchAlbumScene.on('text', async (ctx) => {
     return;
   }
 
-  ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, { 'album.tracks': tracks });
-  const { artist, title } = ctx.session.user.album;
+  ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, {
+    'album.artist': artist,
+    'album.title': album,
+    'album.tracks': tracks,
+  });
+
   await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
-    `You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${title}`)}">${title}</a> ` +
+    `You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${album}`)}">${album}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
     `The following tracks have been found on Last.fm and will be scrobbled:\n\n${tracks
       .map(track => track.name).join('\n')}`,
-          Telegram.Extra.HTML().webPreview(false).markup(Telegram.Markup.inlineKeyboard([
-            Telegram.Markup.callbackButton('Edit', 'EDIT'),
-            Telegram.Markup.callbackButton('OK', 'OK'),
-            Telegram.Markup.callbackButton('Cancel', 'CANCEL'),
+          Telegraf.Extra.HTML().webPreview(false).markup(Telegraf.Markup.inlineKeyboard([
+            Telegraf.Markup.callbackButton('Edit', 'EDIT'),
+            Telegraf.Markup.callbackButton('OK', 'OK'),
+            Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
           ])));
 });
 

@@ -28,6 +28,7 @@ searchAppleMusicScene.enter(async (ctx) => {
       });
     } catch (e) {
       await requestError(ctx, e);
+      await ctx.scene.leave();
       return;
     }
 
