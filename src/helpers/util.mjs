@@ -1,5 +1,4 @@
 import Telegram from 'telegraf';
-import url from 'url';
 import crypto from 'crypto';
 import querystring from 'querystring';
 import fetch from 'node-fetch';
@@ -105,7 +104,7 @@ export async function requestError(ctx, e) {
 
   if (e.code === 429) { // too many requests
     console.log(e.response);
-    await sendToAdmin(`${e.message}\n\nToo many requests!`);
+    await sendToAdmin(`${e.message}\n\n${e.response}`);
     return;
   }
 
@@ -121,7 +120,11 @@ export async function requestError(ctx, e) {
     }
 
     await ctx.scene.enter('auth');
+    return;
   }
+
+  console.error(e);
+  throw new Error(`Unkown request error: ${e.message}`);
 }
 
 export async function scrobbleError(ctx, e, tracks = [], msg = '❌ Failed') {
@@ -231,9 +234,4 @@ export function validateMimeType(mimeType) {
   };
 
   return map[mimeType] || mimeType;
-}
-
-export function isTextLink(text) {
-  const u = url.parse(text);
-  return u.hostname != null;
 }

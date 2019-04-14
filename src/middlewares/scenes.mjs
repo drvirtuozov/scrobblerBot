@@ -1,3 +1,4 @@
+import url from 'url';
 import Stage from 'telegraf/stage';
 import wishScene from '../scenes/wish';
 import authScene from '../scenes/auth';
@@ -31,6 +32,18 @@ stage.command('whoami', auth, ctx => whoami(ctx));
 stage.command('recent', auth, ctx => recent(ctx));
 stage.command('auth', ctx => ctx.scene.enter('auth'));
 stage.command('wish', ctx => ctx.scene.enter('wish'));
+
+// url handler before scenes' text handlers for convinient mobile experience
+// if there are some non-completed actions in those scenes
+stage.hears(/^https?:\/\/.+$/g, async (ctx) => {
+  const service = url.parse(ctx.message.text).hostname;
+
+  if (service === 'itunes.apple.com') {
+    return ctx.scene.enter('search_apple_music');
+  }
+
+  return ctx.reply(`Unknown service to search in: ${service}`);
+});
 
 stage.hears(/^\/\w+$/, async (ctx) => {
   await ctx.reply('If you are confused type /help');

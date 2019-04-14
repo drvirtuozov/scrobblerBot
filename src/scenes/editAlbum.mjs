@@ -27,7 +27,7 @@ editAlbumScene.on('text', async (ctx) => {
     'album.title': title,
   });
 
-  await ctx.scene.enter('edit_album_tracks');
+  return ctx.scene.enter('edit_album_tracks');
 });
 
 editAlbumScene.action('NEXT', ctx => ctx.scene.enter('edit_album_tracks'));
