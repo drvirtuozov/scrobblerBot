@@ -1,4 +1,5 @@
 import Telegram from 'telegraf';
+import url from 'url';
 import crypto from 'crypto';
 import querystring from 'querystring';
 import fetch from 'node-fetch';
@@ -230,4 +231,9 @@ export function validateMimeType(mimeType) {
   };
 
   return map[mimeType] || mimeType;
+}
+
+export function isTextLink(text) {
+  const u = url.parse(text);
+  return u.hostname != null;
 }

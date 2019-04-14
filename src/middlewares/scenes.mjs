@@ -6,8 +6,10 @@ import tracklistScene from '../scenes/tracklist';
 import searchAlbumScene from '../scenes/searchAlbum';
 import noAlbumInfoScene from '../scenes/noAlbumInfo';
 import editAlbumScene from '../scenes/editAlbum';
+import editAlbumTracksScene from '../scenes/editAlbumTracks';
 import setAlbumTracksScene from '../scenes/setAlbumTracks';
 import editTrackAlbumScene from '../scenes/editTrackAlbum';
+import searchAppleMusicScene from '../scenes/searchAppleMusic';
 import auth from '../middlewares/auth';
 import limiter from '../middlewares/limiter';
 import { start, help, whoami, recent } from '../handlers/commands';
@@ -30,7 +32,7 @@ stage.command('recent', auth, ctx => recent(ctx));
 stage.command('auth', ctx => ctx.scene.enter('auth'));
 stage.command('wish', ctx => ctx.scene.enter('wish'));
 
-stage.hears(/\/\w+/, async (ctx) => {
+stage.hears(/^\/\w+$/, async (ctx) => {
   await ctx.reply('If you are confused type /help');
 });
 
@@ -45,7 +47,9 @@ stage.register(tracklistScene);
 stage.register(searchAlbumScene);
 stage.register(noAlbumInfoScene);
 stage.register(editAlbumScene);
+stage.register(editAlbumTracksScene);
 stage.register(setAlbumTracksScene);
 stage.register(editTrackAlbumScene);
+stage.register(searchAppleMusicScene);
 
 export default stage.middleware();

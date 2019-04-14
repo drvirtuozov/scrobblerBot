@@ -1,4 +1,5 @@
 import Telegraf from 'telegraf';
+import url from 'url';
 import { scrobbleTrackFromText, scrobbleTrackFromAudio } from './helpers/scrobbler';
 import {
   searchFromLastfmAndAnswerInlineQuery, cancel, retry, repeat, repeatMany,
@@ -12,7 +13,7 @@ import logger from './middlewares/logger';
 import error from './middlewares/error';
 import asyncer from './middlewares/asyncer';
 import { SCROBBLERBOT_TOKEN } from '../config';
-import { sendToAdmin } from './helpers/util';
+import { sendToAdmin, isTextLink } from './helpers/util';
 import './helpers/scheduler';
 import './db';
 
@@ -39,7 +40,22 @@ bot.use(user);
 bot.use(logger);
 bot.use(scenes); // global commands are here
 
-bot.on('text', auth, limiter, ctx => scrobbleTrackFromText(ctx));
+bot.on('text', auth, limiter, async (ctx) => {
+  if (isTextLink(ctx.message.text)) {
+    // leave any scenes for convinient mobile experience if there are some non-completed actions
+    await ctx.scene.leave();
+    const service = url.parse(ctx.message.text).hostname;
+
+    if (service === 'itunes.apple.com') {
+      return ctx.scene.enter('search_apple_music');
+    }
+
+    return ctx.reply(`Unknown service: ${service}`);
+  }
+
+  return scrobbleTrackFromText(ctx);
+});
+
 bot.on('audio', auth, limiter, async (ctx) => {
   await scrobbleTrackFromAudio(ctx);
   await ctx.scene.leave();
