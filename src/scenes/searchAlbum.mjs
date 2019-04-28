@@ -1,6 +1,6 @@
 import Telegraf from 'telegraf';
 import Scene from 'telegraf/scenes/base';
-import { LASTFM_URL, LASTFM_KEY } from '../../config';
+import { LASTFM_URL, LASTFM_KEY } from '../config';
 import { searchFromLastfmAndAnswerInlineQuery } from '../handlers/actions';
 import { scrobbleAlbum } from '../helpers/scrobbler';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
@@ -33,9 +33,9 @@ searchAlbumScene.on('inline_query', async (ctx) => {
 
 searchAlbumScene.on('text', async (ctx) => {
   ctx.session.messageIdToReply = ctx.message.message_id;
-  let [artist, album] = ctx.message.text.split('\n');
+  let [artist, title] = ctx.message.text.split('\n');
 
-  if (!artist || !album) {
+  if (!artist || !title) {
     await ctx.reply('Format:\n\nArtist\nAlbum Title', Telegraf.Markup.inlineKeyboard([
       Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
@@ -50,7 +50,7 @@ searchAlbumScene.on('text', async (ctx) => {
 
   try {
     res = await httpGet(
-      `${LASTFM_URL}?method=album.getinfo&api_key=${LASTFM_KEY}&artist=${encodeURIComponent(artist)}&album=${encodeURIComponent(album)}&format=json`);
+      `${LASTFM_URL}?method=album.getinfo&api_key=${LASTFM_KEY}&artist=${encodeURIComponent(artist)}&album=${encodeURIComponent(title)}&format=json`);
   } catch (e) {
     await requestError(ctx, e);
     await ctx.scene.leave();
@@ -59,23 +59,32 @@ searchAlbumScene.on('text', async (ctx) => {
 
   if (res.album && res.album.tracks.track.length) {
     artist = res.album.artist;
-    album = res.album.name;
+    title = res.album.name;
     tracks = res.album.tracks.track.map(track => (
       { name: track.name, duration: track.duration }
     ));
+
+    ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, {
+      album: {
+        artist,
+        title,
+        tracks,
+      },
+    });
   } else {
+    ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, {
+      album: {
+        artist,
+        title,
+      },
+    });
+
     await ctx.scene.enter('no_album_info');
     return;
   }
 
-  ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, {
-    'album.artist': artist,
-    'album.title': album,
-    'album.tracks': tracks,
-  });
-
   await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
-    `You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${album}`)}">${album}</a> ` +
+    `You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${title}`)}">${title}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
     `The following tracks have been found on Last.fm and will be scrobbled:\n\n${tracks
       .map(track => track.name).join('\n')}`,
