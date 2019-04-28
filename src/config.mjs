@@ -1,10 +1,15 @@
 export const NODE_ENV = process.env.NODE_ENV;
 export const PORT = process.env.PORT;
-export const MONGODB_URL = process.env.MONGODB_URL;
+export const MONGO_HOST = process.env.MONGO_HOST;
+export const MONGO_PORT = process.env.MONGO_PORT;
+export const MONGO_DBNAME = process.env.MONGO_DBNAME;
+export const MONGO_USERNAME = process.env.MONGO_USERNAME;
+export const MONGO_PASSWORD = process.env.MONGO_PASSWORD;
+export const REDIS_HOST = process.env.REDIS_HOST;
+export const REDIS_PORT = process.env.REDIS_PORT;
 export const SCROBBLERBOT_TOKEN = process.env.SCROBBLERBOT_TOKEN;
 export const LASTFM_URL = process.env.LASTFM_URL;
 export const LASTFM_KEY = process.env.LASTFM_KEY;
 export const LASTFM_SECRET = process.env.LASTFM_SECRET;
 export const ADMIN_ID = process.env.ADMIN_ID;
-export const REDIS_URL = process.env.REDIS_URL;
 export const APPLE_MUSIC_API_TOKEN = process.env.APPLE_MUSIC_API_TOKEN;

@@ -11,7 +11,7 @@ import limiter from './middlewares/limiter';
 import logger from './middlewares/logger';
 import error from './middlewares/error';
 import asyncer from './middlewares/asyncer';
-import { SCROBBLERBOT_TOKEN } from '../config';
+import { SCROBBLERBOT_TOKEN } from './config';
 import { sendToAdmin } from './helpers/util';
 import './helpers/scheduler';
 import './db';

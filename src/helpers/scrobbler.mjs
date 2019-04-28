@@ -6,7 +6,7 @@ import {
   scrobbleError, validateTrackDurations, getIgnoredTracksFromLastfmRes,
   httpPost, validateMimeType,
 } from './util';
-import { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } from '../../config';
+import { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } from '../config';
 
 
 const MAX_BATCH_LENGTH = 50; // 50 is the max count allowed by last.fm at once

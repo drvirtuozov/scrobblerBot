@@ -1,10 +1,11 @@
 import RedisSession from 'telegraf-session-redis';
-import { REDIS_URL } from '../../config';
+import { REDIS_HOST, REDIS_PORT } from '../config';
 
 
 const session = new RedisSession({
   store: {
-    url: REDIS_URL,
+    host: REDIS_HOST,
+    port: REDIS_PORT,
   },
   getSessionKey(ctx) {
     return ctx.from.id;
