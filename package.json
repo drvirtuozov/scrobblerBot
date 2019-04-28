@@ -5,9 +5,9 @@
   "main": "app.mjs",
   "scripts": {
     "test": "eslint --ext=js,mjs .",
-    "start": "eval `cat .env` node --experimental-modules app.mjs",
-    "watch": "nodemon --watch src -e .js,.mjs -x 'eval `cat .env.dev` node --experimental-modules app.mjs'",
-    "deploy": "now && now alias"
+    "start": "node --experimental-modules app.mjs",
+    "watch": "nodemon --watch src -e .js,.mjs -x 'node --experimental-modules app.mjs'",
+    "deploy": "now --dotenv=.env && now alias"
   },
   "repository": {
     "type": "git",

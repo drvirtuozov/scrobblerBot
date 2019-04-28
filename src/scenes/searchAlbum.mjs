@@ -1,6 +1,6 @@
 import Telegraf from 'telegraf';
 import Scene from 'telegraf/scenes/base';
-import { LASTFM_URL, LASTFM_KEY } from '../config';
+import { LASTFM_URL, LASTFM_KEY } from '../../config';
 import { searchFromLastfmAndAnswerInlineQuery } from '../handlers/actions';
 import { scrobbleAlbum } from '../helpers/scrobbler';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
