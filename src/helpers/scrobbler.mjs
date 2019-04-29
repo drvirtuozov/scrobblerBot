@@ -136,21 +136,23 @@ export async function scrobbleAlbum(ctx) {
       Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
   }
 
-  const tracks = ctx.session.user.album.tracks.map(track => ({
+  const { artist, title, titleCleaned, tracks, tracksCleaned } = ctx.session.user.album;
+
+  const tracksToScrobble = (tracksCleaned || tracks).map(track => ({
+    artist,
     name: track.name,
-    artist: ctx.session.user.album.artist,
-    album: ctx.session.user.album.title,
+    album: titleCleaned || title,
     duration: track.duration,
   }));
 
   try {
-    await scrobbleTracks(tracks, undefined, ctx.session.user.key);
+    await scrobbleTracks(tracksToScrobble, undefined, ctx.session.user.key);
   } catch (e) {
-    await scrobbleError(ctx, e, tracks);
+    await scrobbleError(ctx, e, tracksToScrobble);
     return;
   }
 
-  await successfulScrobble(ctx, undefined, tracks);
+  await successfulScrobble(ctx, undefined, tracksToScrobble);
 }
 
 export async function scrobbleTracklist(ctx) {

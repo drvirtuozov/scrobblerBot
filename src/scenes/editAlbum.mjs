@@ -8,7 +8,7 @@ const editAlbumScene = new Scene('edit_album');
 editAlbumScene.enter(async (ctx) => {
   const album = ctx.session.user.album;
   await ctx.editMessageText('Edit the album and send it in the following format back to me:');
-  await ctx.reply(`${album.artist}\n${album.title}`,
+  await ctx.reply(`${album.artist}\n${album.titleCleaned || album.title}`,
     Telegram.Markup.inlineKeyboard([
       Telegram.Markup.callbackButton('Next', 'NEXT'),
       Telegram.Markup.callbackButton('Cancel', 'CANCEL'),
