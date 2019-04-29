@@ -7,7 +7,7 @@
     "test": "eslint --ext=js,mjs .",
     "start": "node --experimental-modules src/app.mjs",
     "watch": "nodemon --watch src -e .js,.mjs -x 'node --experimental-modules src/app.mjs'",
-    "deploy": "now --dotenv=./env/prod/bot && now alias"
+    "deploy": "now --dotenv=./env/prod/bot --npm --public && now alias"
   },
   "repository": {
     "type": "git",
@@ -36,8 +36,5 @@
   },
   "engines": {
     "node": "9.0.0"
-  },
-  "now": {
-    "alias": "scrobblerbot.now.sh"
   }
 }
