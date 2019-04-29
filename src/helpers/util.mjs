@@ -4,7 +4,7 @@ import querystring from 'querystring';
 import fetch from 'node-fetch';
 import songs from '../songs';
 import { findUserByIdAndUpdate, createSucceededMessage, createFailedMessage } from './dbmanager';
-import { ADMIN_ID } from '../../config';
+import { ADMIN_ID } from '../config';
 import bot from '../bot';
 
 

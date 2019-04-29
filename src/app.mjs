@@ -1,6 +1,6 @@
 import { NODE_ENV, PORT, SCROBBLERBOT_TOKEN } from './config';
-import { sendToAdmin } from './src/helpers/util';
-import bot from './src/bot';
+import { sendToAdmin } from './helpers/util';
+import bot from './bot';
 
 
 if (NODE_ENV === 'production') {

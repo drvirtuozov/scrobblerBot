@@ -6,7 +6,7 @@ import { httpGet, requestError } from '../helpers/util';
 import { scrobbleAlbum } from '../helpers/scrobbler';
 import auth from '../middlewares/auth';
 import limiter from '../middlewares/limiter';
-import { APPLE_MUSIC_API_TOKEN } from '../../config';
+import { APPLE_MUSIC_API_TOKEN } from '../config';
 
 
 const searchAppleMusicScene = new Scene('search_apple_music');

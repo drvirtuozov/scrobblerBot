@@ -3,7 +3,7 @@ import he from 'he';
 import {
   httpGet, requestError, successfulScrobble, scrobbleError, multipleArray,
 } from '../helpers/util';
-import { LASTFM_URL, LASTFM_KEY } from '../../config';
+import { LASTFM_URL, LASTFM_KEY } from '../config';
 import { scrobbleTracks, scrobbleTracksByParts } from '../helpers/scrobbler';
 import { findSucceededMessageById, findFailedMessageById } from '../helpers/dbmanager';
 

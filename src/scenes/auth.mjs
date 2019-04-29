@@ -2,7 +2,7 @@ import Telegram from 'telegraf';
 import Scene from 'telegraf/scenes/base';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 import { md5, getRandomFavSong, requestError, httpGet } from '../helpers/util';
-import { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } from '../../config';
+import { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } from '../config';
 
 
 const authScene = new Scene('auth');

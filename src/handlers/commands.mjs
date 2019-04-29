@@ -1,7 +1,7 @@
 import Telegram from 'telegraf';
 import { sendToAdmin, GLOBAL_KEYBOARD, requestError, httpGet } from '../helpers/util';
 import { createUserById } from '../helpers/dbmanager';
-import { LASTFM_URL, LASTFM_KEY } from '../../config';
+import { LASTFM_URL, LASTFM_KEY } from '../config';
 
 
 export async function start(ctx) {
