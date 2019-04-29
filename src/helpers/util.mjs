@@ -235,3 +235,8 @@ export function validateMimeType(mimeType) {
 
   return map[mimeType] || mimeType;
 }
+
+export function cleanNameTags(name = '') {
+  const regexp = /([\(\[,-] ?)(.+)?(remaster(ed)?|deluxe|demo|skit|diss|(re)?mix|instrumental|live|bonus( track)?|single|ep|(p(ar)?t\.?|set)|version|edit(ion)?|f(ea)?t(uring)?)(.+)?([\)\]$])/gi;
+  return name.replace(regexp, '');
+}

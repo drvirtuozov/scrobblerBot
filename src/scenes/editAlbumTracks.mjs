@@ -7,7 +7,7 @@ import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 const editAlbumTracksScene = new Scene('edit_album_tracks');
 
 editAlbumTracksScene.enter(async (ctx) => {
-  const tracks = ctx.session.user.album.tracks;
+  const { tracks, tracksCleaned } = ctx.session.user.album;
   const msg = 'Edit the album\'s tracklist and send it back to me:';
 
   if (ctx.callbackQuery) {
@@ -16,7 +16,7 @@ editAlbumTracksScene.enter(async (ctx) => {
     await ctx.reply(msg);
   }
 
-  await ctx.reply(`${tracks.map(track => track.name).join('\n')}`,
+  await ctx.reply(`${(tracksCleaned || tracks).map(track => track.name).join('\n')}`,
     Telegram.Markup.inlineKeyboard([
       Telegram.Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
