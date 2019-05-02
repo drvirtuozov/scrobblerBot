@@ -32,7 +32,7 @@ searchAlbumScene.on('inline_query', async (ctx) => {
 });
 
 searchAlbumScene.on('text', async (ctx) => {
-  ctx.session.messageIdToReply = ctx.message.message_id;
+  ctx.scene.state.messageIdToReply = ctx.message.message_id;
   let [artist, title] = ctx.message.text.split('\n');
 
   if (!artist || !title) {
@@ -43,8 +43,8 @@ searchAlbumScene.on('text', async (ctx) => {
     return;
   }
 
-  ctx.session.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
-    Telegraf.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
+  ctx.scene.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
+    Telegraf.Extra.HTML().inReplyTo(ctx.scene.state.messageIdToReply))).message_id;
   let tracks = [];
   let res;
 
@@ -79,11 +79,11 @@ searchAlbumScene.on('text', async (ctx) => {
       },
     });
 
-    await ctx.scene.enter('no_album_info');
+    await ctx.scene.enter('no_album_info', ctx.scene.state);
     return;
   }
 
-  await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
+  await ctx.telegram.editMessageText(ctx.chat.id, ctx.scene.state.messageIdToEdit, null,
     `You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${title}`)}">${title}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
     `The following tracks have been found on Last.fm and will be scrobbled:\n\n${tracks
@@ -101,7 +101,7 @@ searchAlbumScene.action('OK', limiter, async (ctx) => {
 });
 
 searchAlbumScene.action('EDIT', async (ctx) => {
-  await ctx.scene.enter('edit_album');
+  await ctx.scene.enter('edit_album', ctx.scene.state);
 });
 
 export default searchAlbumScene;
