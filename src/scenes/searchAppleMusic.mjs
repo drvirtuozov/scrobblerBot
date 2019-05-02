@@ -13,7 +13,7 @@ const searchAppleMusicScene = new Scene('search_apple_music');
 
 searchAppleMusicScene.enter(async (ctx) => {
   const u = url.parse(ctx.message.text);
-  ctx.session.messageIdToReply = ctx.message.message_id;
+  ctx.scene.state.messageIdToReply = ctx.message.message_id;
 
   if (u.pathname.includes('album')) {
     const albumID = u.pathname.match(/\/\d+/g)[0].substring(1);
@@ -51,7 +51,7 @@ searchAppleMusicScene.enter(async (ctx) => {
       `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
       `The following tracks have been found on iTunes and will be scrobbled:\n\n${tracks
         .map(track => track.name).join('\n')}`,
-          Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.session.messageIdToReply)
+          Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
           .markup(Telegraf.Markup.inlineKeyboard([[
             Telegraf.Markup.callbackButton('Clean name tags (Beta)', 'CLEAN'),
           ], [
@@ -71,26 +71,30 @@ searchAppleMusicScene.action('OK', auth, limiter, async (ctx) => {
 });
 
 searchAppleMusicScene.action('EDIT', async (ctx) => {
-  await ctx.scene.enter('edit_album');
+  await ctx.scene.enter('edit_album', ctx.scene.state);
 });
 
 searchAppleMusicScene.action('CLEAN', async (ctx) => {
   const { artist, title, tracks } = ctx.session.user.album;
-  ctx.session.user.album.titleCleaned = cleanNameTags(title);
-  ctx.session.user.album.tracksCleaned = tracks.map((t) => {
-    const track = Object.assign({}, t);
-    track.name = cleanNameTags(track.name);
-    track.album = ctx.session.user.album.titleCleaned;
-    return track;
-  });
+  const titleCleaned = cleanNameTags(title);
 
-  const { titleCleaned, tracksCleaned } = ctx.session.user.album;
+  ctx.scene.state.albumCleaned = {
+    title: titleCleaned,
+    tracks: tracks.map(t => ({
+      artist: t.artist,
+      name: cleanNameTags(t.name),
+      album: titleCleaned,
+      duration: t.duration,
+    })),
+  };
+
+  const { tracks: tracksCleaned } = ctx.scene.state.albumCleaned;
 
   await ctx.editMessageText(`You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${titleCleaned}`)}">${titleCleaned}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
     `The following tracks have been found on iTunes and will be scrobbled:\n\n${tracksCleaned
       .map(track => track.name).join('\n')}`,
-        Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.session.messageIdToReply)
+        Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
         .markup(Telegraf.Markup.inlineKeyboard([[
           Telegraf.Markup.callbackButton('Unclean name tags (Beta)', 'UNCLEAN'),
         ], [
@@ -101,15 +105,14 @@ searchAppleMusicScene.action('CLEAN', async (ctx) => {
 });
 
 searchAppleMusicScene.action('UNCLEAN', async (ctx) => {
-  delete ctx.session.user.album.titleCleaned;
-  delete ctx.session.user.album.tracksCleaned;
+  delete ctx.scene.state.albumCleaned;
   const { artist, title, tracks } = ctx.session.user.album;
 
   await ctx.editMessageText(`You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${title}`)}">${title}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
     `The following tracks have been found on iTunes and will be scrobbled:\n\n${tracks
       .map(track => track.name).join('\n')}`,
-        Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.session.messageIdToReply)
+        Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
         .markup(Telegraf.Markup.inlineKeyboard([[
           Telegraf.Markup.callbackButton('Clean name tags (Beta)', 'CLEAN'),
         ], [

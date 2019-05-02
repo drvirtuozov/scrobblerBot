@@ -61,7 +61,7 @@ export async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') 
 }
 
 export async function retry(ctx) {
-  ctx.session.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+  ctx.scene.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
     Telegram.Extra.HTML())).message_id;
   const messageId = ctx.callbackQuery.message.message_id;
   const message = await findFailedMessageById(messageId);
@@ -110,7 +110,7 @@ export async function repeat(ctx) {
 }
 
 export async function repeatMany(ctx) {
-  ctx.session.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+  ctx.scene.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
     Telegram.Extra.HTML())).message_id;
   const messageId = ctx.callbackQuery.message.message_id;
   const message = await findSucceededMessageById(messageId);
