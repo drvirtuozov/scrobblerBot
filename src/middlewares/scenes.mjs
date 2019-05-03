@@ -10,7 +10,8 @@ import editAlbumScene from '../scenes/editAlbum';
 import editAlbumTracksScene from '../scenes/editAlbumTracks';
 import setAlbumTracksScene from '../scenes/setAlbumTracks';
 import editTrackAlbumScene from '../scenes/editTrackAlbum';
-import searchAppleMusicScene from '../scenes/searchAppleMusic';
+import searchAlbumAppleScene from '../scenes/searchAlbumApple';
+import searchTrackAppleScene from '../scenes/searchTrackApple';
 import auth from '../middlewares/auth';
 import limiter from '../middlewares/limiter';
 import { start, help, whoami, recent } from '../handlers/commands';
@@ -35,14 +36,24 @@ stage.command('wish', ctx => ctx.scene.enter('wish'));
 
 // url handler before scenes' text handlers for convinient mobile experience
 // if there are some non-completed actions in those scenes
-stage.hears(/^https?:\/\/.+$/g, async (ctx) => {
-  const service = url.parse(ctx.message.text).hostname;
+stage.hears(/^https?:\/\/.+$/g, async (ctx, next) => {
+  const u = new url.URL(ctx.message.text);
 
-  if (service === 'itunes.apple.com') {
-    return ctx.scene.enter('search_apple_music');
+  if (u.hostname === 'itunes.apple.com') {
+    ctx.scene.state.apple = {
+      countryCode: u.pathname.match(/\/[A-z]{2}\//g)[0].substring(1, 3),
+      albumID: u.pathname.match(/\/\d+/g)[0].substring(1),
+      songID: u.searchParams.get('i'),
+    };
+
+    if (ctx.scene.state.apple.songID) {
+      return ctx.scene.enter('search_track_apple', ctx.scene.state);
+    }
+
+    return ctx.scene.enter('search_album_apple', ctx.scene.state);
   }
 
-  return ctx.reply(`Unknown service to search in: ${service}`);
+  return next();
 });
 
 stage.hears(/^\/\w+$/, async (ctx) => {
@@ -63,6 +74,7 @@ stage.register(editAlbumScene);
 stage.register(editAlbumTracksScene);
 stage.register(setAlbumTracksScene);
 stage.register(editTrackAlbumScene);
-stage.register(searchAppleMusicScene);
+stage.register(searchAlbumAppleScene);
+stage.register(searchTrackAppleScene);
 
 export default stage.middleware();
