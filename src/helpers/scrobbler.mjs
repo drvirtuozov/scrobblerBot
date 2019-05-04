@@ -90,6 +90,32 @@ export async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   await successfulScrobble(ctx, undefined, [track]);
 }
 
+export async function scrobbleTrackFromState(ctx) {
+  if (ctx.callbackQuery) {
+    ctx.scene.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+      Telegram.Extra.HTML())).message_id;
+  } else {
+    ctx.scene.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+      Telegram.Extra.HTML().inReplyTo(ctx.scene.state.messageIdToReply))).message_id;
+  }
+
+  const track = ctx.scene.state.trackCleaned || ctx.scene.state.track;
+
+  try {
+    const res = await scrobbleTracks([track], undefined, ctx.session.user.key);
+
+    if (res.scrobbles['@attr'].ingored) {
+      await scrobbleError(ctx, {}, [track]);
+      return;
+    }
+  } catch (e) {
+    await scrobbleError(ctx, e, [track]);
+    return;
+  }
+
+  await successfulScrobble(ctx, undefined, [track]);
+}
+
 export async function scrobbleTrackFromText(ctx) {
   const [artist, name, album] = ctx.message.text.split('\n');
   const song = getRandomFavSong();

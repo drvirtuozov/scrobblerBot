@@ -7,6 +7,8 @@ import { findUserByIdAndUpdate, createSucceededMessage, createFailedMessage } fr
 import { ADMIN_ID } from '../config';
 import bot from '../bot';
 
+const cleanNameRegexp = /([\(\[,-] ?)(.+)?(remaster(ed)?|deluxe|demo|skit|diss|(re)?mix|instrumental|live|bonus( track)?|single|ep|(p(ar)?t\.?|set)|version|edit(ion)?|f(ea)?t(uring)?)(.+)?([\)\]$])/gi;
+
 
 export const GLOBAL_KEYBOARD = Telegram.Markup.keyboard([['🎵 Track', '💽 Album', '📃 Tracklist']]).resize().extra();
 
@@ -235,6 +237,29 @@ export function validateMimeType(mimeType) {
 }
 
 export function cleanNameTags(name = '') {
-  const regexp = /([\(\[,-] ?)(.+)?(remaster(ed)?|deluxe|demo|skit|diss|(re)?mix|instrumental|live|bonus( track)?|single|ep|(p(ar)?t\.?|set)|version|edit(ion)?|f(ea)?t(uring)?)(.+)?([\)\]$])/gi;
-  return name.replace(regexp, '');
+  return name.replace(cleanNameRegexp, '');
+}
+
+export function areTagsInName(name = '') {
+  if (name.search(cleanNameRegexp) === -1) {
+    return false;
+  }
+
+  return true;
+}
+
+export function areTagsInAlbum(album = {}) {
+  let areTagsInNames = false;
+
+  if (areTagsInName(album.title)) {
+    areTagsInNames = true;
+  } else {
+    album.tracks.forEach((track) => {
+      if (areTagsInName(track.name)) {
+        areTagsInNames = true;
+      }
+    });
+  }
+
+  return areTagsInNames;
 }
