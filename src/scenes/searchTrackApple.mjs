@@ -1,6 +1,6 @@
 import Telegraf from 'telegraf';
 import Scene from 'telegraf/scenes/base';
-import { httpGet, requestError, cleanNameTags } from '../helpers/util';
+import { httpGet, requestError, cleanNameTags, areTagsInName } from '../helpers/util';
 import { scrobbleTrackFromState } from '../helpers/scrobbler';
 import auth from '../middlewares/auth';
 import limiter from '../middlewares/limiter';
@@ -38,9 +38,9 @@ searchTrackAppleScene.enter(async (ctx) => {
 
   await ctx.reply(`The following track has been found on iTunes and will be scrobbled:\n\n${artist}\n${name}\n${album}`,
     Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
-    .markup(Telegraf.Markup.inlineKeyboard([[
+    .markup(Telegraf.Markup.inlineKeyboard([areTagsInName(name) || areTagsInName(album) ? [
       Telegraf.Markup.callbackButton('Clean name tags (Beta)', 'CLEAN'),
-    ], [
+    ] : [], [
       Telegraf.Markup.callbackButton('Edit', 'EDIT'),
       Telegraf.Markup.callbackButton('OK', 'OK'),
       Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),

@@ -1,7 +1,7 @@
 import Telegraf from 'telegraf';
 import Scene from 'telegraf/scenes/base';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
-import { httpGet, requestError, cleanNameTags } from '../helpers/util';
+import { httpGet, requestError, cleanNameTags, areTagsInAlbum } from '../helpers/util';
 import { scrobbleAlbum } from '../helpers/scrobbler';
 import auth from '../middlewares/auth';
 import limiter from '../middlewares/limiter';
@@ -28,29 +28,28 @@ searchAlbumAppleScene.enter(async (ctx) => {
     return;
   }
 
-  const artist = res.data[0].attributes.artistName;
-  const title = res.data[0].attributes.name;
-  const tracks = res.data[0].relationships.tracks.data.map(track => ({
-    artist,
-    name: track.attributes.name,
-    album: title,
-    duration: track.attributes.durationInMillis / 1000,
-  }));
+  const album = {
+    artist: res.data[0].attributes.artistName,
+    title: res.data[0].attributes.name,
+    tracks: res.data[0].relationships.tracks.data.map(track => ({
+      artist: track.attributes.artistName,
+      name: track.attributes.name,
+      album: track.attributes.albumName,
+      duration: track.attributes.durationInMillis / 1000,
+    })),
+  };
 
-  ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, {
-    'album.title': title,
-    'album.artist': artist,
-    'album.tracks': tracks,
-  });
+  const { artist, title, tracks } = album;
+  ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, { album });
 
   await ctx.reply(`You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${title}`)}">${title}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
     `The following tracks have been found on iTunes and will be scrobbled:\n\n${tracks
       .map(track => track.name).join('\n')}`,
         Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
-        .markup(Telegraf.Markup.inlineKeyboard([[
+        .markup(Telegraf.Markup.inlineKeyboard([areTagsInAlbum(album) ? [
           Telegraf.Markup.callbackButton('Clean name tags (Beta)', 'CLEAN'),
-        ], [
+        ] : [], [
           Telegraf.Markup.callbackButton('Edit', 'EDIT'),
           Telegraf.Markup.callbackButton('OK', 'OK'),
           Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),

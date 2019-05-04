@@ -5,7 +5,7 @@ import { searchFromLastfmAndAnswerInlineQuery } from '../handlers/actions';
 import { scrobbleAlbum } from '../helpers/scrobbler';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 import limiter from '../middlewares/limiter';
-import { requestError, httpGet } from '../helpers/util';
+import { requestError, httpGet, areTagsInAlbum } from '../helpers/util';
 
 
 const searchAlbumScene = new Scene('search_album');
@@ -88,11 +88,14 @@ searchAlbumScene.on('text', async (ctx) => {
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
     `The following tracks have been found on Last.fm and will be scrobbled:\n\n${tracks
       .map(track => track.name).join('\n')}`,
-          Telegraf.Extra.HTML().webPreview(false).markup(Telegraf.Markup.inlineKeyboard([
-            Telegraf.Markup.callbackButton('Edit', 'EDIT'),
-            Telegraf.Markup.callbackButton('OK', 'OK'),
-            Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
-          ])));
+          Telegraf.Extra.HTML().webPreview(false).markup(
+            Telegraf.Markup.inlineKeyboard([areTagsInAlbum(ctx.session.user.album) ? [
+              Telegraf.Markup.callbackButton('Clean name tags (Beta)', 'CLEAN'),
+            ] : [], [
+              Telegraf.Markup.callbackButton('Edit', 'EDIT'),
+              Telegraf.Markup.callbackButton('OK', 'OK'),
+              Telegraf.Markup.callbackButton('Cancel', 'CANCEL'),
+            ]])));
 });
 
 searchAlbumScene.action('OK', limiter, async (ctx) => {
