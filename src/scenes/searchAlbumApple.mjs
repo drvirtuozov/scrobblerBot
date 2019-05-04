@@ -87,7 +87,7 @@ searchAlbumAppleScene.action('CLEAN', async (ctx) => {
       .map(track => track.name).join('\n')}`,
         Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
         .markup(Telegraf.Markup.inlineKeyboard([[
-          Telegraf.Markup.callbackButton('Unclean name tags (Beta)', 'UNCLEAN'),
+          Telegraf.Markup.callbackButton('Unclean name tags', 'UNCLEAN'),
         ], [
           Telegraf.Markup.callbackButton('Edit', 'EDIT'),
           Telegraf.Markup.callbackButton('OK', 'OK'),

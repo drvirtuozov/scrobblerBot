@@ -53,7 +53,11 @@ searchTrackAppleScene.action('OK', auth, limiter, async (ctx) => {
 });
 
 searchTrackAppleScene.action('EDIT', async (ctx) => {
-  await ctx.scene.enter('edit_track', ctx.scene.state);
+  const { artist, name, album } = ctx.scene.state.track;
+  const { name: nameCleaned, album: albumCleaned } = ctx.scene.state.trackCleaned || {};
+  await ctx.editMessageText('Edit the track and send it back to me:');
+  await ctx.reply(`${artist}\n${nameCleaned || name}\n${albumCleaned || album}`);
+  await ctx.scene.leave(); // go to the main scene to scrobble edited track
 });
 
 searchTrackAppleScene.action('CLEAN', async (ctx) => {
@@ -72,7 +76,7 @@ searchTrackAppleScene.action('CLEAN', async (ctx) => {
     `${artist}\n${nameCleaned}\n${albumCleaned}`,
       Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
       .markup(Telegraf.Markup.inlineKeyboard([[
-        Telegraf.Markup.callbackButton('Unclean name tags (Beta)', 'UNCLEAN'),
+        Telegraf.Markup.callbackButton('Unclean name tags', 'UNCLEAN'),
       ], [
         Telegraf.Markup.callbackButton('Edit', 'EDIT'),
         Telegraf.Markup.callbackButton('OK', 'OK'),
