@@ -41,8 +41,8 @@ stage.hears(/^https?:\/\/.+$/g, async (ctx, next) => {
 
   if (u.hostname === 'itunes.apple.com') {
     ctx.scene.state.apple = {
-      countryCode: u.pathname.match(/\/[A-z]{2}\//g)[0].substring(1, 3),
-      albumID: u.pathname.match(/\/\d+/g)[0].substring(1),
+      countryCode: u.pathname.slice(u.pathname.indexOf('/') + 1, 3),
+      albumID: u.pathname.slice(u.pathname.lastIndexOf('/') + 1),
       songID: u.searchParams.get('i'),
     };
 
