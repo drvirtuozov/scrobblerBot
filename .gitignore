@@ -1,7 +1,4 @@
 .idea
 node_modules
-.env
-.env.dev
 npm-debug.log
-key.key
-cert.pem
+env

@@ -6,9 +6,10 @@ import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 const editAlbumScene = new Scene('edit_album');
 
 editAlbumScene.enter(async (ctx) => {
-  const album = ctx.session.user.album;
-  await ctx.editMessageText('Edit the album and send it in the following format back to me:');
-  await ctx.reply(`${album.artist}\n${album.title}`,
+  const { artist, title } = ctx.session.user.album;
+  const { title: titleCleaned } = ctx.scene.state.albumCleaned || {};
+  await ctx.editMessageText('Edit the album and send it with the following format back to me:');
+  await ctx.reply(`${artist}\n${titleCleaned || title}`,
     Telegram.Markup.inlineKeyboard([
       Telegram.Markup.callbackButton('Next', 'NEXT'),
       Telegram.Markup.callbackButton('Cancel', 'CANCEL'),
@@ -22,15 +23,21 @@ editAlbumScene.on('text', async (ctx) => {
     return ctx.reply('Format:\n\nArtist Name\nAlbum Title');
   }
 
-  ctx.session.messageIdToReply = ctx.message.message_id;
+  ctx.scene.state.messageIdToReply = ctx.message.message_id;
   ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, {
     'album.artist': artist,
     'album.title': title,
   });
 
-  return ctx.scene.enter('edit_album_tracks');
+  if (ctx.scene.state.albumCleaned) {
+    delete ctx.scene.state.albumCleaned.title;
+  }
+
+  return ctx.scene.enter('edit_album_tracks', ctx.scene.state);
 });
 
-editAlbumScene.action('NEXT', ctx => ctx.scene.enter('edit_album_tracks'));
+editAlbumScene.action('NEXT', async (ctx) => {
+  await ctx.scene.enter('edit_album_tracks', ctx.scene.state);
+});
 
 export default editAlbumScene;

@@ -1,7 +1,7 @@
 import Telegram from 'telegraf';
 import { sendToAdmin, GLOBAL_KEYBOARD, requestError, httpGet } from '../helpers/util';
 import { createUserById } from '../helpers/dbmanager';
-import { LASTFM_URL, LASTFM_KEY } from '../../config';
+import { LASTFM_URL, LASTFM_KEY } from '../config';
 
 
 export async function start(ctx) {
@@ -35,15 +35,15 @@ export async function help(ctx) {
 
 export async function whoami(ctx) {
   const username = ctx.session.user.account;
-  ctx.session.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
+  ctx.scene.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
     Telegram.Extra.HTML())).message_id;
-  await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
+  await ctx.telegram.editMessageText(ctx.chat.id, ctx.scene.state.messageIdToEdit, null,
     `You are logged in as <a href="https://www.last.fm/user/${username}">${username}</a>`,
       Telegram.Extra.HTML().webPreview(false));
 }
 
 export async function recent(ctx) {
-  ctx.session.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
+  ctx.scene.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
     Telegram.Extra.HTML())).message_id;
   let res;
 
@@ -71,7 +71,7 @@ export async function recent(ctx) {
       url: track.url,
     }));
 
-  await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
+  await ctx.telegram.editMessageText(ctx.chat.id, ctx.scene.state.messageIdToEdit, null,
     'Here are the very last 15 scrobbled tracks from your account:\n\n' +
     `${(tracks.map(track => `<a href="${
       encodeURI(`https://www.last.fm/music/${track.artist}`)

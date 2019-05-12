@@ -1,6 +1,6 @@
 import Telegram from 'telegraf';
 import Scene from 'telegraf/scenes/base';
-import { LASTFM_URL, LASTFM_KEY } from '../../config';
+import { LASTFM_URL, LASTFM_KEY } from '../config';
 import { scrobbleTrackFromDB, scrobbleTrackFromText } from '../helpers/scrobbler';
 import { findUserByIdAndUpdate } from '../helpers/dbmanager';
 import { searchFromLastfmAndAnswerInlineQuery } from '../handlers/actions';
@@ -32,7 +32,7 @@ searchTrackScene.on('inline_query', async (ctx) => {
 });
 
 searchTrackScene.on('text', async (ctx) => {
-  ctx.session.messageIdToReply = ctx.message.message_id;
+  ctx.scene.state.messageIdToReply = ctx.message.message_id;
   const [artist, name, album] = ctx.message.text.split('\n');
 
   if (!artist || !name) {
@@ -40,8 +40,8 @@ searchTrackScene.on('text', async (ctx) => {
       Telegram.Markup.callbackButton('Cancel', 'CANCEL'),
     ]).extra());
   } else if (artist && name && !album) {
-    ctx.session.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
-    Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
+    ctx.scene.state.messageIdToEdit = (await ctx.reply('<i>Fetching data...</i>',
+    Telegram.Extra.HTML().inReplyTo(ctx.scene.state.messageIdToReply))).message_id;
 
     let res;
 
@@ -68,7 +68,7 @@ searchTrackScene.on('text', async (ctx) => {
     ctx.session.user = await findUserByIdAndUpdate(ctx.from.id, { track });
 
     if (track.album) {
-      await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
+      await ctx.telegram.editMessageText(ctx.chat.id, ctx.scene.state.messageIdToEdit, null,
         `Last.fm has album info of this track:\n\n${artist}\n${name}\n${track.album}\n\n` +
         'Would you like to scrobble it with the new info or leave it as is?',
           Telegram.Extra.webPreview(false).markup(Telegram.Markup.inlineKeyboard([
@@ -84,7 +84,7 @@ searchTrackScene.on('text', async (ctx) => {
       return;
     }
 
-    await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
+    await ctx.telegram.editMessageText(ctx.chat.id, ctx.scene.state.messageIdToEdit, null,
       'Last.fm has no album info of this track. Would you like to enter album title manually?',
         Telegram.Extra.webPreview(false).markup(Telegram.Markup.inlineKeyboard([
           Telegram.Markup.callbackButton('Yes', 'EDIT_TRACK_ALBUM'),
@@ -103,7 +103,7 @@ searchTrackScene.action('SCR', limiter, async (ctx) => {
 });
 
 searchTrackScene.action('EDIT_TRACK_ALBUM', async (ctx) => {
-  await ctx.scene.enter('edit_track_album');
+  await ctx.scene.enter('edit_track_album', ctx.scene.state);
 });
 
 searchTrackScene.action('SCR_WITHOUT_ALBUM', limiter, async (ctx) => {

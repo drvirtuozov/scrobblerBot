@@ -4,8 +4,10 @@ import querystring from 'querystring';
 import fetch from 'node-fetch';
 import songs from '../songs';
 import { findUserByIdAndUpdate, createSucceededMessage, createFailedMessage } from './dbmanager';
-import { ADMIN_ID } from '../../config';
+import { ADMIN_ID } from '../config';
 import bot from '../bot';
+
+const cleanNameRegexp = /([\(\[]|[,-] )(.+)?(remaster(ed)?|deluxe|demo|skit|diss|(re)?mix|instrumental|live|bonus( track)?|single|ep|(p(ar)?t\.?|set)|version|edit(ion)?|f(ea)?t(uring)?)(.+)?([\)\]])?/gi;
 
 
 export const GLOBAL_KEYBOARD = Telegram.Markup.keyboard([['🎵 Track', '💽 Album', '📃 Tracklist']]).resize().extra();
@@ -35,7 +37,7 @@ export async function error(ctx, e) {
     await ctx.editMessageText(errText);
   } else if (ctx.inlineQuery) {
     // pass
-  } else if (ctx.session.messageIdToReply) {
+  } else if (ctx.scene.state.messageIdToReply) {
     await ctx.reply(errText, Telegram.Extra.inReplyTo(ctx.message.message_id));
   } else {
     await ctx.reply(errText);
@@ -65,15 +67,13 @@ export async function successfulScrobble(ctx, text = '✅ Scrobbled', tracks = [
 
   if (ctx.callbackQuery) {
     message = await ctx.editMessageText(text, extra);
-  } else if (ctx.session.messageIdToEdit) {
+  } else if (ctx.scene.state.messageIdToEdit) {
     message = await ctx.telegram
-      .editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null, text, extra);
+      .editMessageText(ctx.chat.id, ctx.scene.state.messageIdToEdit, null, text, extra);
   } else {
     message = await ctx.reply(text, extra);
   }
 
-  ctx.session.messageIdToEdit = null;
-  ctx.session.messageIdToReply = null;
   await createSucceededMessage(message.message_id, tracks);
 }
 
@@ -134,8 +134,8 @@ export async function scrobbleError(ctx, e, tracks = [], msg = '❌ Failed') {
 
   let messageId;
 
-  if (ctx.session.messageIdToEdit) {
-    messageId = ctx.session.messageIdToEdit;
+  if (ctx.scene.state.messageIdToEdit) {
+    messageId = ctx.scene.state.messageIdToEdit;
     await ctx.telegram.editMessageText(ctx.chat.id, messageId, null, msg, extra);
   } else if (ctx.callbackQuery) {
     messageId = ctx.callbackQuery.message.message_id;
@@ -234,4 +234,32 @@ export function validateMimeType(mimeType) {
   };
 
   return map[mimeType] || mimeType;
+}
+
+export function cleanNameTags(name = '') {
+  return name.replace(cleanNameRegexp, '');
+}
+
+export function areTagsInName(name = '') {
+  if (name.search(cleanNameRegexp) === -1) {
+    return false;
+  }
+
+  return true;
+}
+
+export function areTagsInAlbum(album = {}) {
+  let areTagsInNames = false;
+
+  if (areTagsInName(album.title)) {
+    areTagsInNames = true;
+  } else {
+    album.tracks.forEach((track) => {
+      if (areTagsInName(track.name)) {
+        areTagsInNames = true;
+      }
+    });
+  }
+
+  return areTagsInNames;
 }

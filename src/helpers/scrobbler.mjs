@@ -6,7 +6,7 @@ import {
   scrobbleError, validateTrackDurations, getIgnoredTracksFromLastfmRes,
   httpPost, validateMimeType,
 } from './util';
-import { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } from '../../config';
+import { LASTFM_URL, LASTFM_KEY, LASTFM_SECRET } from '../config';
 
 
 const MAX_BATCH_LENGTH = 50; // 50 is the max count allowed by last.fm at once
@@ -45,7 +45,7 @@ export async function scrobbleTracksByParts(ctx, tracks = []) {
 
   for (let i = 0; i < partsCount; i += 1) {
     if (partsCount > 1) {
-      await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
+      await ctx.telegram.editMessageText(ctx.chat.id, ctx.scene.state.messageIdToEdit, null,
         `Too many tracks to scrobble at once.\n\n<i>Scrobbling by parts... ${i + 1} of ${partsCount}</i>`,
         Telegram.Extra.HTML());
     }
@@ -68,11 +68,11 @@ export async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   };
 
   if (ctx.callbackQuery) {
-    ctx.session.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+    ctx.scene.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
       Telegram.Extra.HTML())).message_id;
   } else {
-    ctx.session.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
-      Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
+    ctx.scene.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+      Telegram.Extra.HTML().inReplyTo(ctx.scene.state.messageIdToReply))).message_id;
   }
 
   try {
@@ -90,11 +90,37 @@ export async function scrobbleTrackFromDB(ctx, isAlbum = true) {
   await successfulScrobble(ctx, undefined, [track]);
 }
 
+export async function scrobbleTrackFromState(ctx) {
+  if (ctx.callbackQuery) {
+    ctx.scene.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+      Telegram.Extra.HTML())).message_id;
+  } else {
+    ctx.scene.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+      Telegram.Extra.HTML().inReplyTo(ctx.scene.state.messageIdToReply))).message_id;
+  }
+
+  const track = ctx.scene.state.trackCleaned || ctx.scene.state.track;
+
+  try {
+    const res = await scrobbleTracks([track], undefined, ctx.session.user.key);
+
+    if (res.scrobbles['@attr'].ingored) {
+      await scrobbleError(ctx, {}, [track]);
+      return;
+    }
+  } catch (e) {
+    await scrobbleError(ctx, e, [track]);
+    return;
+  }
+
+  await successfulScrobble(ctx, undefined, [track]);
+}
+
 export async function scrobbleTrackFromText(ctx) {
-  const parsedTrack = ctx.message.text.split('\n');
+  const [artist, name, album] = ctx.message.text.split('\n');
   const song = getRandomFavSong();
 
-  if (parsedTrack.length < 2 || parsedTrack.length > 3) {
+  if (!artist || !name) {
     await ctx.reply('Please, send me valid data separated by new lines. Example:\n\n' +
       `${song.artist}\n${song.name}\n${song.album} <i>(optional)</i>\n\nType /help for more info`,
         Telegram.Extra.HTML().webPreview(false));
@@ -102,14 +128,14 @@ export async function scrobbleTrackFromText(ctx) {
     return;
   }
 
-  ctx.session.messageIdToReply = ctx.message.message_id;
-  ctx.session.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
-    Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
+  ctx.scene.state.messageIdToReply = ctx.message.message_id;
+  ctx.scene.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+    Telegram.Extra.HTML().inReplyTo(ctx.scene.state.messageIdToReply))).message_id;
 
   const track = {
-    artist: parsedTrack[0],
-    name: parsedTrack[1],
-    album: parsedTrack[2],
+    artist,
+    name,
+    album,
   };
 
   try {
@@ -129,28 +155,31 @@ export async function scrobbleTrackFromText(ctx) {
 
 export async function scrobbleAlbum(ctx) {
   if (ctx.callbackQuery) {
-    ctx.session.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
+    ctx.scene.state.messageIdToEdit = (await ctx.editMessageText('<i>Scrobbling...</i>',
       Telegram.Extra.HTML())).message_id;
   } else {
-    ctx.session.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
-      Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
+    ctx.scene.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+      Telegram.Extra.HTML().inReplyTo(ctx.scene.state.messageIdToReply))).message_id;
   }
 
-  const tracks = ctx.session.user.album.tracks.map(track => ({
+  const { artist, title, tracks } = ctx.session.user.album;
+  const { title: titleCleaned, tracks: tracksCleaned } = ctx.scene.state.albumCleaned || {};
+
+  const tracksToScrobble = (tracksCleaned || tracks).map(track => ({
+    artist,
     name: track.name,
-    artist: ctx.session.user.album.artist,
-    album: ctx.session.user.album.title,
+    album: titleCleaned || title,
     duration: track.duration,
   }));
 
   try {
-    await scrobbleTracks(tracks, undefined, ctx.session.user.key);
+    await scrobbleTracks(tracksToScrobble, undefined, ctx.session.user.key);
   } catch (e) {
-    await scrobbleError(ctx, e, tracks);
+    await scrobbleError(ctx, e, tracksToScrobble);
     return;
   }
 
-  await successfulScrobble(ctx, undefined, tracks);
+  await successfulScrobble(ctx, undefined, tracksToScrobble);
 }
 
 export async function scrobbleTracklist(ctx) {
@@ -179,9 +208,9 @@ export async function scrobbleTracklist(ctx) {
     return;
   }
 
-  ctx.session.messageIdToReply = ctx.message.message_id;
-  ctx.session.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
-    Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
+  ctx.scene.state.messageIdToReply = ctx.message.message_id;
+  ctx.scene.state.messageIdToEdit = (await ctx.reply('<i>Scrobbling...</i>',
+    Telegram.Extra.HTML().inReplyTo(ctx.scene.state.messageIdToReply))).message_id;
 
   let responses = [];
 
@@ -230,9 +259,9 @@ export async function scrobbleTrackFromAudio(ctx) {
     return;
   }
 
-  ctx.session.messageIdToReply = ctx.message.message_id;
-  ctx.session.messageIdToEdit = (await ctx.reply('<i>Downloading audio file...</i>',
-    Telegram.Extra.HTML().inReplyTo(ctx.session.messageIdToReply))).message_id;
+  ctx.scene.state.messageIdToReply = ctx.message.message_id;
+  ctx.scene.state.messageIdToEdit = (await ctx.reply('<i>Downloading audio file...</i>',
+    Telegram.Extra.HTML().inReplyTo(ctx.scene.state.messageIdToReply))).message_id;
 
   const link = await ctx.telegram.getFileLink(fileId);
   const res = await fetch(link, {
@@ -251,7 +280,7 @@ export async function scrobbleTrackFromAudio(ctx) {
     album: metadata.common.album,
   };
 
-  await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.messageIdToEdit, null,
+  await ctx.telegram.editMessageText(ctx.chat.id, ctx.scene.state.messageIdToEdit, null,
     '<i>Scrobbling...</i>', Telegram.Extra.HTML());
 
   try {
