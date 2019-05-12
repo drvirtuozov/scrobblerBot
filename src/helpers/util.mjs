@@ -7,7 +7,7 @@ import { findUserByIdAndUpdate, createSucceededMessage, createFailedMessage } fr
 import { ADMIN_ID } from '../config';
 import bot from '../bot';
 
-const cleanNameRegexp = /([\(\[,-] ?)(.+)?(remaster(ed)?|deluxe|demo|skit|diss|(re)?mix|instrumental|live|bonus( track)?|single|ep|(p(ar)?t\.?|set)|version|edit(ion)?|f(ea)?t(uring)?)(.+)?([\)\]$])/gi;
+const cleanNameRegexp = /([\(\[]|[,-] )(.+)?(remaster(ed)?|deluxe|demo|skit|diss|(re)?mix|instrumental|live|bonus( track)?|single|ep|(p(ar)?t\.?|set)|version|edit(ion)?|f(ea)?t(uring)?)(.+)?([\)\]])?/gi;
 
 
 export const GLOBAL_KEYBOARD = Telegram.Markup.keyboard([['🎵 Track', '💽 Album', '📃 Tracklist']]).resize().extra();
