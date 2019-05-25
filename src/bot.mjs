@@ -1,8 +1,6 @@
 import Telegraf from 'telegraf';
 import { scrobbleTrackFromText, scrobbleTrackFromAudio } from './helpers/scrobbler';
-import {
-  searchFromLastfmAndAnswerInlineQuery, cancel, retry, repeat, repeatMany,
-} from './handlers/actions';
+import { cancel, retry, repeat, repeatMany } from './handlers/actions';
 import user from './middlewares/user';
 import scenes from './middlewares/scenes';
 import auth from './middlewares/auth';
@@ -44,10 +42,6 @@ bot.on('text', auth, limiter, ctx => scrobbleTrackFromText(ctx));
 bot.on('audio', auth, limiter, async (ctx) => {
   await scrobbleTrackFromAudio(ctx);
   await ctx.scene.leave();
-});
-
-bot.on('inline_query', async (ctx) => {
-  await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
 });
 
 bot.action('CANCEL', ctx => cancel(ctx));

@@ -39,21 +39,23 @@ stage.command('wish', ctx => ctx.scene.enter('wish'));
 stage.hears(/^https?:\/\/.+$/g, async (ctx, next) => {
   const u = new url.URL(ctx.message.text);
 
-  if (u.hostname === 'itunes.apple.com') {
-    ctx.scene.state.apple = {
-      countryCode: u.pathname.slice(u.pathname.indexOf('/') + 1, 3),
-      albumID: u.pathname.slice(u.pathname.lastIndexOf('/') + 1),
-      songID: u.searchParams.get('i'),
-    };
+  switch (u.hostname) {
+    case 'itunes.apple.com':
+    case 'music.apple.com':
+      ctx.scene.state.apple = {
+        countryCode: u.pathname.slice(u.pathname.indexOf('/') + 1, 3),
+        albumID: u.pathname.slice(u.pathname.lastIndexOf('/') + 1),
+        songID: u.searchParams.get('i'),
+      };
 
-    if (ctx.scene.state.apple.songID) {
-      return ctx.scene.enter('search_track_apple', ctx.scene.state);
-    }
+      if (ctx.scene.state.apple.songID) {
+        return ctx.scene.enter('search_track_apple', ctx.scene.state);
+      }
 
-    return ctx.scene.enter('search_album_apple', ctx.scene.state);
+      return ctx.scene.enter('search_album_apple', ctx.scene.state);
+    default:
+      return next();
   }
-
-  return next();
 });
 
 stage.hears(/^\/\w+$/, async (ctx) => {

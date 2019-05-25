@@ -237,7 +237,7 @@ export function validateMimeType(mimeType) {
 }
 
 export function cleanNameTags(name = '') {
-  return name.replace(cleanNameRegexp, '');
+  return name.replace(cleanNameRegexp, '').trim();
 }
 
 export function areTagsInName(name = '') {

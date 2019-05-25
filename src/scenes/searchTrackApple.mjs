@@ -92,7 +92,7 @@ searchTrackAppleScene.action('UNCLEAN', async (ctx) => {
     `${artist}\n${name}\n${album}`,
       Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
       .markup(Telegraf.Markup.inlineKeyboard([[
-        Telegraf.Markup.callbackButton('Unclean name tags (Beta)', 'CLEAN'),
+        Telegraf.Markup.callbackButton('Clean name tags (Beta)', 'CLEAN'),
       ], [
         Telegraf.Markup.callbackButton('Edit', 'EDIT'),
         Telegraf.Markup.callbackButton('OK', 'OK'),
