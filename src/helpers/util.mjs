@@ -103,8 +103,8 @@ export async function requestError(ctx, e) {
   if (!e.response) throw new Error('Haven\'t got any response');
 
   if (e.code === 429) { // too many requests
-    console.log(e.response);
-    await sendToAdmin(`${e.message}\n\n${e.response}`);
+    console.error(e.response);
+    await sendToAdmin(`${e.message}\n\n${e.response.message}`);
     return;
   }
 
