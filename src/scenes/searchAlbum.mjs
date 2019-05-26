@@ -28,7 +28,11 @@ searchAlbumScene.enter(async (ctx) => {
 });
 
 searchAlbumScene.on('inline_query', async (ctx) => {
-  await searchFromLastfmAndAnswerInlineQuery(ctx, 'album');
+  try {
+    await searchFromLastfmAndAnswerInlineQuery(ctx, 'album');
+  } catch (e) {
+    console.error(e);
+  }
 });
 
 searchAlbumScene.on('text', async (ctx) => {
