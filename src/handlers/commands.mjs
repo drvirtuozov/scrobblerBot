@@ -24,8 +24,8 @@ export async function help(ctx) {
     'Scrobble tracks by sending audio files to the bot. ' +
     'It will take some time to download and parse audio tags from the file. ' +
     'Be sure to check the tags before sending it.\n\n' +
-    '<b>Update:</b>\nScrobble Apple Music songs and albums by sending a link\n\n' +
-    'For any enhancements and bugs write to https://github.com/drvirtuozov/scrobblerBot/issues',
+    '<b>Update:</b>\nScrobble Apple Music songs and albums by sharing a link with the bot\n\n' +
+    'For any enhancements and bugs write <a href="https://github.com/drvirtuozov/scrobblerBot/issues">here</a>',
       Telegram.Extra.HTML().load(GLOBAL_KEYBOARD).webPreview(false));
 }
 
