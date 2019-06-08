@@ -28,7 +28,11 @@ searchAlbumScene.enter(async (ctx) => {
 });
 
 searchAlbumScene.on('inline_query', async (ctx) => {
-  await searchFromLastfmAndAnswerInlineQuery(ctx, 'album');
+  try {
+    await searchFromLastfmAndAnswerInlineQuery(ctx, 'album');
+  } catch (e) {
+    console.error(e);
+  }
 });
 
 searchAlbumScene.on('text', async (ctx) => {
@@ -86,7 +90,7 @@ searchAlbumScene.on('text', async (ctx) => {
   await ctx.telegram.editMessageText(ctx.chat.id, ctx.scene.state.messageIdToEdit, null,
     `You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${title}`)}">${title}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
-    `The following tracks have been found on Last.fm and will be scrobbled:\n\n${tracks
+    `The following tracks have been found on Last.fm and going to be scrobbled:\n\n${tracks
       .map(track => track.name).join('\n')}`,
           Telegraf.Extra.HTML().webPreview(false).markup(
             Telegraf.Markup.inlineKeyboard([areTagsInAlbum(ctx.session.user.album) ? [
@@ -125,7 +129,7 @@ searchAlbumScene.action('CLEAN', async (ctx) => {
 
   await ctx.editMessageText(`You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${titleCleaned}`)}">${titleCleaned}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
-    `The following tracks have been found on Last.fm and will be scrobbled:\n\n${tracksCleaned
+    `The following tracks have been found on Last.fm and going to be scrobbled:\n\n${tracksCleaned
       .map(track => track.name).join('\n')}`,
         Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
         .markup(Telegraf.Markup.inlineKeyboard([[
@@ -143,7 +147,7 @@ searchAlbumScene.action('UNCLEAN', async (ctx) => {
 
   await ctx.editMessageText(`You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${title}`)}">${title}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
-    `The following tracks have been found on Last.fm and will be scrobbled:\n\n${tracks
+    `The following tracks have been found on Last.fm and going to be scrobbled:\n\n${tracks
       .map(track => track.name).join('\n')}`,
         Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
         .markup(Telegraf.Markup.inlineKeyboard([[

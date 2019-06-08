@@ -44,7 +44,7 @@ searchAlbumAppleScene.enter(async (ctx) => {
 
   await ctx.reply(`You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${title}`)}">${title}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
-    `The following tracks have been found on iTunes and will be scrobbled:\n\n${tracks
+    `The following tracks have been found on Apple Music and going to be scrobbled:\n\n${tracks
       .map(track => track.name).join('\n')}`,
         Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
         .markup(Telegraf.Markup.inlineKeyboard([areTagsInAlbum(album) ? [
@@ -83,7 +83,7 @@ searchAlbumAppleScene.action('CLEAN', async (ctx) => {
 
   await ctx.editMessageText(`You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${titleCleaned}`)}">${titleCleaned}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
-    `The following tracks have been found on iTunes and will be scrobbled:\n\n${tracksCleaned
+    `The following tracks have been found on Apple Music and going to be scrobbled:\n\n${tracksCleaned
       .map(track => track.name).join('\n')}`,
         Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
         .markup(Telegraf.Markup.inlineKeyboard([[
@@ -101,7 +101,7 @@ searchAlbumAppleScene.action('UNCLEAN', async (ctx) => {
 
   await ctx.editMessageText(`You are about to scrobble <a href="${encodeURI(`https://www.last.fm/music/${artist}/${title}`)}">${title}</a> ` +
     `by <a href="${encodeURI(`https://www.last.fm/music/${artist}`)}">${artist}</a>. ` +
-    `The following tracks have been found on iTunes and will be scrobbled:\n\n${tracks
+    `The following tracks have been found on Apple Music and going to be scrobbled:\n\n${tracks
       .map(track => track.name).join('\n')}`,
         Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
         .markup(Telegraf.Markup.inlineKeyboard([[
