@@ -78,7 +78,7 @@ export async function successfulScrobble(ctx, text = '✅ Scrobbled', tracks = [
 }
 
 export function canScrobble(ctx) {
-  if (!ctx.session.user || Date.now() - +ctx.session.user.last_scrobble <= 30000) {
+  if (!ctx.session.user || Date.now() - +new Date(ctx.session.user.last_scrobble) <= 30000) {
     return false;
   }
 
