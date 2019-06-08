@@ -14,7 +14,7 @@ export async function cancel(ctx) {
 }
 
 export async function searchFromLastfmAndAnswerInlineQuery(ctx, type = 'track') {
-  if (!ctx.inlineQuery.query) {
+  if (ctx.inlineQuery.query.length < 5) {
     await ctx.answerInlineQuery([{
       type: 'article',
       title: 'Type your query below...',

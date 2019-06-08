@@ -36,7 +36,7 @@ searchTrackAppleScene.enter(async (ctx) => {
 
   const { artist, name, album } = ctx.scene.state.track;
 
-  await ctx.reply(`The following track has been found on iTunes and will be scrobbled:\n\n${artist}\n${name}\n${album}`,
+  await ctx.reply(`The following track has been found on Apple Music and going to be scrobbled:\n\n${artist}\n${name}\n${album}`,
     Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
     .markup(Telegraf.Markup.inlineKeyboard([areTagsInName(name) || areTagsInName(album) ? [
       Telegraf.Markup.callbackButton('Clean name tags (Beta)', 'CLEAN'),
@@ -72,7 +72,7 @@ searchTrackAppleScene.action('CLEAN', async (ctx) => {
 
   const { name: nameCleaned, album: albumCleaned } = ctx.scene.state.trackCleaned;
 
-  await ctx.editMessageText('The following track has been found on iTunes and will be scrobbled:\n\n' +
+  await ctx.editMessageText('The following track has been found on Apple Music and going to be scrobbled:\n\n' +
     `${artist}\n${nameCleaned}\n${albumCleaned}`,
       Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
       .markup(Telegraf.Markup.inlineKeyboard([[
@@ -88,11 +88,11 @@ searchTrackAppleScene.action('UNCLEAN', async (ctx) => {
   delete ctx.scene.state.trackCleaned;
   const { artist, name, album } = ctx.scene.state.track;
 
-  await ctx.editMessageText('The following track has been found on iTunes and will be scrobbled:\n\n' +
+  await ctx.editMessageText('The following track has been found on Apple Music and going to be scrobbled:\n\n' +
     `${artist}\n${name}\n${album}`,
       Telegraf.Extra.HTML().webPreview(false).inReplyTo(ctx.scene.state.messageIdToReply)
       .markup(Telegraf.Markup.inlineKeyboard([[
-        Telegraf.Markup.callbackButton('Unclean name tags (Beta)', 'CLEAN'),
+        Telegraf.Markup.callbackButton('Clean name tags (Beta)', 'CLEAN'),
       ], [
         Telegraf.Markup.callbackButton('Edit', 'EDIT'),
         Telegraf.Markup.callbackButton('OK', 'OK'),

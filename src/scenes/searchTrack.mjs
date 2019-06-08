@@ -28,7 +28,11 @@ searchTrackScene.enter(async (ctx) => {
 });
 
 searchTrackScene.on('inline_query', async (ctx) => {
-  await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
+  try {
+    await searchFromLastfmAndAnswerInlineQuery(ctx, 'track');
+  } catch (e) {
+    console.error(e);
+  }
 });
 
 searchTrackScene.on('text', async (ctx) => {
