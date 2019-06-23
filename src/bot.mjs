@@ -40,8 +40,9 @@ bot.use(scenes); // global commands are here
 bot.on('text', auth, limiter, ctx => scrobbleTrackFromText(ctx));
 
 bot.on('audio', auth, limiter, async (ctx) => {
-  await scrobbleTrackFromAudio(ctx);
-  await ctx.scene.leave();
+  await ctx.reply('Sorry, temporary unavailable :(');
+  // await scrobbleTrackFromAudio(ctx);
+  // await ctx.scene.leave();
 });
 
 bot.action('CANCEL', ctx => cancel(ctx));
