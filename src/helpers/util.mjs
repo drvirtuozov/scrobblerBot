@@ -124,6 +124,7 @@ export async function requestError(ctx, e) {
       break;
     case 29: // rate limit exceeded
       {
+        console.error(e.response);
         const until = new Date();
         until.setSeconds(until.getSeconds() + e.retryAfter);
         ctx.session.state.retryAfter = until;
@@ -136,6 +137,8 @@ export async function requestError(ctx, e) {
 
   if (ctx.callbackQuery) {
     await ctx.editMessageText(text);
+  } else if (ctx.inlineQuery) {
+    // pass
   } else {
     await ctx.reply(text);
   }
