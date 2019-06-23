@@ -31,16 +31,16 @@ export async function error(ctx, e) {
   }
 
   console.error(e);
-  const errText = '❗️ Oops, something went wrong. Please try again later.';
+  const text = '❗️ Oops, something went wrong. Please try again later.';
 
   if (ctx.callbackQuery) {
-    await ctx.editMessageText(errText);
+    await ctx.editMessageText(text);
   } else if (ctx.inlineQuery) {
     // pass
   } else if (ctx.scene.state.messageIdToReply) {
-    await ctx.reply(errText, Telegram.Extra.inReplyTo(ctx.message.message_id));
+    await ctx.reply(text, Telegram.Extra.inReplyTo(ctx.message.message_id));
   } else {
-    await ctx.reply(errText);
+    await ctx.reply(text);
   }
 
   await sendToAdmin('❗️ An error occured. Check the logs...');
@@ -78,7 +78,16 @@ export async function successfulScrobble(ctx, text = '✅ Scrobbled', tracks = [
 }
 
 export function canScrobble(ctx) {
-  if (!ctx.session.user || Date.now() - +new Date(ctx.session.user.last_scrobble) <= 30000) {
+  if (!ctx.session.user) {
+    return false;
+  }
+
+  const now = Date.now();
+  if (now - +new Date(ctx.session.user.last_scrobble) <= 30000) {
+    return false;
+  }
+
+  if (ctx.session.state && +new Date(ctx.session.state.retryAfter) > now) {
     return false;
   }
 
@@ -100,31 +109,39 @@ export function multipleArray(array = [], multipleTimes = 1) {
 }
 
 export async function requestError(ctx, e) {
-  if (!e.response) throw new Error('Haven\'t got any response');
-
-  if (e.code === 429) { // too many requests
-    console.error(e.response);
-    await sendToAdmin(`${e.message}\n\n${e.response.message}`);
-    return;
+  if (!e.response) {
+    throw new Error('Haven\'t got any json');
   }
 
-  const err = e.response.error;
+  let text;
 
-  if (err === 14 || err === 4 || err === 9) {
-    const text = '❌ Access has not been granted. Please re-authenticate';
-
-    if (ctx.callbackQuery) {
-      await ctx.editMessageText(text);
-    } else {
-      await ctx.reply(text);
-    }
-
-    await ctx.scene.enter('auth');
-    return;
+  switch (e.response.error) {
+    case 4:
+    case 9:
+    case 14:
+      text = '❌ Access has not been granted. Please re-authenticate';
+      await ctx.scene.enter('auth');
+      break;
+    case 29: // rate limit exceeded
+      {
+        console.error(e.response);
+        const until = new Date();
+        until.setSeconds(until.getSeconds() + e.retryAfter);
+        ctx.session.state.retryAfter = until;
+        await sendToAdmin(`${e.message}\n\n${e.response.message}\n\nRetry-After: ${e.retryAfter}`);
+        break;
+      }
+    default:
+      throw e;
   }
 
-  console.error(e);
-  throw new Error(`Unkown request error: ${e.message}`);
+  if (ctx.callbackQuery) {
+    await ctx.editMessageText(text);
+  } else if (ctx.inlineQuery) {
+    // pass
+  } else {
+    await ctx.reply(text);
+  }
 }
 
 export async function scrobbleError(ctx, e, tracks = [], msg = '❌ Failed') {
@@ -187,6 +204,11 @@ export async function httpRequest(url = '', options = {}) {
     const err = new Error(res.statusText);
     err.code = res.status;
     err.response = json;
+
+    if (res.status === 429) {
+      err.retryAfter = res.headers.get('retry-after') || 180;
+    }
+
     throw err;
   }
 
