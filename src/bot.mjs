@@ -45,7 +45,7 @@ bot.on('audio', auth, limiter, async (ctx) => {
 });
 
 bot.action('CANCEL', ctx => cancel(ctx));
-bot.action('RETRY', ctx => retry(ctx));
+bot.action('RETRY', limiter, ctx => retry(ctx));
 bot.action('REPEAT', ctx => repeat(ctx));
 bot.action(/REPEAT:\d?\d/, auth, limiter, ctx => repeatMany(ctx));
 
