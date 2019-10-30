@@ -21,7 +21,7 @@
   "homepage": "https://github.com/drvirtuozov/scrobblerBot#readme",
   "dependencies": {
     "he": "^1.1.1",
-    "mongoose": "^4.11.14",
+    "mongoose": "^5.7.5",
     "music-metadata": "^2.0.1",
     "node-fetch": "^1.7.3",
     "telegraf": "^3.30.1",
