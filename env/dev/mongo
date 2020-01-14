@@ -1,0 +1,3 @@
+MONGO_INITDB_ROOT_USERNAME=scrobblerbot_dev
+MONGO_INITDB_ROOT_PASSWORD=scrobblerbot_dev
+MONGO_INITDB_DATABASE=scrobblerbot_dev

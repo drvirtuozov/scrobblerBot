@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   redis:
     image: "redis"
@@ -10,17 +10,21 @@ services:
       - "27018:27017"
     volumes:
       - "data:/data/db"
+      - "./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro"
     user: mongodb
+    env_file:
+      - ./env/dev/mongo
   bot:
     build: .
     ports:
-     - "8444:8443"
+      - "8444:8443"
     depends_on:
       - mongo
       - redis
-    env_file: 
+    env_file:
       - ./env/dev/bot
     volumes:
       - "./src:/opt/scrobblerbot/src"
+    command: bash -c 'sleep 5 && npm run watch'
 volumes:
   data:
